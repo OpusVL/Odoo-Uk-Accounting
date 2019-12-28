@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-<data noupdate="0">
-
-</data>
+    <!-- Add full accounting features to internal user group -->
+    <function model="res.groups" name="add_full_accounting_features">
+        <value eval="False"/>
+    </function>
 </odoo>

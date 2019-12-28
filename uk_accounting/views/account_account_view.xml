@@ -1,6 +1,9 @@
 <odoo>
   <data>
 
+    <record model="ir.ui.menu" id="account.menu_finance">
+      <field name="name">Finance</field>
+    </record>
 
   </data>
 </odoo>
