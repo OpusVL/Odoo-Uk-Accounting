@@ -5,6 +5,12 @@ from odoo import models, fields, api
 from odoo.tools.safe_eval import safe_eval
 
 
+class AccountTaxTemplateMargin(models.Model):
+    _inherit = "account.tax.template"
+
+    amount_type = fields.Selection(selection_add=[('margin', 'Margin')])
+
+
 class AccountTaxMargin(models.Model):
     _inherit = "account.tax"
 
