@@ -42,6 +42,7 @@
         'security/ir.model.access.csv',
         'security/uk_accounting_security.xml',
         'data/ir_sequence_data.xml',
+        'data/account_type_data.xml',
         'views/account_account_view.xml',
     ],
 }

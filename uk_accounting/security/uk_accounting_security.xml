@@ -4,4 +4,5 @@
     <function model="res.groups" name="add_full_accounting_features">
         <value eval="False"/>
     </function>
+
 </odoo>
