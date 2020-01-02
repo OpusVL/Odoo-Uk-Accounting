@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="sale_margin" model="account.tax">
+            <field name="description">STM</field>
+            <field name="type_tax_use">sale</field>
+            <field name="name">Sale Margin Tax Scheme</field>
+            <field name="amount_type">margin</field>
+            <field name="amount">20</field>
+            <field name="tax_group_id" ref="l10n_uk.tax_group_20"/>
+            <field name="active">False</field>
+            <field name="invoice_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'factor': 1.0,
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('l10n_uk.2200'),
+                    'factor': 1.0,
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5,0,0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                    'factor': 1.0,
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('l10n_uk.2200'),
+                    'factor': 1.0,
+                }),
+            ]"/>
+        </record>
+    </data>
+
+</odoo>
