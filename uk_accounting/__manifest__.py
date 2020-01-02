@@ -2,7 +2,7 @@
 
 ##############################################################################
 #
-# V12 Fleet Management
+# UK Accounting Localization
 # Copyright (C) 2019 Opus Vision Limited (<https://opusvl.com>)
 #
 # This program is free software: you can redistribute it and/or modify
