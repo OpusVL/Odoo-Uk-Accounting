@@ -35,15 +35,21 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['account', 'l10n_uk'],
+    'depends': ['account', 'base_iban', 'base_vat'],
 
     # always loaded
     'data': [
         'security/ir.model.access.csv',
         'security/uk_accounting_security.xml',
-        'data/ir_sequence_data.xml',
+        'data/uk_accounting_chart_data.xml',
         'data/account_type_data.xml',
+        'data/account.account.template.csv',
+        'data/account.chart.template.csv',
+        'data/account.tax.group.csv',
+        'data/account_tax_report_data.xml',
         'data/account_tax_data.xml',
+        'data/account_chart_template_data.xml',
+        'data/ir_sequence_data.xml',
         'views/account_account_view.xml',
     ],
 }
