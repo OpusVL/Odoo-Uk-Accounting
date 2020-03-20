@@ -15,18 +15,37 @@ class AccountTaxMargin(models.Model):
 
     amount_type = fields.Selection(selection_add=[('margin', 'Margin')])
 
-    def _compute_amount(self, base_amount, price_unit, quantity=1.0, product=None, partner=None):
+    def _compute_amount(self, base_amount, price_unit, quantity=1.0,
+                        product=None, partner=None):
         self.ensure_one()
-        if product and product._name == 'product.template':
-            product = product.product_variant_id
         if self.amount_type == 'margin':
+            price_include = self.price_include
+            if product and product._name == 'product.template':
+                product = product.product_variant_id
             company = self.env.company
-            localdict = {'base_amount': base_amount, 'price_unit': price_unit, 'quantity': quantity, 'product': product,
+            localdict = {'base_amount': base_amount, 'price_unit': price_unit,
+                         'quantity': quantity, 'product': product,
                          'partner': partner, 'company': company}
-            safe_eval('result = (price_unit - product.standard_price ) * {}'.format(self.amount/100.0),
-                      localdict, mode="exec", nocopy=True)
-            return localdict['result']
-        return super(AccountTaxMargin, self)._compute_amount(base_amount, price_unit, quantity, product, partner)
+            if not price_include:
+                if product:
+                    safe_eval('result = (base_amount - product.standard_price ) * {}'.format(
+                        self.amount/100.0), localdict, mode="exec", nocopy=True)
+                    return localdict['result']
+
+                else:
+                    res = super(AccountTaxMargin, self)._compute_amount(base_amount, price_unit, quantity, product, partner) or 0.0
+            else:
+                if product:
+                    safe_eval(
+                        'result = (base_amount - product.standard_price) - (base_amount - product.standard_price ) / (1 + {})'.format(
+                            self.amount / 100.0), localdict, mode="exec",
+                        nocopy=True)
+                    return localdict['result']
+                else:
+                    res = super(AccountTaxMargin, self)._compute_amount(base_amount, price_unit, quantity, product, partner) or 0.0
+        else:
+            res = super(AccountTaxMargin, self)._compute_amount(base_amount, price_unit, quantity, product, partner)
+        return res
 
     def compute_all(self, price_unit, currency=None, quantity=1.0, product=None, partner=None,
                     is_refund=False, handle_price_include=True):
