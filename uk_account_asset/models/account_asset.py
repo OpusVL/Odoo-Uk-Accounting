@@ -387,7 +387,7 @@ class AccountAssetAsset(models.Model):
             amount_to_depr = residual_amount = self.value_residual
             if self.prorata:
                 # If we already have some previous validated entries,
-                # starting date is last entry + method perio
+                # starting date is last entry + method period
                 if posted_depreciation_line_ids and posted_depreciation_line_ids[-1].depreciation_date:
                     last_depreciation_date = datetime.strptime(
                         posted_depreciation_line_ids[-1].depreciation_date, DF
