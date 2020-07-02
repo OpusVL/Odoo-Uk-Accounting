@@ -103,6 +103,7 @@ class CrossoveredBudgetLines(models.Model):
         help="Amount really earned/spent.")
     practical_amount = fields.Monetary(string='Practical Amount',
                                        help="Amount really earned/spent.")
+    difference_amount = fields.Monetary(string='Difference', )
     company_id = fields.Many2one(related='crossovered_budget_id.company_id', comodel_name='res.company',
         string='Company', store=True, readonly=True)
     crossovered_budget_state = fields.Selection(related='crossovered_budget_id.state', string='Budget State', store=True, readonly=True)
@@ -175,6 +176,7 @@ class CrossoveredBudgetLines(models.Model):
             practical_amount = self.env.cr.fetchone()[0] or 0.0
             line.write({
                 'practical_amount': practical_amount,
+                'difference_amount': line.planned_amount - practical_amount,
             })
             line.computed_practical_amount = practical_amount
 

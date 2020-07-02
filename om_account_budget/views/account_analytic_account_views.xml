@@ -22,7 +22,14 @@
                                            invisible="1"/>
                                     <field name="practical_amount"
                                            sum="Practical Amount"
+                                           readonly="1"
+                                           force_save="1"
                                            widget="monetary"/>
+                                    <field name="difference_amount"
+                                           readonly="1"
+                                           force_save="1"
+                                           widget="monetary"
+                                           sum="Total Difference"/>
                                 </tree>
                                 <form string="Budget Items">
                                     <field name="crossovered_budget_id"/>
