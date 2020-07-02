@@ -10,7 +10,7 @@
     Assets management
     =================
     Manage assets owned by a company.
-    Keeps track of debreciations, and creates corresponding journal entries.
+    Keeps track of depreciations, and creates corresponding journal entries.
     """,
     'images': ['static/description/icon.png'],
     'depends': [
