@@ -17,7 +17,6 @@
         'uk_accounting',
     ],
     'data': [
-        'security/account_asset_security.xml',
         'security/ir.model.access.csv',
         'wizard/asset_modify_views.xml',
         'views/account_asset_views.xml',
