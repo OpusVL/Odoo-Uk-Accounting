@@ -531,7 +531,7 @@ class AccountAssetAsset(models.Model):
             debreciation_move_date = (depreciation_date + relativedelta(
                 months=1) - relativedelta(days=1))
 
-    def compute_year_depreciation_board_legal(self):
+    def compute_not_year_depreciation_board_legal(self):
         depreciation_lin_obj = self.env['account.asset.depreciation.line']
         amount_to_depr = depreciation_factor = remaining_value = self.value_residual
         depreciation_date = self._get_last_depreciation_date()[self.id]
