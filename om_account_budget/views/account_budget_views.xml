@@ -101,7 +101,7 @@
                             <field name="crossovered_budget_line"
                                    context="{'default_date_from': date_from,'default_date_to': date_to}" colspan="4"
                                    nolabel="1" attrs="{'readonly':[('state','!=','draft')]}">
-                                <tree string="Budget Lines" decoration-success="is_above_budget and planned_amount &gt; 0" decoration-danger="is_above_budget and planned_amount &lt; 0" editable="bottom">
+                                <tree string="Budget Lines" decoration-success="planned_amount &gt; 0" decoration-danger="planned_amount &lt; 0" editable="bottom">
                                     <field name="general_budget_id"/>
                                     <field name="analytic_account_id" groups="analytic.group_analytic_accounting"/>
                                     <field name="date_from"/>
@@ -110,11 +110,8 @@
                                     <field name="currency_id" invisible="1"/>
                                     <field name="planned_amount" sum="Planned Amount"/>
                                     <field name="practical_amount" sum="Practical Amount"/>
-                                    <field name="theoritical_amount" sum="Theoretical Amount"/>
-                                    <field name="percentage"  widget="percentage" />
                                     <button type="object" name="action_open_budget_entries" string="Entries..."
                                             icon="fa-arrow-circle-o-right"/>
-                                    <field name="is_above_budget" invisible="1"/>
                                 </tree>
                                 <form string="Budget Lines">
                                     <group>
@@ -279,8 +276,6 @@
                 <field name="paid_date" groups="base.group_no_one"  />
                 <field name="planned_amount"/>
                 <field name="practical_amount"/>
-                <field name="theoritical_amount"/>
-                <field name="percentage" widget="percentage"/>
             </tree>
         </field>
     </record>
@@ -301,8 +296,6 @@
                         <field name="paid_date"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="planned_amount" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="practical_amount" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
-                        <field name="theoritical_amount" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
-                        <field name="percentage"  widget="percentage" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                     </group>
                 </sheet>
@@ -317,9 +310,7 @@
             <pivot string="Budget Lines">
                 <field name="crossovered_budget_id" type="row"/>
                 <field name="planned_amount"  type="measure" string="Planned amount"/>
-                <field name="theoritical_amount"  type="measure" string="Theoritical amount"/>
                 <field name="practical_amount" type="measure" string="Practical amount"/>
-                <field name="percentage" type="measure" widget="percentage"/>
             </pivot>
         </field>
     </record>
@@ -331,7 +322,6 @@
             <graph string="Budget Lines">
                 <field name="crossovered_budget_id" type="row"/>
                 <field name="planned_amount"  type="measure" string="Planned amount"/>
-                <field name="theoritical_amount"  type="measure" string="Theoritical amount"/>
                 <field name="practical_amount" type="measure" string="Practical amount"/>
             </graph>
         </field>

@@ -19,8 +19,6 @@
                                     <field name="paid_date"/>
                                     <field name="planned_amount" widget="monetary"/>
                                     <field name="practical_amount" sum="Practical Amount" widget="monetary"/>
-                                    <field name="theoritical_amount" sum="Theoritical Amount" widget="monetary"/>
-                                    <field name="percentage"/>
                                 </tree>
                                 <form string="Budget Items">
                                     <field name="crossovered_budget_id"/>
