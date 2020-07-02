@@ -459,16 +459,15 @@ class AccountAssetAsset(models.Model):
         return True
 
     def action_view_account_move(self):
-        '''
-        Test
-        '''
         action = self.env.ref('account.action_move_line_form').read()[0]
 
         moves = self.mapped('move_ids')
         if len(moves) > 1:
             action['domain'] = [('id', 'in', moves.ids)]
         elif moves:
-            action['views'] = [(self.env.ref('account.view_move_form').id, 'form')]
+            action['views'] = [
+                (self.env.ref('account.view_move_form').id, 'form')
+            ]
             action['res_id'] = moves.id
         return action
 
