@@ -109,7 +109,11 @@
                                     <field name="paid_date" groups="base.group_no_one"/>
                                     <field name="currency_id" invisible="1"/>
                                     <field name="planned_amount" sum="Planned Amount"/>
-                                    <field name="practical_amount" sum="Practical Amount"/>
+                                    <field name="computed_practical_amount"
+                                           invisible="1"/>
+                                    <field name="practical_amount" readonly="1"
+                                           force_save="1"
+                                           sum="Practical Amount"/>
                                     <button type="object" name="action_open_budget_entries" string="Entries..."
                                             icon="fa-arrow-circle-o-right"/>
                                 </tree>
@@ -275,7 +279,8 @@
                 <field name="date_to"  />
                 <field name="paid_date" groups="base.group_no_one"  />
                 <field name="planned_amount"/>
-                <field name="practical_amount"/>
+                <field name="computed_practical_amount" invisible="1"/>
+                <field name="practical_amount" readonly="1" force_save="1"/>
             </tree>
         </field>
     </record>
@@ -295,7 +300,8 @@
                         <field name="date_to"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="paid_date"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="planned_amount" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
-                        <field name="practical_amount" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
+                        <field name="computed_practical_amount" invisible="1"/>
+                        <field name="practical_amount" readonly="1" force_save="1"/>
                         <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                     </group>
                 </sheet>

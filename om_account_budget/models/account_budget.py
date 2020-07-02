@@ -97,8 +97,12 @@ class CrossoveredBudgetLines(models.Model):
     planned_amount = fields.Monetary(
         'Planned Amount', required=True,
         help="Amount you plan to earn/spend. Record a positive amount if it is a revenue and a negative amount if it is a cost.")
-    practical_amount = fields.Monetary(
-        compute='_compute_practical_amount', string='Practical Amount', help="Amount really earned/spent.")
+    computed_practical_amount = fields.Monetary(
+        compute='_compute_practical_amount',
+        string='Computed Practical Amount',
+        help="Amount really earned/spent.")
+    practical_amount = fields.Monetary(string='Practical Amount',
+                                       help="Amount really earned/spent.")
     company_id = fields.Many2one(related='crossovered_budget_id.company_id', comodel_name='res.company',
         string='Company', store=True, readonly=True)
     crossovered_budget_state = fields.Selection(related='crossovered_budget_id.state', string='Budget State', store=True, readonly=True)
@@ -168,7 +172,11 @@ class CrossoveredBudgetLines(models.Model):
                 select = "SELECT sum(credit)-sum(debit) from " + from_clause + " where " + where_clause
 
             self.env.cr.execute(select, where_clause_params)
-            line.practical_amount = self.env.cr.fetchone()[0] or 0.0
+            practical_amount = self.env.cr.fetchone()[0] or 0.0
+            line.write({
+                'practical_amount': practical_amount,
+            })
+            line.computed_practical_amount = practical_amount
 
     @api.constrains('general_budget_id', 'analytic_account_id')
     def _must_have_analytical_or_budgetary_or_both(self):

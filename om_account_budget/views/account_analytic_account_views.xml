@@ -18,7 +18,11 @@
                                     <field name="date_to"/>
                                     <field name="paid_date"/>
                                     <field name="planned_amount" widget="monetary"/>
-                                    <field name="practical_amount" sum="Practical Amount" widget="monetary"/>
+                                    <field name="computed_practical_amount"
+                                           invisible="1"/>
+                                    <field name="practical_amount"
+                                           sum="Practical Amount"
+                                           widget="monetary"/>
                                 </tree>
                                 <form string="Budget Items">
                                     <field name="crossovered_budget_id"/>
