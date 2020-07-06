@@ -14,7 +14,7 @@
     """,
     'images': ['static/description/icon.png'],
     'depends': [
-        'uk_accounting',
+        'account',
     ],
     'data': [
         'security/ir.model.access.csv',
