@@ -1,45 +1,44 @@
 <odoo>
   <data>
 
-    <record model="ir.ui.menu" id="account.menu_finance">
-      <field name="name">Finance</field>
-    </record>
+      <record model="ir.ui.menu" id="account.menu_finance">
+          <field name="name">Finance</field>
+      </record>
 
-    <record id="view_account_with_parent_form" model="ir.ui.view">
-        <field name="name">account.account.form</field>
-        <field name="model">account.account</field>
-        <field name="inherit_id" ref="account.view_account_form"/>
-        <field name="arch" type="xml">
-        	<field name="code" position="after">
-        		<field name="account_parent_id" domain="[('internal_type','=','view')]" context="{'show_parent_account':True}"/>
-        	</field>
-        </field>
-    </record>
+      <record id="view_account_with_parent_form" model="ir.ui.view">
+          <field name="name">account.account.form</field>
+          <field name="model">account.account</field>
+          <field name="inherit_id" ref="account.view_account_form"/>
+          <field name="arch" type="xml">
+              <field name="code" position="after">
+                  <field name="account_parent_id" domain="[('internal_type','=','view')]" context="{'show_parent_account':True}"/>
+              </field>
+          </field>
+      </record>
 
-    <record id="view_account_with_parent_list" model="ir.ui.view">
-        <field name="name">account.account.list.inherit</field>
-        <field name="model">account.account</field>
-        <field name="inherit_id" ref="account.view_account_list"/>
-        <field name="arch" type="xml">
-        	<field name="code" position="before">
-        		<field name="account_parent_id"/>
-        	</field>
-        </field>
-    </record>
+      <record id="view_account_with_parent_list" model="ir.ui.view">
+          <field name="name">account.account.list.inherit</field>
+          <field name="model">account.account</field>
+          <field name="inherit_id" ref="account.view_account_list"/>
+          <field name="arch" type="xml">
+              <field name="code" position="before">
+                  <field name="account_parent_id"/>
+              </field>
+          </field>
+      </record>
 
       <record id="view_account_search_inherit" model="ir.ui.view">
-        <field name="name">account.account.search.inherit</field>
-        <field name="model">account.account</field>
-        <field name="inherit_id" ref="account.view_account_search"/>
-        <field name="arch" type="xml">
-        	<searchpanel position="replace"/>
-        </field>
-    </record>
+          <field name="name">account.account.search.inherit</field>
+          <field name="model">account.account</field>
+          <field name="inherit_id" ref="account.view_account_search"/>
+          <field name="arch" type="xml">
+              <searchpanel position="replace"/>
+          </field>
+      </record>
 
-
-    <record id="account.action_account_form" model="ir.actions.act_window">
-    	<field name="context">{'show_parent_account':True}</field>
-    </record>
+      <record id="account.action_account_form" model="ir.actions.act_window">
+          <field name="context">{'show_parent_account':True}</field>
+      </record>
 
   </data>
 </odoo>

@@ -51,5 +51,6 @@
         'data/account_chart_template_data.xml',
         'data/ir_sequence_data.xml',
         'views/account_account_view.xml',
+        'views/account_move_view.xml',
     ],
 }
