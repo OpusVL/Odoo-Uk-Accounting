@@ -221,7 +221,7 @@
                             <field name="value_residual" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="border_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="value_accumulated" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                            <field name="partner_id" string="Vendor" domain="[('supplier', '=', True)]"/>
+                            <field name="partner_id" string="Vendor"/>
                             <field name="invoice_id" string="Invoice" options="{'no_create': True}"/>
                         </group>
                     </group>
