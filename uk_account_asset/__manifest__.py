@@ -15,6 +15,7 @@
     'images': ['static/description/icon.png'],
     'depends': [
         'account',
+        'stock_account',
     ],
     'data': [
         'security/ir.model.access.csv',

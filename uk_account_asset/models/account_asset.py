@@ -199,7 +199,7 @@ class AccountAssetAsset(models.Model):
              "time between 2 depreciations. * Ending Date: Choose the time "
              "between 2 depreciations and the date the depreciations "
              "won't go beyond.")
-    value_residual = fields.Monetary(compute='_amount_residual', method=True,
+    value_residual = fields.Monetary(compute='_compute_amount', method=True,
                                      store=True, string='Residual Value')
     prorata = fields.Boolean(
         string='Prorata Temporis', readonly=True,
@@ -232,7 +232,7 @@ class AccountAssetAsset(models.Model):
     year_depreciation = fields.Boolean('Year Depreciation', readonly=True,
                                        states={'draft': [('readonly', False)]})
     product_id = fields.Many2one('product.product', string='Product')
-    value_accumulated = fields.Float(compute='_amount_accumulated', store=True,
+    value_accumulated = fields.Float(compute='_compute_amount', store=True,
                                      method=True, digits=0,
                                      string='Accumulated Value')
     serial_nr = fields.Char('Serial no')
@@ -246,9 +246,6 @@ class AccountAssetAsset(models.Model):
         states={'draft': [('readonly', False)], 'open': [('readonly', False)]})
     move_ids = fields.One2many('account.move', 'asset_id',
                                string='Journal entries')
-    invoice_id = fields.Many2one(
-        'account.invoice', string='Invoice',
-        states={'draft': [('readonly', False)]}, copy=False)
     picking_id = fields.Many2one('stock.picking', string='Picking',
                                  states={'draft': [('readonly', False)]},
                                  copy=False)
@@ -347,10 +344,10 @@ class AccountAssetAsset(models.Model):
                             amount = (residual_amount * self.method_progress_factor) / total_days * days
         return amount
 
-    def _compute_board_undone_dotation_nb(self, depreciation_date, total_days):
+    def _compute_board_undone_dotation_nb(self, depreciation_date):
         undone_dotation_number = self.method_number
         if self.method_time == 'end':
-            end_date = datetime.strptime(self.method_end, DF).date()
+            end_date = self.method_end
             undone_dotation_number = 0
             while depreciation_date <= end_date:
                 depreciation_date = date(
@@ -364,10 +361,11 @@ class AccountAssetAsset(models.Model):
 
     def compute_depreciation_board(self):
         self.ensure_one()
-        if self.computation_type=='management':
+        if self.computation_type == 'management':
             self.compute_depreciation_board_management()
         else:
             self.compute_depreciation_board_legal()
+        return True
 
     def compute_depreciation_board_management(self):
         self.ensure_one()
@@ -378,8 +376,7 @@ class AccountAssetAsset(models.Model):
             lambda x: not x.move_check)
 
         # Remove old unposted depreciation lines.
-        # We cannot use unlink() with One2many field
-        commands = [
+        depreciation_lines = [
             (2, line_id.id, False) for line_id in unposted_depreciation_line_ids
         ]
 
@@ -389,30 +386,21 @@ class AccountAssetAsset(models.Model):
                 # If we already have some previous validated entries,
                 # starting date is last entry + method period
                 if posted_depreciation_line_ids and posted_depreciation_line_ids[-1].depreciation_date:
-                    last_depreciation_date = datetime.strptime(
-                        posted_depreciation_line_ids[-1].depreciation_date, DF
-                    ).date()
-                    depreciation_date = last_depreciation_date + relativedelta(
+                    depreciation_date = posted_depreciation_line_ids[-1].depreciation_date + relativedelta(
                         months=+self.method_period)
                 else:
-                    depreciation_date = datetime.strptime(
-                        self._get_last_depreciation_date()[self.id], DF).date()
+                    depreciation_date = self._get_last_depreciation_date()[self.id]
             else:
                 # depreciation_date = 1st of January of purchase year if annual
                 # valuation, 1st of purchase month in other cases
                 if self.method_period >= 12:
-                    asset_date = datetime.strptime(self.date[:4] + '-01-01', DF
-                                                   ).date()
+                    asset_date = date(self.date.year, 1, 1)
                 else:
-                    asset_date = datetime.strptime(self.date[:7] + '-01', DF
-                                                   ).date()
+                    asset_date = self.date.replace(day=1)
                 # if we already have some previous validated entries,
                 # starting date isn't 1st January but last entry + method period
                 if posted_depreciation_line_ids and posted_depreciation_line_ids[-1].depreciation_date:
-                    last_depreciation_date = datetime.strptime(
-                        posted_depreciation_line_ids[-1].depreciation_date, DF
-                    ).date()
-                    depreciation_date = last_depreciation_date + relativedelta(
+                    depreciation_date = posted_depreciation_line_ids[-1].depreciation_date + relativedelta(
                         months=+self.method_period)
                 else:
                     depreciation_date = asset_date
@@ -422,7 +410,7 @@ class AccountAssetAsset(models.Model):
             total_days = (year % 4) and 365 or 366
 
             undone_dotation_number = self._compute_board_undone_dotation_nb(
-                depreciation_date, total_days)
+                depreciation_date)
 
             for x in range(
                     len(posted_depreciation_line_ids), undone_dotation_number):
@@ -446,7 +434,7 @@ class AccountAssetAsset(models.Model):
                             self.salvage_value + residual_amount),
                     'depreciation_date': depreciation_date.strftime(DF),
                 }
-                commands.append((0, False, vals))
+                depreciation_lines.append((0, False, vals))
                 # Considering Depr. Period as months
                 depreciation_date = date(year, month, day) + relativedelta(
                     months=+self.method_period)
@@ -454,7 +442,7 @@ class AccountAssetAsset(models.Model):
                 month = depreciation_date.month
                 year = depreciation_date.year
 
-        self.write({'depreciation_line_ids': commands})
+        self.write({'depreciation_line_ids': depreciation_lines})
 
         return True
 
@@ -479,7 +467,7 @@ class AccountAssetAsset(models.Model):
             if old_depreciation_line_ids:
                 old_depreciation_line_ids.unlink()
 
-            if asset.value_residual == asset.salvage_value:
+            if not asset.value_residual:
                 continue
             if not asset.method_progress_factor:
                 continue
@@ -493,14 +481,12 @@ class AccountAssetAsset(models.Model):
         depreciation_lin_obj = self.env['account.asset.depreciation.line']
         depreciated_value = 0
         amount_to_depr = remaining_value = self.value_residual
-        depreciation_date = datetime.strptime(
-            self._get_last_depreciation_date()[self.id], DF)
+        depreciation_date = self._get_last_depreciation_date()[self.id]
         depreciation_date = (depreciation_date - relativedelta(
             days=depreciation_date.day - 1)) + relativedelta(months=1)
         debreciation_move_date = (depreciation_date + relativedelta(
             months=1) - relativedelta(days=1))
-        purchase_begining_month_date = datetime.strptime(
-            self.date, '%Y-%m-%d')
+        purchase_begining_month_date = self.date
         purchase_begining_month_date = purchase_begining_month_date + relativedelta(
             months=1) - relativedelta(days=purchase_begining_month_date.day - 1)
         total_passed_months = month_difference(
@@ -659,7 +645,6 @@ class AccountAssetAsset(models.Model):
             'method_progress_factor',
             'method_time',
             'salvage_value',
-            'invoice_id',
         ]
         ref_tracked_fields = self.env['account.asset.asset'].fields_get(
             asset_fields)
@@ -758,22 +743,15 @@ class AccountAssetAsset(models.Model):
 
     @api.depends('value', 'salvage_value', 'depreciation_line_ids.move_check',
                  'depreciation_line_ids.amount', 'value_alr_accumulated')
-    def _amount_residual(self):
-        total_amount = 0.0
-        for line in self.depreciation_line_ids:
-            if line.move_check:
-                total_amount += line.amount
-        self.value_residual = self.value - total_amount - (
-                self.salvage_value - self.value_alr_accumulated)
-
-    @api.depends('value', 'salvage_value', 'depreciation_line_ids.move_check',
-                 'depreciation_line_ids.amount')
-    def _amount_accumulated(self):
-        total_amount = 0.0
-        for line in self.depreciation_line_ids:
-            if line.move_check:
-                total_amount += line.amount
-        self.value_accumulated = total_amount
+    def _compute_amount(self):
+        for asset in self:
+            total_amount = 0.0
+            for line in asset.depreciation_line_ids:
+                if line.move_check:
+                    total_amount += line.amount
+            asset.value_accumulated = total_amount
+            asset.value_residual = asset.value - total_amount - \
+                              asset.salvage_value - asset.value_alr_accumulated
 
     @api.onchange('company_id')
     def onchange_company_id(self):
@@ -787,36 +765,21 @@ class AccountAssetAsset(models.Model):
 
     @api.onchange('category_id')
     def onchange_category_id(self):
-        vals = self.onchange_category_id_values(self.category_id.id)
-        # We cannot use 'write' on an object that doesn't exist yet
-        if vals:
-            for k, v in vals['value'].items():
-                setattr(self, k, v)
-
-    def onchange_category_id_values(self, category_id):
-        if category_id:
-            category = self.env['account.asset.category'].browse(category_id)
-            return {
-                'value': {
-                    'method': category.method,
-                    'method_number': category.method_number,
-                    'method_time': category.method_time,
-                    'method_period': category.method_period,
-                    'method_progress_factor': category.method_progress_factor,
-                    'method_end': category.method_end,
-                    'prorata': category.prorata,
-                    'year_depreciation': category.year_depreciation,
-                    'years': category.years,
-                    'border_amount': self.value * category.border_amount/100
-                }
-            }
+        if self.category_id:
+            self.method = self.category_id.method
+            self.method_number = self.category_id.method_number
+            self.method_time = self.category_id.method_time
+            self.method_progress_factor = self.category_id.method_progress_factor
+            self.method_end = self.category_id.method_end
+            self.year_depreciation = self.category_id.year_depreciation
+            self.years = self.category_id.years
 
     @api.onchange('method_time')
     def onchange_method_time(self):
         if self.method_time != 'number':
             self.prorata = False
 
-    @api.onchange('value')
+    @api.onchange('value', 'category_id')
     def onchange_value(self):
         if self.category_id:
             self.border_amount = self.value * self.category_id.border_amount/100
