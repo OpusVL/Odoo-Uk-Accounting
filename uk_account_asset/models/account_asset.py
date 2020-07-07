@@ -344,10 +344,10 @@ class AccountAssetAsset(models.Model):
                             amount = (residual_amount * self.method_progress_factor) / total_days * days
         return amount
 
-    def _compute_board_undone_dotation_nb(self, depreciation_date, total_days):
+    def _compute_board_undone_dotation_nb(self, depreciation_date):
         undone_dotation_number = self.method_number
         if self.method_time == 'end':
-            end_date = datetime.strptime(self.method_end, DF).date()
+            end_date = self.method_end
             undone_dotation_number = 0
             while depreciation_date <= end_date:
                 depreciation_date = date(
@@ -361,7 +361,7 @@ class AccountAssetAsset(models.Model):
 
     def compute_depreciation_board(self):
         self.ensure_one()
-        if self.computation_type=='management':
+        if self.computation_type == 'management':
             self.compute_depreciation_board_management()
         else:
             self.compute_depreciation_board_legal()
@@ -376,8 +376,7 @@ class AccountAssetAsset(models.Model):
             lambda x: not x.move_check)
 
         # Remove old unposted depreciation lines.
-        # We cannot use unlink() with One2many field
-        commands = [
+        depreciation_lines = [
             (2, line_id.id, False) for line_id in unposted_depreciation_line_ids
         ]
 
@@ -387,30 +386,21 @@ class AccountAssetAsset(models.Model):
                 # If we already have some previous validated entries,
                 # starting date is last entry + method period
                 if posted_depreciation_line_ids and posted_depreciation_line_ids[-1].depreciation_date:
-                    last_depreciation_date = datetime.strptime(
-                        posted_depreciation_line_ids[-1].depreciation_date, DF
-                    ).date()
-                    depreciation_date = last_depreciation_date + relativedelta(
+                    depreciation_date = posted_depreciation_line_ids[-1].depreciation_date + relativedelta(
                         months=+self.method_period)
                 else:
-                    depreciation_date = datetime.strptime(
-                        self._get_last_depreciation_date()[self.id], DF).date()
+                    depreciation_date = self._get_last_depreciation_date()[self.id]
             else:
                 # depreciation_date = 1st of January of purchase year if annual
                 # valuation, 1st of purchase month in other cases
                 if self.method_period >= 12:
-                    asset_date = datetime.strptime(str(self.date)[:4] + '-01-01', DF
-                                                   ).date()
+                    asset_date = date(self.date.year, 1, 1)
                 else:
-                    asset_date = datetime.strptime(str(self.date)[:7] + '-01', DF
-                                                   ).date()
+                    asset_date = self.date.replace(day=1)
                 # if we already have some previous validated entries,
                 # starting date isn't 1st January but last entry + method period
                 if posted_depreciation_line_ids and posted_depreciation_line_ids[-1].depreciation_date:
-                    last_depreciation_date = datetime.strptime(
-                        posted_depreciation_line_ids[-1].depreciation_date, DF
-                    ).date()
-                    depreciation_date = last_depreciation_date + relativedelta(
+                    depreciation_date = posted_depreciation_line_ids[-1].depreciation_date + relativedelta(
                         months=+self.method_period)
                 else:
                     depreciation_date = asset_date
@@ -420,7 +410,7 @@ class AccountAssetAsset(models.Model):
             total_days = (year % 4) and 365 or 366
 
             undone_dotation_number = self._compute_board_undone_dotation_nb(
-                depreciation_date, total_days)
+                depreciation_date)
 
             for x in range(
                     len(posted_depreciation_line_ids), undone_dotation_number):
@@ -444,7 +434,7 @@ class AccountAssetAsset(models.Model):
                             self.salvage_value + residual_amount),
                     'depreciation_date': depreciation_date.strftime(DF),
                 }
-                commands.append((0, False, vals))
+                depreciation_lines.append((0, False, vals))
                 # Considering Depr. Period as months
                 depreciation_date = date(year, month, day) + relativedelta(
                     months=+self.method_period)
@@ -452,7 +442,7 @@ class AccountAssetAsset(models.Model):
                 month = depreciation_date.month
                 year = depreciation_date.year
 
-        self.write({'depreciation_line_ids': commands})
+        self.write({'depreciation_line_ids': depreciation_lines})
 
         return True
 
@@ -477,7 +467,7 @@ class AccountAssetAsset(models.Model):
             if old_depreciation_line_ids:
                 old_depreciation_line_ids.unlink()
 
-            if asset.value_residual == asset.salvage_value:
+            if not asset.value_residual:
                 continue
             if not asset.method_progress_factor:
                 continue
