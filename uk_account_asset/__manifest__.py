@@ -19,6 +19,7 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        'data/account_asset_data.xml',
         'wizard/asset_modify_views.xml',
         'views/account_asset_views.xml',
         'views/product_views.xml',
