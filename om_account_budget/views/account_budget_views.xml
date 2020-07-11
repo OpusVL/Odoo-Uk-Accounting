@@ -108,7 +108,7 @@
                                     <field name="date_to"/>
                                     <field name="paid_date" groups="base.group_no_one"/>
                                     <field name="currency_id" invisible="1"/>
-                                    <field name="planned_amount" sum="Planned Amount"/>
+                                    <field name="planned_amount" sum="Total Budget"/>
                                     <field name="computed_practical_amount"
                                            invisible="1"/>
                                     <field name="practical_amount" readonly="1"
@@ -327,9 +327,9 @@
         <field name="arch" type="xml">
             <pivot string="Budget Lines">
                 <field name="crossovered_budget_id" type="row"/>
-                <field name="planned_amount"  type="measure" string="Planned amount"/>
-                <field name="practical_amount" type="measure" string="Practical amount"/>
-                <field name="difference_amount" type="measure" string="Difference"/>
+                <field name="planned_amount"  type="measure" string="Budget"/>
+                <field name="practical_amount" type="measure" string="Actual"/>
+                <field name="difference_amount" type="measure" string="Variance"/>
             </pivot>
         </field>
     </record>
@@ -341,8 +341,8 @@
             <graph string="Budget Lines">
                 <field name="crossovered_budget_id" type="row"/>
                 <field name="planned_amount"  type="measure" string="Planned amount"/>
-                <field name="practical_amount" type="measure" string="Practical amount"/>
-                <field name="difference_amount" type="measure" string="Difference"/>
+                <field name="practical_amount" type="measure" string="Actual"/>
+                <field name="difference_amount" type="measure" string="Variance"/>
             </graph>
         </field>
     </record>
