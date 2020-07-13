@@ -21,7 +21,7 @@
                                     <field name="computed_practical_amount"
                                            invisible="1"/>
                                     <field name="practical_amount"
-                                           sum="Practical Amount"
+                                           sum="Actual"
                                            readonly="1"
                                            force_save="1"
                                            widget="monetary"/>
