@@ -107,9 +107,19 @@ class CrossoveredBudgetLines(models.Model):
         help="Amount really earned/spent.",
     )
     difference_amount = fields.Monetary(string='Variance', )
-    company_id = fields.Many2one(related='crossovered_budget_id.company_id', comodel_name='res.company',
-        string='Company', store=True, readonly=True)
-    crossovered_budget_state = fields.Selection(related='crossovered_budget_id.state', string='Budget State', store=True, readonly=True)
+    company_id = fields.Many2one(
+        related='crossovered_budget_id.company_id',
+        comodel_name='res.company',
+        string='Company',
+        store=True,
+        readonly=True,
+    )
+    crossovered_budget_state = fields.Selection(
+        related='crossovered_budget_id.state',
+        string='Budget State',
+        store=True,
+        readonly=True,
+    )
 
     @api.model
     def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
