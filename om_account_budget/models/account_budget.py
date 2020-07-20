@@ -95,8 +95,10 @@ class CrossoveredBudgetLines(models.Model):
     paid_date = fields.Date('Paid Date')
     currency_id = fields.Many2one('res.currency', related='company_id.currency_id', readonly=True)
     planned_amount = fields.Monetary(
-        'Budget', required=True,
-        help="Amount you plan to earn/spend. Record a positive amount if it is a revenue and a negative amount if it is a cost.")
+        'Budget',
+        required=True,
+        help="Amount you plan to earn/spend. Record a positive amount if it is a revenue and a negative amount if it is a cost.",
+    )
     computed_practical_amount = fields.Monetary(
         compute='_compute_practical_amount',
         string='Computed Practical Amount',
