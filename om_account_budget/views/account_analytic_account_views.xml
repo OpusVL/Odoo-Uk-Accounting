@@ -19,9 +19,6 @@
                                     <field name="paid_date"/>
                                     <field name="planned_amount" widget="monetary"/>
                                     <field
-                                        name="computed_practical_amount"
-                                        invisible="1"/>
-                                    <field
                                         name="practical_amount"
                                         sum="Actual"
                                         readonly="1"

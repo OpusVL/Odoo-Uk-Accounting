@@ -99,16 +99,17 @@ class CrossoveredBudgetLines(models.Model):
         required=True,
         help="Amount you plan to earn/spend. Record a positive amount if it is a revenue and a negative amount if it is a cost.",
     )
-    computed_practical_amount = fields.Monetary(
-        compute='_compute_practical_amount',
-        string='Computed Practical Amount',
-        help="Amount really earned/spent.",
-    )
     practical_amount = fields.Monetary(
+        compute='_compute_amounts',
+        store=True,
         string='Actual',
         help="Amount really earned/spent.",
     )
-    difference_amount = fields.Monetary(string='Variance')
+    difference_amount = fields.Monetary(
+        string='Variance',
+        compute='_compute_amounts',
+        store=True,
+    )
     company_id = fields.Many2one(
         related='crossovered_budget_id.company_id',
         comodel_name='res.company',
@@ -156,7 +157,7 @@ class CrossoveredBudgetLines(models.Model):
         self.name = computed_name
 
     
-    def _compute_practical_amount(self):
+    def _compute_amounts(self):
         for line in self:
             acc_ids = line.general_budget_id.account_ids.ids
             date_to = line.date_to
@@ -186,14 +187,9 @@ class CrossoveredBudgetLines(models.Model):
                 aml_obj._apply_ir_rules(where_query, 'read')
                 from_clause, where_clause, where_clause_params = where_query.get_sql()
                 select = "SELECT sum(credit)-sum(debit) from " + from_clause + " where " + where_clause
-
             self.env.cr.execute(select, where_clause_params)
-            practical_amount = self.env.cr.fetchone()[0] or 0.0
-            line.write({
-                'practical_amount': practical_amount,
-                'difference_amount': line.planned_amount - practical_amount,
-            })
-            line.computed_practical_amount = practical_amount
+            line.practical_amount = self.env.cr.fetchone()[0] or 0.0
+            line.difference_amount = line.planned_amount - line.practical_amount
 
     @api.constrains('general_budget_id', 'analytic_account_id')
     def _must_have_analytical_or_budgetary_or_both(self):
