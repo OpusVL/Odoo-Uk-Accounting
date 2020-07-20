@@ -279,9 +279,18 @@
                 <field name="analytic_account_id"/>
                 <field name="analytic_group_id" string="AA Group"/>
                 <field name="crossovered_budget_id"/>
-                <filter name="filter_not_cancelled" string="Not Cancelled" domain="[('crossovered_budget_state','!=','cancel')]"/>
+                <filter
+                    name="filter_not_cancelled"
+                    string="Not Cancelled"
+                    domain="[('crossovered_budget_state','!=','cancel')]"
+                />
                 <group expand="0" string="Group By">
-                    <filter name="group_crossevered_budgdet_id" string="Budgets" domain="[]" context="{'group_by':'crossovered_budget_id'}"/>
+                    <filter
+                        name="group_crossevered_budgdet_id"
+                        string="Budgets"
+                        domain="[]"
+                        context="{'group_by':'crossovered_budget_id'}"
+                    />
                     <filter
                         name="group_analytic_group_id"
                         string="AA Group"
