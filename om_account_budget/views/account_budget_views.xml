@@ -115,12 +115,10 @@
                                     <field
                                         name="practical_amount"
                                         readonly="1"
-                                        force_save="1"
                                         sum="Total Practical Amount"/>
                                     <field
                                         name="difference_amount"
                                         readonly="1"
-                                        force_save="1"
                                         sum="Total Difference"/>
                                     <button
                                         type="object"
@@ -293,12 +291,10 @@
                 <field name="computed_practical_amount" invisible="1"/>
                 <field name="practical_amount"
                        readonly="1"
-                       force_save="1"
                        sum="Total Practical Amount"
                 />
                 <field name="difference_amount"
                        readonly="1"
-                       force_save="1"
                        sum="Total Difference"/>
             </tree>
         </field>
@@ -322,11 +318,9 @@
                         <field name="computed_practical_amount" invisible="1"/>
                         <field name="practical_amount"
                                readonly="1"
-                               force_save="1"
                         />
                         <field name="difference_amount"
                                readonly="1"
-                               force_save="1"
                         />
                         <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                     </group>
