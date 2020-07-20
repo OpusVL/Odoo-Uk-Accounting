@@ -98,9 +98,13 @@
                     </group>
                     <notebook>
                         <page string="Budget Lines">
-                            <field name="crossovered_budget_line"
-                                   context="{'default_date_from': date_from,'default_date_to': date_to}" colspan="4"
-                                   nolabel="1" attrs="{'readonly':[('state','!=','draft')]}">
+                            <field
+                                name="crossovered_budget_line"
+                                context="{'default_date_from': date_from,'default_date_to': date_to}"
+                                colspan="4"
+                                nolabel="1"
+                                attrs="{'readonly':[('state','!=','draft')]}"
+                            >
                                 <tree
                                     string="Budget Lines"
                                     decoration-success="planned_amount &gt; 0"
