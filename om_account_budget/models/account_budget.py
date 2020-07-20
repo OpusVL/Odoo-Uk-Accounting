@@ -99,6 +99,7 @@ class CrossoveredBudgetLines(models.Model):
         string='Analytic Group',
         related='analytic_account_id.group_id',
         readonly=True,
+        store=True,
     )
     general_budget_id = fields.Many2one('account.budget.post', 'Budgetary Position')
     date_from = fields.Date('Start Date', required=True)
