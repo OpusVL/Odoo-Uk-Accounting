@@ -188,8 +188,9 @@ class CrossoveredBudgetLines(models.Model):
                 from_clause, where_clause, where_clause_params = where_query.get_sql()
                 select = "SELECT sum(credit)-sum(debit) from " + from_clause + " where " + where_clause
             self.env.cr.execute(select, where_clause_params)
-            line.practical_amount = self.env.cr.fetchone()[0] or 0.0
-            line.difference_amount = line.planned_amount - line.practical_amount
+            actual_amount = self.env.cr.fetchone()[0] or 0.0
+            line.practical_amount = actual_amount
+            line.difference_amount = line.planned_amount - actual_amount
 
     @api.constrains('general_budget_id', 'analytic_account_id')
     def _must_have_analytical_or_budgetary_or_both(self):
