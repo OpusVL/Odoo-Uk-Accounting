@@ -191,7 +191,7 @@ class CrossoveredBudgetLines(models.Model):
             actual_amount = self.env.cr.fetchone()[0] or 0.0
             line.write({
                 'practical_amount': actual_amount,
-                'difference_amount': line.planned_amount - actual_amount,
+                'difference_amount': actual_amount - line.planned_amount,
             })
             line.computed_practical_amount = actual_amount
             # I saw this write() and auxiliary computed field, and tried to switch to
