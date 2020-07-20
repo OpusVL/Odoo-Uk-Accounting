@@ -292,6 +292,12 @@
                         context="{'group_by':'crossovered_budget_id'}"
                     />
                     <filter
+                        name="groupby_analytic_account_id"
+                        string="Account"
+                        domain="[]"
+                        context="{'group_by':'analytic_account_id'}"
+                    />
+                    <filter
                         name="group_analytic_group_id"
                         string="AA Group"
                         domain="[]"
