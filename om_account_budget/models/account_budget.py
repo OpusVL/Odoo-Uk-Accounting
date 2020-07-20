@@ -101,8 +101,9 @@ class CrossoveredBudgetLines(models.Model):
         compute='_compute_practical_amount',
         string='Computed Practical Amount',
         help="Amount really earned/spent.")
-    practical_amount = fields.Monetary(string='Actual',
-                                       help="Amount really earned/spent.")
+    practical_amount = fields.Monetary(
+        string='Actual',
+        help="Amount really earned/spent.")
     difference_amount = fields.Monetary(string='Variance', )
     company_id = fields.Many2one(related='crossovered_budget_id.company_id', comodel_name='res.company',
         string='Company', store=True, readonly=True)
