@@ -106,6 +106,7 @@
                                     decoration-success="planned_amount &gt; 0"
                                     decoration-danger="planned_amount &lt; 0"
                                     editable="bottom"
+                                    default_order="general_budget_id"
                                 >
                                     <field name="general_budget_id"/>
                                     <field name="analytic_account_id" groups="analytic.group_analytic_accounting"/>
