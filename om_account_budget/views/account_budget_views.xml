@@ -276,6 +276,7 @@
         <field name="model">crossovered.budget.lines</field>
         <field name="arch" type="xml">
             <search string="Budget Lines">
+                <field name="account_id" string="Account"/>
                 <field name="analytic_account_id"/>
                 <field name="analytic_group_id" string="AA Group"/>
                 <field name="crossovered_budget_id"/>
