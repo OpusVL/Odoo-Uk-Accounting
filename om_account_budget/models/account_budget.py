@@ -127,6 +127,12 @@ class CrossoveredBudgetLines(models.Model):
         readonly=True,
         store=True,
     )
+    account_user_type_id = fields.Many2one(
+        string='Account Type',
+        comodel_name='account.account.type',
+        related='account_id.user_type_id',
+        readonly=True,
+    )
     date_from = fields.Date('Start Date', required=True)
     date_to = fields.Date('End Date', required=True)
     paid_date = fields.Date('Paid Date')
