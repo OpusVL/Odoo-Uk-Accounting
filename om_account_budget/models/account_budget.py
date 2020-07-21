@@ -132,6 +132,7 @@ class CrossoveredBudgetLines(models.Model):
         comodel_name='account.group',
         related='account_id.group_id',
         readonly=True,
+        store=True,
     )
     account_user_type_id = fields.Many2one(
         string='Account Type',
