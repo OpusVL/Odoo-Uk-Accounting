@@ -23,6 +23,7 @@ class AccountBudgetPost(models.Model):
         help='The account that related objects can use when they need a singleton',
     )
 
+    # TODO consider changing to an @api.constrains('account_ids')
     def _check_account_ids(self, vals):
         # Raise an error to prevent the account.budget.post to have not specified account_ids.
         # This check is done on create because require=True doesn't work on Many2many fields.
