@@ -276,11 +276,48 @@
         <field name="model">crossovered.budget.lines</field>
         <field name="arch" type="xml">
             <search string="Budget Lines">
+                <field name="account_id" string="Account"/>
+                <field name="account_group_id"/>
+                <field name="account_user_type_id"/>
                 <field name="analytic_account_id"/>
+                <field name="analytic_group_id" string="AA Group"/>
                 <field name="crossovered_budget_id"/>
-                <filter name="filter_not_cancelled" string="Not Cancelled" domain="[('crossovered_budget_state','!=','cancel')]"/>
+                <filter
+                    name="filter_not_cancelled"
+                    string="Not Cancelled"
+                    domain="[('crossovered_budget_state','!=','cancel')]"
+                />
                 <group expand="0" string="Group By">
-                    <filter name="group_crossevered_budgdet_id" string="Budgets" domain="[]" context="{'group_by':'crossovered_budget_id'}"/>
+                    <filter
+                        name="group_crossevered_budgdet_id"
+                        string="Budgets"
+                        domain="[]"
+                        context="{'group_by':'crossovered_budget_id'}"
+                    />
+                    <filter
+                        name="group_account_id"
+                        string="Account"
+                        domain="[]"
+                        context="{'group_by':'account_id'}"
+                    />
+                    <filter
+                        name="group_account_group_id"
+                        string="Account Group"
+                        domain="[]"
+                        context="{'group_by':'account_group_id'}"
+                    />
+                    <filter
+                        name="group_account_user_type_id"
+                        string="Account Type"
+                        domain="[]"
+                        context="{'group_by':'account_user_type_id'}"
+                    />
+                    <filter
+                        name="group_analytic_group_id"
+                        string="AA Group"
+                        domain="[]"
+                        context="{'group_by':'analytic_group_id'}"
+                    />
                 </group>
             </search>
 
