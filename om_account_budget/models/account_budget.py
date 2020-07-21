@@ -21,6 +21,11 @@ class AccountBudgetPost(models.Model):
         comodel_name='account.account',
         compute='_compute_first_account_id',
     )
+    main_account_id = fields.Many2one(
+        comodel_name='account.account',
+        related='first_account_id',
+        help='The account that related objects can use when they need a singleton',
+    )
 
     def _check_account_ids(self, vals):
         # Raise an error to prevent the account.budget.post to have not specified account_ids.
@@ -118,7 +123,7 @@ class CrossoveredBudgetLines(models.Model):
     account_id = fields.Many2one(
         string='Account',
         comodel_name='account.account',
-        related='general_budget_id.first_account_id',
+        related='general_budget_id.main_account_id',
         readonly=True,
         store=True,
     )
