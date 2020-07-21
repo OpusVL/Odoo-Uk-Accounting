@@ -300,6 +300,12 @@
                         context="{'group_by':'account_id'}"
                     />
                     <filter
+                        name="group_account_user_type_id"
+                        string="Account Type"
+                        domain="[]"
+                        context="{'group_by':'account_user_type_id'}"
+                    />
+                    <filter
                         name="group_analytic_group_id"
                         string="AA Group"
                         domain="[]"

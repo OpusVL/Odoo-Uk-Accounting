@@ -132,6 +132,7 @@ class CrossoveredBudgetLines(models.Model):
         comodel_name='account.account.type',
         related='account_id.user_type_id',
         readonly=True,
+        store=True,
     )
     date_from = fields.Date('Start Date', required=True)
     date_to = fields.Date('End Date', required=True)
