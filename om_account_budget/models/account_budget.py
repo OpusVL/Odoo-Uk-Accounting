@@ -194,6 +194,24 @@ class CrossoveredBudgetLines(models.Model):
                 'difference_amount': line.planned_amount - actual_amount,
             })
             line.computed_practical_amount = actual_amount
+            # I saw this write() and auxiliary computed field, and tried to switch to
+            # stored-computed fields for the practical_amount and difference_amount,
+            # not understanding why this hack existed.
+            # That prevented the values from updating when journal entries were
+            # posted.
+            # I'm not totally sure how this works still, but I suspect it's down to
+            # the non-stored computed_practical_amount being recomputed each time
+            # it is requested and forcing this write() to happen and store the values.
+            # This means when you want the up to date planned_amount or
+            # actual_amount, you must also request the computed_practical_amount,
+            # even if you just throw it away or make it invisible.
+            # If we wanted to query it with SQL, we might find it's sensible to
+            # have a cron job run this method every so often.
+            # DEBT: This is an extra burden on anybody calling this code, and we
+            #  should make the effort to turn it into a proper stored computed field,
+            #  with appropriate @api.depends(...) clauses (which, I realise, will be
+            #  a bit more involved than normal to construct).  Unless, that is,
+            #  having them as stored-computed fields would be a performance burden.
 
     @api.constrains('general_budget_id', 'analytic_account_id')
     def _must_have_analytical_or_budgetary_or_both(self):
