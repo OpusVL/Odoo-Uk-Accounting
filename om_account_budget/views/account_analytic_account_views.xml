@@ -25,10 +25,12 @@
                                         name="practical_amount"
                                         sum="Actual"
                                         readonly="1"
+                                        force_save="1"
                                         widget="monetary"/>
                                     <field
                                         name="difference_amount"
                                         readonly="1"
+                                        force_save="1"
                                         widget="monetary"
                                         sum="Total Difference"/>
                                 </tree>
