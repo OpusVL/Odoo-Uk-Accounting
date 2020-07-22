@@ -110,6 +110,9 @@
                                     <field name="currency_id" invisible="1"/>
                                     <field name="planned_amount" sum="Total Budget"/>
                                     <field
+                                        name="computed_practical_amount"
+                                        invisible="1"/>
+                                    <field
                                         name="practical_amount"
                                         readonly="1"
                                         sum="Total Practical Amount"/>
@@ -285,6 +288,7 @@
                 <field name="date_to"  />
                 <field name="paid_date" groups="base.group_no_one"  />
                 <field name="planned_amount"/>
+                <field name="computed_practical_amount" invisible="1"/>
                 <field name="practical_amount"
                        readonly="1"
                        sum="Total Practical Amount"
@@ -311,6 +315,7 @@
                         <field name="date_to"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="paid_date"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="planned_amount" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
+                        <field name="computed_practical_amount" invisible="1"/>
                         <field name="practical_amount"
                                readonly="1"
                         />
