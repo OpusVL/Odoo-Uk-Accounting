@@ -110,12 +110,17 @@
                                     <field name="currency_id" invisible="1"/>
                                     <field name="planned_amount" sum="Total Budget"/>
                                     <field
+                                        name="computed_practical_amount"
+                                        invisible="1"/>
+                                    <field
                                         name="practical_amount"
                                         readonly="1"
+                                        force_save="1"
                                         sum="Total Practical Amount"/>
                                     <field
                                         name="difference_amount"
                                         readonly="1"
+                                        force_save="1"
                                         sum="Total Difference"/>
                                     <button
                                         type="object"
@@ -285,12 +290,15 @@
                 <field name="date_to"  />
                 <field name="paid_date" groups="base.group_no_one"  />
                 <field name="planned_amount"/>
+                <field name="computed_practical_amount" invisible="1"/>
                 <field name="practical_amount"
                        readonly="1"
+                       force_save="1"
                        sum="Total Practical Amount"
                 />
                 <field name="difference_amount"
                        readonly="1"
+                       force_save="1"
                        sum="Total Difference"/>
             </tree>
         </field>
@@ -311,11 +319,14 @@
                         <field name="date_to"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="paid_date"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                         <field name="planned_amount" attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
+                        <field name="computed_practical_amount" invisible="1"/>
                         <field name="practical_amount"
                                readonly="1"
+                               force_save="1"
                         />
                         <field name="difference_amount"
                                readonly="1"
+                               force_save="1"
                         />
                         <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"  attrs="{'readonly':[('crossovered_budget_state','!=','draft')]}"/>
                     </group>

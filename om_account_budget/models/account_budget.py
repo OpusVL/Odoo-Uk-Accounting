@@ -99,17 +99,16 @@ class CrossoveredBudgetLines(models.Model):
         required=True,
         help="Amount you plan to earn/spend. Record a positive amount if it is a revenue and a negative amount if it is a cost.",
     )
+    computed_practical_amount = fields.Monetary(
+        compute='_compute_practical_amount',
+        string='Computed Practical Amount',
+        help="Amount really earned/spent.",
+    )
     practical_amount = fields.Monetary(
-        compute='_compute_amounts',
-        store=True,
         string='Actual',
         help="Amount really earned/spent.",
     )
-    difference_amount = fields.Monetary(
-        string='Variance',
-        compute='_compute_amounts',
-        store=True,
-    )
+    difference_amount = fields.Monetary(string='Variance')
     company_id = fields.Many2one(
         related='crossovered_budget_id.company_id',
         comodel_name='res.company',
@@ -157,7 +156,7 @@ class CrossoveredBudgetLines(models.Model):
         self.name = computed_name
 
     
-    def _compute_amounts(self):
+    def _compute_practical_amount(self):
         for line in self:
             acc_ids = line.general_budget_id.account_ids.ids
             date_to = line.date_to
@@ -187,10 +186,32 @@ class CrossoveredBudgetLines(models.Model):
                 aml_obj._apply_ir_rules(where_query, 'read')
                 from_clause, where_clause, where_clause_params = where_query.get_sql()
                 select = "SELECT sum(credit)-sum(debit) from " + from_clause + " where " + where_clause
+
             self.env.cr.execute(select, where_clause_params)
             actual_amount = self.env.cr.fetchone()[0] or 0.0
-            line.practical_amount = actual_amount
-            line.difference_amount = line.planned_amount - actual_amount
+            line.write({
+                'practical_amount': actual_amount,
+                'difference_amount': line.planned_amount - actual_amount,
+            })
+            line.computed_practical_amount = actual_amount
+            # I saw this write() and auxiliary computed field, and tried to switch to
+            # stored-computed fields for the practical_amount and difference_amount,
+            # not understanding why this hack existed.
+            # That prevented the values from updating when journal entries were
+            # posted.
+            # I'm not totally sure how this works still, but I suspect it's down to
+            # the non-stored computed_practical_amount being recomputed each time
+            # it is requested and forcing this write() to happen and store the values.
+            # This means when you want the up to date planned_amount or
+            # actual_amount, you must also request the computed_practical_amount,
+            # even if you just throw it away or make it invisible.
+            # If we wanted to query it with SQL, we might find it's sensible to
+            # have a cron job run this method every so often.
+            # DEBT: This is an extra burden on anybody calling this code, and we
+            #  should make the effort to turn it into a proper stored computed field,
+            #  with appropriate @api.depends(...) clauses (which, I realise, will be
+            #  a bit more involved than normal to construct).  Unless, that is,
+            #  having them as stored-computed fields would be a performance burden.
 
     @api.constrains('general_budget_id', 'analytic_account_id')
     def _must_have_analytical_or_budgetary_or_both(self):
