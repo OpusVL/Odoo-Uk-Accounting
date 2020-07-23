@@ -172,8 +172,8 @@ class CrossoveredBudgetLines(models.Model):
     def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
         # overrides the default read_group in order to compute the computed fields manually for the group
 
-        result = super(CrossoveredBudgetLines, self).read_group(domain, fields, groupby, offset=offset, limit=limit,
-                                                                orderby=orderby, lazy=lazy)
+        result = super(CrossoveredBudgetLines, self).read_group(
+            domain, fields, groupby, offset=offset, limit=limit, orderby=orderby, lazy=lazy)
         fields_list = ['practical_amount']
         if any(x in fields for x in fields_list):
             for group_line in result:
