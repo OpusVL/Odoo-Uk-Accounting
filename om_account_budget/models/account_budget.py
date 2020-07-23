@@ -17,7 +17,13 @@ class AccountBudgetPost(models.Model):
         domain=[('deprecated', '=', False)])
     company_id = fields.Many2one('res.company', 'Company', required=True,
         default=lambda self: self.env['res.company']._company_default_get('account.budget.post'))
+    main_account_id = fields.Many2one(
+        comodel_name='account.account',
+        compute='_compute_main_account_id',
+        help='The account that related objects can use when they need a singleton',
+    )
 
+    # TODO consider changing to an @api.constrains('account_ids')
     def _check_account_ids(self, vals):
         # Raise an error to prevent the account.budget.post to have not specified account_ids.
         # This check is done on create because require=True doesn't work on Many2many fields.
@@ -27,6 +33,12 @@ class AccountBudgetPost(models.Model):
             account_ids = self.account_ids
         if not account_ids:
             raise ValidationError(_('The budget must have at least one account.'))
+
+    @api.depends('account_ids')
+    def _compute_main_account_id(self):
+        for budgetary_position in self:
+            budgetary_position.main_account_id = \
+                first_or_null(budgetary_position.account_ids)
 
     @api.model
     def create(self, vals):
@@ -86,10 +98,43 @@ class CrossoveredBudgetLines(models.Model):
     _description = "Budget Line"
 
     name = fields.Char(compute='_compute_line_name')
-    crossovered_budget_id = fields.Many2one('crossovered.budget', 'Budget', ondelete='cascade', index=True, required=True)
+    crossovered_budget_id = fields.Many2one(
+        comodel_name='crossovered.budget',
+        string='Budget',
+        ondelete='cascade',
+        index=True,
+        required=True,
+    )
     analytic_account_id = fields.Many2one('account.analytic.account', 'Analytic Account')
-    analytic_group_id = fields.Many2one('account.analytic.group', 'Analytic Group', related='analytic_account_id.group_id', readonly=True)
+    analytic_group_id = fields.Many2one(
+        comodel_name='account.analytic.group',
+        string='Analytic Group',
+        related='analytic_account_id.group_id',
+        readonly=True,
+        store=True,
+    )
     general_budget_id = fields.Many2one('account.budget.post', 'Budgetary Position')
+    account_id = fields.Many2one(
+        string='Account',
+        comodel_name='account.account',
+        related='general_budget_id.main_account_id',
+        readonly=True,
+        store=True,
+    )
+    account_group_id = fields.Many2one(
+        string='Account Group',
+        comodel_name='account.group',
+        related='account_id.group_id',
+        readonly=True,
+        store=True,
+    )
+    account_user_type_id = fields.Many2one(
+        string='Account Type',
+        comodel_name='account.account.type',
+        related='account_id.user_type_id',
+        readonly=True,
+        store=True,
+    )
     date_from = fields.Date('Start Date', required=True)
     date_to = fields.Date('End Date', required=True)
     paid_date = fields.Date('Paid Date')
@@ -127,8 +172,8 @@ class CrossoveredBudgetLines(models.Model):
     def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
         # overrides the default read_group in order to compute the computed fields manually for the group
 
-        result = super(CrossoveredBudgetLines, self).read_group(domain, fields, groupby, offset=offset, limit=limit,
-                                                                orderby=orderby, lazy=lazy)
+        result = super(CrossoveredBudgetLines, self).read_group(
+            domain, fields, groupby, offset=offset, limit=limit, orderby=orderby, lazy=lazy)
         fields_list = ['practical_amount']
         if any(x in fields for x in fields_list):
             for group_line in result:
@@ -191,7 +236,7 @@ class CrossoveredBudgetLines(models.Model):
             actual_amount = self.env.cr.fetchone()[0] or 0.0
             line.write({
                 'practical_amount': actual_amount,
-                'difference_amount': line.planned_amount - actual_amount,
+                'difference_amount': actual_amount - line.planned_amount,
             })
             line.computed_practical_amount = actual_amount
             # I saw this write() and auxiliary computed field, and tried to switch to
@@ -258,3 +303,23 @@ class CrossoveredBudgetLines(models.Model):
                     raise ValidationError(_(
                         '"End Date" of the budget line should be included in '
                         'the Period of the budget'))
+
+
+# TODO belongs in a library
+def first_or_null(recset):
+    """Return the first of the recordset, or the null object of same type if empty"""
+    if recset:
+        return recset[0]
+    else:
+        return null_object(recset)
+
+
+# TODO belongs in a library
+def null_object(recset):
+    """Return an the null object for the given recset's type.
+
+    For example you could give it a recordset of account.account,
+    of any size, and it will return you the null (unset) value for that record
+    type.
+    """
+    return recset.env[recset._name]
