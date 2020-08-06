@@ -943,7 +943,8 @@ class AccountAssetDepreciationLine(models.Model):
             created_moves |= move
 
         if post_move and created_moves:
-            created_moves.post()
+            for created_move in created_moves:
+                created_move.post()
         return [x.id for x in created_moves]
 
     def create_grouped_move(self, post_move=True):
@@ -1087,9 +1088,9 @@ class AssetDepreciationLog(models.Model):
         depreciation_lin_obj = self.env['account.asset.depreciation.line']
         depreciation_lines = depreciation_lin_obj.search([
             ('move_id', 'in', tuple([move.id for move in self.move_ids]))])
-        depreciation_lines.write({'state': 'confirm', 'move_id': False})
+        depreciation_lines.write({'move_id': False})
+        self.move_ids.button_draft()
         self.move_ids.button_cancel()
-        self.move_ids.unlink()
         return self.write({'state': 'draft'})
 
     def unlink(self):
