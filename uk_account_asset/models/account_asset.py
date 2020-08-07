@@ -124,6 +124,14 @@ class AccountAssetCategory(models.Model):
         if self.method_time != 'number':
             self.prorata = False
 
+    @api.onchange('method')
+    def onchange_method(self):
+        self.year_depreciation = False
+        self.years = 1
+        if self.method == 'linear':
+            self.border_amount = 0.0
+            self.min_amount = 0.0
+
 
 class AccountAssetAsset(models.Model):
     _name = 'account.asset.asset'
@@ -303,47 +311,6 @@ class AccountAssetAsset(models.Model):
                 asset_date, False, False, group_entries=True)
         return created_move_ids
 
-    def _compute_board_amount(
-            self, sequence, residual_amount, amount_to_depr,
-            undone_dotation_number, posted_depreciation_line_ids, total_days,
-            depreciation_date):
-        amount = 0
-        if sequence == undone_dotation_number:
-            amount = residual_amount
-        else:
-            if self.method == 'linear':
-                amount = amount_to_depr / (undone_dotation_number - len(
-                    posted_depreciation_line_ids))
-                if self.prorata:
-                    amount = amount_to_depr / self.method_number
-                    if sequence == 1:
-                        if self.method_period % 12 != 0:
-                            asset_date = datetime.strptime(self.date, '%Y-%m-%d')
-                            month_days = calendar.monthrange(
-                                asset_date.year, asset_date.month)[1]
-                            days = month_days - asset_date.day + 1
-                            amount = (amount_to_depr / self.method_number) / month_days * days
-                        else:
-                            days = (self.company_id.compute_fiscalyear_dates(
-                                depreciation_date)['date_to'] - depreciation_date
-                                    ).days + 1
-                            amount = (amount_to_depr / self.method_number) / total_days * days
-            elif self.method == 'degressive':
-                amount = residual_amount * self.method_progress_factor
-                if self.prorata:
-                    if sequence == 1:
-                        if self.method_period % 12 != 0:
-                            asset_date = datetime.strptime(self.date, '%Y-%m-%d')
-                            month_days = calendar.monthrange(
-                                asset_date.year, asset_date.month)[1]
-                            days = month_days - asset_date.day + 1
-                            amount = (residual_amount * self.method_progress_factor) / month_days * days
-                        else:
-                            days = (self.company_id.compute_fiscalyear_dates(
-                                depreciation_date)['date_to'] - depreciation_date).days + 1
-                            amount = (residual_amount * self.method_progress_factor) / total_days * days
-        return amount
-
     def _compute_board_undone_dotation_nb(self, depreciation_date):
         undone_dotation_number = self.method_number
         if self.method_time == 'end':
@@ -361,164 +328,15 @@ class AccountAssetAsset(models.Model):
 
     def compute_depreciation_board(self):
         self.ensure_one()
-        if self.computation_type == 'management':
-            self.compute_depreciation_board_management()
-        else:
-            self.compute_depreciation_board_legal()
-        return True
-
-    def compute_depreciation_board_management(self):
-        self.ensure_one()
-
-        posted_depreciation_line_ids = self.depreciation_line_ids.filtered(
-            lambda x: x.move_check).sorted(key=lambda l: l.depreciation_date)
-        unposted_depreciation_line_ids = self.depreciation_line_ids.filtered(
-            lambda x: not x.move_check)
-
-        # Remove old unposted depreciation lines.
-        depreciation_lines = [
-            (2, line_id.id, False) for line_id in unposted_depreciation_line_ids
-        ]
-
-        if self.value_residual != 0.0:
-            amount_to_depr = residual_amount = self.value_residual
-            if self.prorata:
-                # If we already have some previous validated entries,
-                # starting date is last entry + method period
-                if posted_depreciation_line_ids and posted_depreciation_line_ids[-1].depreciation_date:
-                    depreciation_date = posted_depreciation_line_ids[-1].depreciation_date + relativedelta(
-                        months=+self.method_period)
-                else:
-                    depreciation_date = self._get_last_depreciation_date()[self.id]
-            else:
-                # depreciation_date = 1st of January of purchase year if annual
-                # valuation, 1st of purchase month in other cases
-                if self.method_period >= 12:
-                    asset_date = date(self.date.year, 1, 1)
-                else:
-                    asset_date = self.date.replace(day=1)
-                # if we already have some previous validated entries,
-                # starting date isn't 1st January but last entry + method period
-                if posted_depreciation_line_ids and posted_depreciation_line_ids[-1].depreciation_date:
-                    depreciation_date = posted_depreciation_line_ids[-1].depreciation_date + relativedelta(
-                        months=+self.method_period)
-                else:
-                    depreciation_date = asset_date
-            day = depreciation_date.day
-            month = depreciation_date.month
-            year = depreciation_date.year
-            total_days = (year % 4) and 365 or 366
-
-            undone_dotation_number = self._compute_board_undone_dotation_nb(
-                depreciation_date)
-
-            for x in range(
-                    len(posted_depreciation_line_ids), undone_dotation_number):
-                sequence = x + 1
-                amount = self._compute_board_amount(
-                    sequence, residual_amount, amount_to_depr,
-                    undone_dotation_number, posted_depreciation_line_ids,
-                    total_days, depreciation_date)
-                amount = self.currency_id.round(amount)
-                if float_is_zero(amount,
-                                 precision_rounding=self.currency_id.rounding):
-                    continue
-                residual_amount -= amount
-                vals = {
-                    'amount': amount,
-                    'asset_id': self.id,
-                    'sequence': sequence,
-                    'name': (self.code or '') + '/' + str(sequence),
-                    'remaining_value': residual_amount,
-                    'depreciated_value': self.value - (
-                            self.salvage_value + residual_amount),
-                    'depreciation_date': depreciation_date.strftime(DF),
-                }
-                depreciation_lines.append((0, False, vals))
-                # Considering Depr. Period as months
-                depreciation_date = date(year, month, day) + relativedelta(
-                    months=+self.method_period)
-                day = depreciation_date.day
-                month = depreciation_date.month
-                year = depreciation_date.year
-
-        self.write({'depreciation_line_ids': depreciation_lines})
-
-        return True
-
-    def action_view_account_move(self):
-        action = self.env.ref('account.action_move_line_form').read()[0]
-
-        moves = self.mapped('move_ids')
-        if len(moves) > 1:
-            action['domain'] = [('id', 'in', moves.ids)]
-        elif moves:
-            action['views'] = [
-                (self.env.ref('account.view_move_form').id, 'form')
-            ]
-            action['res_id'] = moves.id
-        return action
-
-    def compute_depreciation_board_legal(self):
-        depreciation_lin_obj = self.env['account.asset.depreciation.line']
-        for asset in self:
-            old_depreciation_line_ids = depreciation_lin_obj.search([
-                ('asset_id', '=', asset.id), ('move_id', '=', False)])
-            if old_depreciation_line_ids:
-                old_depreciation_line_ids.unlink()
-
-            if not asset.value_residual:
-                continue
-            if not asset.method_progress_factor:
-                continue
-            if asset.year_depreciation:
-                asset.compute_year_depreciation_board_legal()
-            else:
-                asset.compute_not_year_depreciation_board_legal()
-        return True
-
-    def compute_year_depreciation_board_legal(self):
-        depreciation_lin_obj = self.env['account.asset.depreciation.line']
-        depreciated_value = 0
-        amount_to_depr = remaining_value = self.value_residual
-        depreciation_date = self._get_last_depreciation_date()[self.id]
-        depreciation_date = (depreciation_date - relativedelta(
-            days=depreciation_date.day - 1)) + relativedelta(months=1)
-        debreciation_move_date = (depreciation_date + relativedelta(
-            months=1) - relativedelta(days=1))
-        purchase_begining_month_date = self.date
-        purchase_begining_month_date = purchase_begining_month_date + relativedelta(
-            months=1) - relativedelta(days=purchase_begining_month_date.day - 1)
-        total_passed_months = month_difference(
-            purchase_begining_month_date, depreciation_date)
-        total_depreciation_months = self.years * 12
-        total_remaining_months = total_depreciation_months - total_passed_months
-        amount_per_month = amount_to_depr * 1.0 / total_remaining_months
-        for i in range(0, total_remaining_months):
-            if i == total_remaining_months - 1:
-                amount_per_month = amount_to_depr
-            amount_per_month = round(amount_per_month, 2)
-            amount_to_depr = amount_to_depr - amount_per_month
-            vals = {
-                'amount': amount_per_month,
-                'asset_id': self.id,
-                'sequence': i + 1,
-                'name': str(self.id) + '/' + str(i + 1),
-                'remaining_value': remaining_value,
-                'depreciated_value': self.value_residual - remaining_value,
-                'depreciation_date': debreciation_move_date.strftime(
-                    '%Y-%m-%d'),
-            }
-            remaining_value -= amount_per_month
-            depreciated_value += amount_per_month
-            depreciation_lin_obj.create(vals)
-            depreciation_date = (depreciation_date + relativedelta(
-                months=1))
-            debreciation_move_date = (depreciation_date + relativedelta(
-                months=1) - relativedelta(days=1))
-
-    def compute_not_year_depreciation_board_legal(self):
-        depreciation_lin_obj = self.env['account.asset.depreciation.line']
+        depreciation_line = self.env['account.asset.depreciation.line']
+        old_depreciation_line_ids = depreciation_line.search([
+            ('asset_id', '=', self.id), ('move_id', '=', False)])
+        if old_depreciation_line_ids:
+            old_depreciation_line_ids.unlink()
+        if not self.value_residual:
+            return False
+        if not self.method_progress_factor:
+            return False
         amount_to_depr = depreciation_factor = remaining_value = self.value_residual
         depreciation_date = self._get_last_depreciation_date()[self.id]
         depreciation_date = (depreciation_date - relativedelta(
@@ -533,17 +351,16 @@ class AccountAssetAsset(models.Model):
             i += 1
             sequence += 1
             depreciation_amount = depreciation_factor * self.method_progress_factor
-            loop_number = 13 - depreciation_date.month
-            amount_per_month = depreciation_amount / 12
+            loop_number = int((13 - depreciation_date.month) / self.method_period) + 1
+            amount_per_period = depreciation_amount / 12 * self.method_period
             if self.method == 'degressive':
-                depreciation_factor = depreciation_factor - loop_number * amount_per_month
-
+                depreciation_factor = depreciation_factor - loop_number * amount_per_period
             for j in range(0, loop_number):
                 sequence += 1
-                amount_to_depr = amount_to_depr - amount_per_month
+                amount_to_depr = amount_to_depr - amount_per_period
 
                 vals = {
-                    'amount': amount_per_month,
+                    'amount': amount_per_period,
                     'asset_id': self.id,
                     'sequence': sequence,
                     'name': str(self.id) + '/' + str(i),
@@ -554,30 +371,30 @@ class AccountAssetAsset(models.Model):
                         debreciation_move_date.strftime('%Y-%m-%d'),
                 }
 
-                remaining_value -= amount_per_month
-                depreciated_value += amount_per_month
-                depreciation_lin_obj.create(vals)
+                remaining_value -= amount_per_period
+                depreciated_value += amount_per_period
+                depreciation_line.create(vals)
                 depreciation_date = (depreciation_date + relativedelta(
-                    months=1))
+                    months=self.method_period))
                 debreciation_move_date = (depreciation_date + relativedelta(
-                    months=1) - relativedelta(days=1))
+                    months=self.method_period) - relativedelta(days=1))
                 if remaining_value < 0.01:
                     return True
         depreciation_amount = amount_to_depr
-        loop_number = 13 - depreciation_date.month
-        amount_per_month = round(depreciation_amount / loop_number, 2)
-        last_amount_per_month = depreciation_amount - (
-                loop_number - 1) * amount_per_month
+        loop_number = int((13 - depreciation_date.month) / self.method_period) + 1
+        amount_per_period = round(depreciation_amount / loop_number, 2)
+        last_amount_per_period = depreciation_amount - (
+                loop_number - 1) * amount_per_period
         for j in range(0, loop_number):
             sequence += 1
             if j == loop_number - 1:
-                amount_per_month = last_amount_per_month
-            if remaining_value < amount_per_month:
-                remaining_value = amount_per_month
+                amount_per_period = amount_per_period
+            if remaining_value < amount_per_period:
+                amount_per_period = last_amount_per_period
 
-            amount_to_depr = amount_to_depr - amount_per_month
+            amount_to_depr = amount_to_depr - amount_per_period
             vals = {
-                'amount': amount_per_month,
+                'amount': amount_per_period,
                 'asset_id': self.id,
                 'sequence': sequence,
                 'name': str(self.id) + '/' + str(i),
@@ -586,14 +403,28 @@ class AccountAssetAsset(models.Model):
                 'depreciation_date':
                     debreciation_move_date.strftime('%Y-%m-%d'),
             }
-            remaining_value -= amount_per_month
+            remaining_value -= amount_per_period
 
-            depreciated_value += amount_per_month
-            depreciation_lin_obj.create(vals)
+            depreciated_value += amount_per_period
+            depreciation_line.create(vals)
             depreciation_date = (depreciation_date + relativedelta(
-                months=1))
+                months=self.method_period))
             debreciation_move_date = (depreciation_date + relativedelta(
-                months=1) - relativedelta(days=1))
+                months=self.method_period) - relativedelta(days=1))
+        return True
+
+    def action_view_account_move(self):
+        action = self.env.ref('account.action_move_line_form').read()[0]
+
+        moves = self.mapped('move_ids')
+        if len(moves) > 1:
+            action['domain'] = [('id', 'in', moves.ids)]
+        elif moves:
+            action['views'] = [
+                (self.env.ref('account.view_move_form').id, 'form')
+            ]
+            action['res_id'] = moves.id
+        return action
 
     def do_change_accumulated_account(self, datas):
         """ Changes the Standard Price of Product and creates an account move
@@ -720,12 +551,6 @@ class AccountAssetAsset(models.Model):
                 'res_id': move_ids[0],
             }
 
-    def set_to_close_legal(self):
-        if self.depreciation_line_ids:
-            for depreciation_line in self.depreciation_line_ids:
-                depreciation_line.write({'state': 'done'})
-        self.write({'state': 'close'})
-
     def set_to_draft(self):
         if self.mapped('move_ids'):
             self.mapped('move_ids').button_cancel()
@@ -778,6 +603,20 @@ class AccountAssetAsset(models.Model):
     def onchange_method_time(self):
         if self.method_time != 'number':
             self.prorata = False
+
+    @api.onchange('method')
+    def onchange_method(self):
+        self.year_depreciation = False
+        self.years = 1
+        if self.method == 'linear':
+            self.border_amount = 0.0
+
+    @api.onchange('year_depreciation', 'years', 'method_period')
+    def onchange_year_depreciation(self):
+        if self.year_depreciation and self.years:
+            self.method_progress_factor = 1 / self.years
+            if self.method_period:
+                self.method_number = self.years * 12 / self.method_period
 
     @api.onchange('value', 'category_id')
     def onchange_value(self):
