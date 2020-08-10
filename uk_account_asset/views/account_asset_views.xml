@@ -208,7 +208,7 @@
                         <group>
                             <field name="category_id" domain="[('type', '=', 'purchase')]" context="{'default_type': 'purchase'}" help="Category of asset"/>
                             <field name="product_id"/>
-                            <field name="code"/>
+                            <field name="code" readonly="1" force_save="1"/>
                             <field name="serial_nr"/>
                             <field name="date" help="Date of asset"/>
                             <field name="type" invisible="1"/>
@@ -295,12 +295,13 @@
                 <field name="category_id"/>
                 <field name="date"/>
                 <field name="state"/>
+                <field name="code"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div t-attf-class="oe_kanban_global_click">
                             <div class="row mb4">
                                 <div class="col-xs-6">
-                                    <strong><span><t t-esc="record.name.value"/></span></strong>
+                                    <strong><span><t t-esc="record.name.value"/>[<t t-esc="record.code.value"/>]</span></strong>
                                 </div>
                                 <div class="col-xs-6 pull-right text-right">
                                     <strong><t t-esc="record.date.value"/></strong>
@@ -329,6 +330,7 @@
         <field name="arch" type="xml">
             <tree string="Assets" decoration-info="(state == 'draft')" decoration-muted="(state == 'close')">
                 <field name="name"/>
+                <field name="code"/>
                 <field name="category_id"/>
                 <field name="date"/>
                 <field name="partner_id" string="Vendor"/>
@@ -347,7 +349,7 @@
         <field name="model">account.asset.asset</field>
         <field name="arch" type="xml">
             <search string="Asset Account">
-                <field name="name" string="Asset"/>
+                <field name="name" string="Asset" filter_domain="['|',('code','ilike',self),('name','ilike',self)]"/>
                 <field name="date"/>
                 <filter string="Current" name="current"
                         domain="[('state','in', ('draft','open'))]"

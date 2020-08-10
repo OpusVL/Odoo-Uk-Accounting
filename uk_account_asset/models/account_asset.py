@@ -105,6 +105,13 @@ class AccountAssetCategory(models.Model):
         'res.currency', 'Currency', required=True,
         default=lambda self: self.env.company.currency_id)
 
+    def name_get(self):
+        res = []
+        for category in self:
+            name = "[{}] {}".format(category.code, category.name)
+            res.append((category.id, name))
+        return res
+
     @api.onchange('account_asset_id')
     def onchange_account_asset(self):
         if self.type == "purchase":
@@ -479,7 +486,8 @@ class AccountAssetAsset(models.Model):
         return True
 
     def validate(self):
-        self.write({'state': 'open'})
+        code = self.get_asset_code()
+        self.write({'state': 'open', 'code':code})
         asset_fields = [
             'method',
             'method_number',
@@ -570,13 +578,24 @@ class AccountAssetAsset(models.Model):
         if self.mapped('depreciation_line_ids'):
             self.mapped('depreciation_line_ids').unlink()
         self.write({'state': 'draft', 'value_alr_accumulated': 0,
-                    'date_value_alr_acc': False})
+                    'date_value_alr_acc': False, 'code': False})
 
     def set_to_open(self):
         if self.depreciation_line_ids:
             for depreciation_line in self.depreciation_line_ids:
                 depreciation_line.write({'state': 'confirm'})
         self.write({'state': 'open'})
+        
+    def get_asset_code(self):
+        total_asset_ids = self.search([
+            ('code', '!=', False),
+            ('category_id', '=', self.category_id.id),
+        ])
+        sequence = len(total_asset_ids) + 1
+        no_digits = len(str(sequence)) if sequence >= 10000 else 4
+        code = '{}{}'.format(self.category_id.code, str(sequence).zfill(
+            no_digits))
+        return code
 
     @api.depends('value', 'salvage_value', 'depreciation_line_ids.move_check',
                  'depreciation_line_ids.amount', 'value_alr_accumulated')
