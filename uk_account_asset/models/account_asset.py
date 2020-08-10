@@ -30,6 +30,7 @@ class AccountAssetCategory(models.Model):
 
     active = fields.Boolean(default=True)
     name = fields.Char(required=True, index=True, string="Asset Type")
+    code = fields.Char(required=True, index=True, string="Category Code")
     account_analytic_id = fields.Many2one('account.analytic.account',
                                           string='Analytic Account')
     account_asset_id = fields.Many2one(

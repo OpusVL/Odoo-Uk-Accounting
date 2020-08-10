@@ -26,6 +26,7 @@
                         <label for="name" string="Deferred Revenue Type" class="oe_edit_only" attrs="{'invisible': [('type','==','purchase')]}"/>
                         <h1>
                             <field name="name" placeholder="e.g. Computers"/>
+                            <field name="code" placeholder="e.g. XYZ"/>
                         </h1>
                     </div>
                     <group>
@@ -97,16 +98,17 @@
         <field name="arch" type="xml">
             <kanban class="o_kanban_mobile">
                 <field name="name"/>
+                <field name="code"/>
                 <field name="journal_id"/>
                 <field name="method"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div t-attf-class="oe_kanban_card oe_kanban_global_click">
-                            <div class="row mb4">
-                                <div class="col-xs-6">
-                                    <strong><span><t t-esc="record.name.value"/></span></strong>
+                            <div class="row mb4" style="margin-left:1px;">
+                                <div class="col-xs-8">
+                                    <strong><span><t t-esc="record.name.value"/>[<t t-esc="record.code.value"/>]</span></strong>
                                 </div>
-                                <div class="col-xs-6 text-right">
+                                <div class="col-xs-4 text-right">
                                     <span class="badge"><strong><t t-esc="record.method.value"/></strong></span>
                                 </div>
                             </div>
@@ -123,6 +125,7 @@
         <field name="model">account.asset.category</field>
         <field name="arch" type="xml">
             <tree string="Asset category">
+                <field name="code"/>
                 <field name="name"/>
                 <field name="journal_id"/>
                 <field name="method"/>
