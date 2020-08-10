@@ -11,3 +11,5 @@ access_account_asset_depreciation_line_invoicing_payment,account.asset.depreciat
 access_account_asset_asset_employee_hr,account_asset_asset Employee,model_account_asset_asset,base.group_user,1,0,0,0
 access_asset_depreciation_log_manager,asset.depreciation.log,model_asset_depreciation_log,account.group_account_manager,1,1,1,1
 access_account_asset_depreciation_line_employee,account.asset.depreciation.line,model_account_asset_depreciation_line,base.group_user,1,0,0,0
+access_account_asset_group,account.asset.group,model_account_asset_group,account.group_account_user,1,0,0,0
+access_account_asset_group_manager,account.asset.group,model_account_asset_group,account.group_account_manager,1,1,1,1

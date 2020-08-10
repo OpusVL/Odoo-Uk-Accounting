@@ -11,6 +11,65 @@
 
     <menuitem id="account_asset_menu" name="Assets Report"
               parent="menu_assets" sequence="10" groups="account.group_account_manager"/>
+
+    <!--
+        Asset Group
+     -->
+
+    <record model="ir.ui.view" id="view_account_asset_group_form">
+        <field name="name">account.asset.group.form</field>
+        <field name="model">account.asset.group</field>
+        <field name="arch" type="xml">
+            <form string="Asset category">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Asset Group" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Computers"/>
+                        </h1>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+     <record model="ir.ui.view" id="view_account_asset_group_tree">
+        <field name="name">account.asset.group.tree</field>
+        <field name="model">account.asset.group</field>
+        <field name="arch" type="xml">
+            <tree string="Asset group" editable="bottom">
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="view_account_asset_group_search">
+        <field name="name">account.asset.group.search</field>
+        <field name="model">account.asset.group</field>
+        <field name="arch" type="xml">
+            <search string="Search Asset Group">
+                <field name="name" string="Asset Group"/>
+                <group expand="0" string="Group By...">
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_account_asset_group">
+        <field name="name">Asset Groups</field>
+        <field name="res_model">account.asset.group</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="view_account_asset_group_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                Asset Group
+            </p>
+        </field>
+    </record>
+
+    <menuitem parent="menu_asset_configuration" id="menu_action_account_asset_group"
+              action="action_account_asset_group" sequence="2"/>
+
     <!--
         Asset Category
      -->
@@ -207,6 +266,7 @@
                     <group>
                         <group>
                             <field name="category_id" domain="[('type', '=', 'purchase')]" context="{'default_type': 'purchase'}" help="Category of asset"/>
+                            <field name="group_id" widget="selection"/>
                             <field name="product_id"/>
                             <field name="code" readonly="1" force_save="1"/>
                             <field name="serial_nr"/>
@@ -293,6 +353,7 @@
             <kanban class="o_kanban_mobile">
                 <field name="name"/>
                 <field name="category_id"/>
+                <field name="group_id"/>
                 <field name="date"/>
                 <field name="state"/>
                 <field name="code"/>
@@ -317,6 +378,11 @@
                                     </span>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-xs-12 text-muted">
+                                    <span><t t-esc="record.group_id.value"/></span>
+                                </div>
+                            </div>
                         </div>
                     </t>
                 </templates>
@@ -331,6 +397,7 @@
             <tree string="Assets" decoration-info="(state == 'draft')" decoration-muted="(state == 'close')">
                 <field name="name"/>
                 <field name="code"/>
+                <field name="group_id"/>
                 <field name="category_id"/>
                 <field name="date"/>
                 <field name="partner_id" string="Vendor"/>
@@ -358,11 +425,14 @@
                         domain="[('state','=', 'close')]" help="Assets in closed state"/>
                 <field name="product_id"/>
                 <field name="category_id"/>
+                <field name="group_id"/>
                 <field name="partner_id" filter_domain="[('partner_id','child_of',self)]"/>
                 <group expand="0" string="Group By...">
                         <filter string="Month" name="group_by_month" domain="[]" context="{'group_by':'date'}"/>
                         <filter string="Category" name="group_by_category"
                                 domain="[]" context="{'group_by':'category_id'}"/>
+                        <filter string="Asset Group" name="group_by_asset_group"
+                                domain="[]" context="{'group_by':'group_id'}"/>
                 </group>
             </search>
         </field>

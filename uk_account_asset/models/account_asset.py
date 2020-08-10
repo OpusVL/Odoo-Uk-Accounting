@@ -24,6 +24,12 @@ def month_difference(d1, d2):
     return difference
 
 
+class AccountAssetGroup(models.Model):
+    _name = 'account.asset.group'
+
+    name = fields.Char(required=True, index=True, string="Asset Group")
+
+
 class AccountAssetCategory(models.Model):
     _name = 'account.asset.category'
     _description = 'Asset category'
@@ -170,6 +176,10 @@ class AccountAssetAsset(models.Model):
         'account.asset.category', string='Category',
         required=True, change_default=True, readonly=True,
         states={'draft': [('readonly', False)]})
+    group_id = fields.Many2one(
+        'account.asset.group', string='Asset Group',
+        required=True, change_default=True, readonly=True,
+        states={'draft': [('readonly', False)]})
     date = fields.Date(string='Date', required=True, readonly=True,
                        states={'draft': [('readonly', False)]},
                        default=fields.Date.context_today, )
@@ -272,6 +282,10 @@ class AccountAssetAsset(models.Model):
                 raise UserError(_(
                     'You cannot delete a document which is in %s state.') % (
                     asset.state,))
+            if asset.code:
+                raise UserError(_(
+                    'You cannot delete a fixed asset which is confirmed once, '
+                    'We suggest to archive it instead'))
             for depreciation_line in asset.depreciation_line_ids:
                 if depreciation_line.move_id:
                     raise UserError(_('You cannot delete a document that '
@@ -578,7 +592,7 @@ class AccountAssetAsset(models.Model):
         if self.mapped('depreciation_line_ids'):
             self.mapped('depreciation_line_ids').unlink()
         self.write({'state': 'draft', 'value_alr_accumulated': 0,
-                    'date_value_alr_acc': False, 'code': False})
+                    'date_value_alr_acc': False})
 
     def set_to_open(self):
         if self.depreciation_line_ids:
@@ -587,11 +601,16 @@ class AccountAssetAsset(models.Model):
         self.write({'state': 'open'})
         
     def get_asset_code(self):
-        total_asset_ids = self.search([
+        active_asset_ids = self.search([
+            ('code', '!=', False),
+            ('category_id', '=', self.category_id.id)
+        ])
+        archive_asset_ids = self.search([
             ('code', '!=', False),
             ('category_id', '=', self.category_id.id),
+            ('active', '=', False)
         ])
-        sequence = len(total_asset_ids) + 1
+        sequence = len(active_asset_ids) + len(archive_asset_ids) + 1
         no_digits = len(str(sequence)) if sequence >= 10000 else 4
         code = '{}{}'.format(self.category_id.code, str(sequence).zfill(
             no_digits))
@@ -696,6 +715,10 @@ class AccountAssetAsset(models.Model):
         return asset
 
     def write(self, vals):
+        if 'active' in vals:
+            if self.state != 'draft':
+                raise UserError(
+                    _('Cannot Activate/Archive the asset, expect draft state!'))
         res = super(AccountAssetAsset, self).write(vals)
         if 'depreciation_line_ids' not in vals and 'state' not in vals:
             for rec in self:
