@@ -229,7 +229,8 @@
                                 <tree string="Depreciation Lines" decoration-info="(move_check == False)" create="false" delete="false">
                                     <field name="depreciation_date"/>
                                     <field name="depreciated_value" readonly="1"/>
-                                    <field name="amount" widget="monetary" string="Depreciation" sum="Total"/>
+                                    <field name="period_amount" widget="monetary" string="Depreciation" sum="Total"/>
+                                    <field name="amount" widget="monetary" string="Depreciation" sum="Total" invisible="1"/>
                                     <field name="remaining_value" readonly="1" widget="monetary" string="Residual"/>
                                     <field name="move_check" widget="deprec_lines_toggler" attrs="{'invisible': [('parent_state', '!=', 'open')]}"/>
                                     <field name="move_posted_check" invisible="1"/>
@@ -246,7 +247,8 @@
                                             <field name="parent_state" invisible="1"/>
                                         </group>
                                         <group>
-                                            <field name="amount" widget="monetary"/>
+                                            <field name="period_amount" widget="monetary"/>
+                                            <field name="amount" widget="monetary" invisible="1"/>
                                             <field name="depreciation_date"/>
                                             <field name="depreciated_value"/>
                                             <field name="remaining_value"/>

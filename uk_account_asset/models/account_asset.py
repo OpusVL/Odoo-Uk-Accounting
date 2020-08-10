@@ -346,71 +346,82 @@ class AccountAssetAsset(models.Model):
         i = 0
         sequence = 0
         depreciated_value = 0
+        period_amount = 0
+        if self.method_period > 12 or self.method_period == 1 or 12 % self.method_period:
+            period_months = [i for i in range(1, 13)]
+        else:
+            total_list = [i for i in range(1, 13)]
+            period_months = [x for x in total_list if x % self.method_period == 0]
         while amount_to_depr > self.border_amount and \
                 amount_to_depr > self.category_id.min_amount:
             i += 1
             sequence += 1
             depreciation_amount = depreciation_factor * self.method_progress_factor
-            loop_number = int((13 - depreciation_date.month) / self.method_period) + 1
-            amount_per_period = depreciation_amount / 12 * self.method_period
+            loop_number = 13 - depreciation_date.month
+            amount_per_month = depreciation_amount / 12
             if self.method == 'degressive':
-                depreciation_factor = depreciation_factor - loop_number * amount_per_period
+                depreciation_factor = depreciation_factor - loop_number * amount_per_month
             for j in range(0, loop_number):
+                amount_to_depr = amount_to_depr - amount_per_month
+                period_amount += amount_per_month
+                if debreciation_move_date.month in period_months:
+                    sequence += 1
+                    if period_amount > remaining_value:
+                        period_amount = remaining_value
+                    vals = {
+                        'amount': amount_per_month,
+                        'asset_id': self.id,
+                        'sequence': sequence,
+                        'name': str(self.id) + '/' + str(i),
+                        'depreciation_date':
+                            debreciation_move_date.strftime('%Y-%m-%d'),
+                        'period_amount': period_amount,
+                        'remaining_value': remaining_value,
+                        'depreciated_value':
+                            self.value_residual - remaining_value,
+                    }
+                    remaining_value -= period_amount
+                    depreciated_value += period_amount
+                    depreciation_line.create(vals)
+                    period_amount = 0
+                depreciation_date = (depreciation_date + relativedelta(
+                    months=1))
+                debreciation_move_date = (depreciation_date + relativedelta(
+                    months=1) - relativedelta(days=1))
+                if remaining_value < 0.01:
+                    return True
+        depreciation_amount = amount_to_depr
+        loop_number = 13 - depreciation_date.month
+        amount_per_month = round(depreciation_amount / loop_number, 2)
+        period_amount = 0
+        for j in range(0, loop_number):
+            amount_to_depr = amount_to_depr - amount_per_month
+            period_amount += amount_per_month
+            if debreciation_move_date.month in period_months:
                 sequence += 1
-                amount_to_depr = amount_to_depr - amount_per_period
-
+                if period_amount > remaining_value:
+                    period_amount = remaining_value
+                elif j == loop_number - 1:
+                    period_amount = remaining_value
                 vals = {
-                    'amount': amount_per_period,
+                    'amount': amount_per_month,
                     'asset_id': self.id,
                     'sequence': sequence,
                     'name': str(self.id) + '/' + str(i),
                     'remaining_value': remaining_value,
-                    'depreciated_value':
-                        self.value_residual - remaining_value,
+                    'depreciated_value': self.value - remaining_value,
                     'depreciation_date':
                         debreciation_move_date.strftime('%Y-%m-%d'),
+                    'period_amount': period_amount,
                 }
-
-                remaining_value -= amount_per_period
-                depreciated_value += amount_per_period
+                remaining_value -= period_amount
+                depreciated_value += period_amount
+                period_amount = 0
                 depreciation_line.create(vals)
-                depreciation_date = (depreciation_date + relativedelta(
-                    months=self.method_period))
-                debreciation_move_date = (depreciation_date + relativedelta(
-                    months=self.method_period) - relativedelta(days=1))
-                if remaining_value < 0.01:
-                    return True
-        depreciation_amount = amount_to_depr
-        loop_number = int((13 - depreciation_date.month) / self.method_period) + 1
-        amount_per_period = round(depreciation_amount / loop_number, 2)
-        last_amount_per_period = depreciation_amount - (
-                loop_number - 1) * amount_per_period
-        for j in range(0, loop_number):
-            sequence += 1
-            if j == loop_number - 1:
-                amount_per_period = amount_per_period
-            if remaining_value < amount_per_period:
-                amount_per_period = last_amount_per_period
-
-            amount_to_depr = amount_to_depr - amount_per_period
-            vals = {
-                'amount': amount_per_period,
-                'asset_id': self.id,
-                'sequence': sequence,
-                'name': str(self.id) + '/' + str(i),
-                'remaining_value': remaining_value,
-                'depreciated_value': self.value - remaining_value,
-                'depreciation_date':
-                    debreciation_move_date.strftime('%Y-%m-%d'),
-            }
-            remaining_value -= amount_per_period
-
-            depreciated_value += amount_per_period
-            depreciation_line.create(vals)
             depreciation_date = (depreciation_date + relativedelta(
-                months=self.method_period))
+                months=1))
             debreciation_move_date = (depreciation_date + relativedelta(
-                months=self.method_period) - relativedelta(days=1))
+                months=1) - relativedelta(days=1))
         return True
 
     def action_view_account_move(self):
@@ -714,6 +725,8 @@ class AccountAssetDepreciationLine(models.Model):
     move_posted_check = fields.Boolean(compute='_get_move_posted_check',
                                        string='Posted', store=True,
                                        track_visibility='always',)
+    period_amount = fields.Monetary(string='Current Depreciation Amount',
+                                    required=True)
 
     @api.depends('move_id')
     def _get_move_check(self):
