@@ -7,8 +7,10 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     asset_depreciation_ids = fields.One2many(
-        'account.asset.depreciation.line', 'move_id',
-        string='Assets Depreciation Lines', ondelete="restrict")
+        'account.asset.depreciation.line',
+        'move_id',
+        string='Assets Depreciation Lines',
+        ondelete="restrict")
 
     def button_cancel(self):
         for move in self:
