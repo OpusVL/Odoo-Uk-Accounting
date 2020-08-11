@@ -20,7 +20,12 @@ odoo.define('om_account_budget.RecalculateCrossoveredBudgetLines', function (req
 		    model: 'crossovered.budget.lines',
 		    method: 'recalculate_crossovered_budget_lines',
 		}).then(function(ret) {
-		    // TODO(peter): Reload the action on completion, but it doesn't seem to be scoped in?
+		    // Re-fetch the data to update the user who clicked the buttons view.
+		    // Would use normal actions however access to things like `do_action()` are not
+		    // available here, so we just simulate hitting enter in the searchbox
+		    var e = $.Event("keydown");
+		    e.which = 13; // Enter
+		    $(".o_searchview_input").trigger(e);
 		});
             });
 	}
