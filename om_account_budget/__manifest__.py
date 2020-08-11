@@ -7,7 +7,7 @@
     'category': 'Accounting',
     'description': """Use budgets to compare actual with expected revenues and costs""",
     'summary': 'Odoo 13 Budget Management',
-    'depends': ['account'],
+    'depends': ['account', 'web'],
     'license': 'LGPL-3',
     'data': [
         'security/ir.model.access.csv',
@@ -15,6 +15,10 @@
         'views/account_analytic_account_views.xml',
         'views/account_budget_views.xml',
         'views/res_config_settings_views.xml',
+        'views/webclient_templates.xml',
+    ],
+    'qweb': [
+        'static/src/xml/base.xml',
     ],
     "images": ['static/description/banner.gif'],
     'demo': ['data/account_budget_demo.xml'],
