@@ -466,7 +466,7 @@ class AccountAssetAsset(models.Model):
         depreciation_date = self._get_last_depreciation_date()[self.id]
         depreciation_date = (depreciation_date - relativedelta(
             days=depreciation_date.day - 1)) + relativedelta(months=1)
-        debreciation_move_date = (depreciation_date + relativedelta(
+        depreciation_move_date = (depreciation_date + relativedelta(
             months=1) - relativedelta(days=1))
         i = 0
         sequence = 0
@@ -489,7 +489,7 @@ class AccountAssetAsset(models.Model):
             for j in range(0, loop_number):
                 amount_to_depr = amount_to_depr - amount_per_month
                 period_amount += amount_per_month
-                if debreciation_move_date.month in period_months:
+                if depreciation_move_date.month in period_months:
                     sequence += 1
                     if period_amount > remaining_value:
                         period_amount = remaining_value
@@ -499,7 +499,7 @@ class AccountAssetAsset(models.Model):
                         'sequence': sequence,
                         'name': str(self.id) + '/' + str(i),
                         'depreciation_date':
-                            debreciation_move_date.strftime('%Y-%m-%d'),
+                            depreciation_move_date.strftime('%Y-%m-%d'),
                         'period_amount': period_amount,
                         'remaining_value': remaining_value,
                         'depreciated_value':
@@ -511,7 +511,7 @@ class AccountAssetAsset(models.Model):
                     period_amount = 0
                 depreciation_date = (depreciation_date + relativedelta(
                     months=1))
-                debreciation_move_date = (depreciation_date + relativedelta(
+                depreciation_move_date = (depreciation_date + relativedelta(
                     months=1) - relativedelta(days=1))
                 if remaining_value < 0.01:
                     return True
@@ -522,7 +522,7 @@ class AccountAssetAsset(models.Model):
         for j in range(0, loop_number):
             amount_to_depr = amount_to_depr - amount_per_month
             period_amount += amount_per_month
-            if debreciation_move_date.month in period_months:
+            if depreciation_move_date.month in period_months:
                 sequence += 1
                 if period_amount > remaining_value:
                     period_amount = remaining_value
@@ -536,7 +536,7 @@ class AccountAssetAsset(models.Model):
                     'remaining_value': remaining_value,
                     'depreciated_value': self.value - remaining_value,
                     'depreciation_date':
-                        debreciation_move_date.strftime('%Y-%m-%d'),
+                        depreciation_move_date.strftime('%Y-%m-%d'),
                     'period_amount': period_amount,
                 }
                 remaining_value -= period_amount
@@ -545,7 +545,7 @@ class AccountAssetAsset(models.Model):
                 depreciation_line.create(vals)
             depreciation_date = (depreciation_date + relativedelta(
                 months=1))
-            debreciation_move_date = (depreciation_date + relativedelta(
+            depreciation_move_date = (depreciation_date + relativedelta(
                 months=1) - relativedelta(days=1))
         return True
 
