@@ -85,6 +85,10 @@ odoo.define('om_account_budget.RecalculateCrossoveredBudgetLines', function (req
                     });
 		}
             }
+	    // END FUNCTION OVERRIDE
+
+	    CrossoveredBudgetLinesControllerMixin._bindRecalculateCrossoveredBudgetLines.call(this);
+
 	},
     });
 });
