@@ -455,10 +455,9 @@ class AccountAssetAsset(models.Model):
     def compute_depreciation_board(self):
         self.ensure_one()
         depreciation_line = self.env['account.asset.depreciation.line']
-        old_depreciation_line_ids = depreciation_line.search([
+        old_depreciation_lines = depreciation_line.search([
             ('asset_id', '=', self.id), ('move_id', '=', False)])
-        if old_depreciation_line_ids:
-            old_depreciation_line_ids.unlink()
+        old_depreciation_lines.unlink()
         if not self.value_residual:
             return False
         if not self.method_progress_factor:
