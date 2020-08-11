@@ -550,6 +550,12 @@ class AccountAssetAsset(models.Model):
         return True
 
     def action_view_account_move(self):
+        """
+        :return: Form view of account move if there is only one account move
+        created , and tree view if there are more than one account moves
+        created. The function is triggered when clicking the button on account
+        asset form view.
+        """
         action = self.env.ref('account.action_move_line_form').read()[0]
 
         moves = self.mapped('move_ids')
