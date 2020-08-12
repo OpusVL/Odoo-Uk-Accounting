@@ -169,28 +169,25 @@ class CrossoveredBudgetLines(models.Model):
     )
 
     @api.model
-    def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
-        # overrides the default read_group in order to compute the computed fields manually for the group
+    def recalculate_crossovered_budget_lines(self):
+        """
+        A new button has been added to the header of any view which is for this model
+        which allows users to manually trigger re-computation of all crossovered.budget.lines.
 
-        result = super(CrossoveredBudgetLines, self).read_group(
-            domain, fields, groupby, offset=offset, limit=limit, orderby=orderby, lazy=lazy)
-        fields_list = ['practical_amount']
-        if any(x in fields for x in fields_list):
-            for group_line in result:
+        This is required due to other solutions which were attempting to re-compute the searchable
+        fields values on page load (i.e in read_group) were not actually working as intended.
 
-                # initialise fields to compute to 0 if they are requested
-                if 'practical_amount' in fields:
-                    group_line['practical_amount'] = 0
+        There is some Odoo weirdness on a pivot view, where even if the non-stored computed field
+        is declared on the view, the values are not recomputed. Also, on a list view where groupbys
+        existed, the recomputation did not happen until the groupbys were opened up, causing the
+        sum aggregate fields of the groupby to then show outdated information
 
-                if group_line.get('__domain'):
-                    all_budget_lines_that_compose_group = self.search(group_line['__domain'])
-                else:
-                    all_budget_lines_that_compose_group = self.search([])
-                for budget_line_of_group in all_budget_lines_that_compose_group:
-                    if 'practical_amount' in fields:
-                        group_line['practical_amount'] += budget_line_of_group.practical_amount
-        return result
-
+        I am going with this approach rather than force recomputing in read_group due to the fact that:
+        a) the original implementation was broken, and
+        b) it will be more of a performance hit if called on every page load (read_group) call
+        """
+        self.search([])._compute_practical_amount()
+    
     def _compute_line_name(self):
         #just in case someone opens the budget line in form view
         computed_name = self.crossovered_budget_id.name
