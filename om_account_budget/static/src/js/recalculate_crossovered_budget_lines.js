@@ -39,13 +39,17 @@ odoo.define('om_account_budget.RecalculateCrossoveredBudgetLines', function (req
     });
 
     PivotController.include({
-	// DEBT: Unfortunately the standard PivotController doesn't render the QWEB template
-	// with `widget: this` passed in, and instead just passes in an arbitrary local array
-	// so we have to override the function to do this so that the
-	// qweb can succesfully only display the button _only_ on the model we care about.
-	// This has the benefit of making it as simple as (above) the ListController.include()
-	// for any future modules that extend PivotController to add more buttons.
-	// We still pass in `measures` so that we don't have to amend the original QWeb template.
+	/* 
+	   DEBT: Unfortunately the standard PivotController doesn't render
+	   the QWEB template with `widget: this` passed in
+	   (see `web.ListController` for how this has the better implementation),
+	   and instead just passes in an arbitrary local array to the template,
+	   so we have to override the function to do this so that the
+	   values like `this.modelName` are scoped into the QWeb template.
+	   This has the benefit of making it as simple as the ListController
+	   for any future modules that extend PivotController to add more buttons.
+	   We still pass in `measures` so that we don't have to amend the original QWeb template.
+	*/
 
 	// TODO(peter): PR this function override upstream along with the QWEB changes
         renderButtons: function ($node) {
