@@ -276,7 +276,7 @@ class AccountAssetAsset(models.Model):
         string='Number of Months in a Period',
         required=True,
         readonly=True,
-        default=12,
+        default=1,
         states={'draft': [('readonly', False)]},
         help="The amount of time between two depreciations, in months")
     method_end = fields.Date(
@@ -609,8 +609,11 @@ class AccountAssetAsset(models.Model):
         return True
 
     def validate(self):
-        code = self.get_asset_code()
-        self.write({'state': 'open', 'code':code})
+        if not self.code:
+            code = self.get_asset_code()
+            self.write({'state': 'open', 'code': code})
+        else:
+            self.write({'state': 'open'})
         asset_fields = [
             'method',
             'method_number',
