@@ -767,8 +767,8 @@ class AccountAssetAsset(models.Model):
         default['name'] = self.name + _(' (copy)')
         return super(AccountAssetAsset, self).copy_data(default)
 
-    def _compute_entries(self, date_end, date_start=False,
-                         log_id=False, group_entries=False):
+    def _compute_entries(self, date_end, date_start,
+                         log_id, accounting_date, group_entries=False):
         if date_start:
             depreciation_ids = self.env['account.asset.depreciation.line'].search([
                 ('asset_id', 'in', self.ids),
@@ -782,7 +782,11 @@ class AccountAssetAsset(models.Model):
                 ('move_check', '=', False)])
         if group_entries:
             return depreciation_ids.create_grouped_move()
-        return depreciation_ids.create_move(post_move=True, log_id=log_id)
+        return depreciation_ids.create_move(
+            post_move=True,
+            log_id=log_id,
+            accounting_date=accounting_date,
+        )
 
     @api.model
     def create(self, vals):
@@ -890,12 +894,12 @@ class AccountAssetDepreciationLine(models.Model):
         for line in self:
             line.move_posted_check = True if line.move_id and line.move_id.state == 'posted' else False
 
-    def create_move(self, post_move=True, log_id=False):
+    def create_move(self, post_move=True, log_id=False, accounting_date=False):
         created_moves = self.env['account.move']
         prec = self.env['decimal.precision'].precision_get('Account')
         for line in self:
             category_id = line.asset_id.category_id
-            depreciation_date = self.env.context.get('depreciation_date') or line.depreciation_date or fields.Date.context_today(self)
+            depreciation_date = accounting_date or self.env.context.get('depreciation_date') or line.depreciation_date or fields.Date.context_today(self)
             company_currency = line.asset_id.company_id.currency_id
             current_currency = line.asset_id.currency_id
             amount = current_currency.with_context(
@@ -1045,17 +1049,26 @@ class AssetDepreciationLog(models.Model):
     _name = "asset.depreciation.log"
     _description = "Asset Depreciation Log"
 
-    def _get_last_date(self):
-        log_date = time.strftime('%Y-%m-%d')
-        datenow=datetime.strptime(log_date,'%Y-%m-%d')
-        date_end_month = datenow + relativedelta(months=1)-relativedelta(
-            days=datenow.day)
-        return date_end_month.strftime('%Y-%m-%d')
+    def _get_date_start(self):
+        return datetime.now() + relativedelta(months=-1, day=1,)
 
-    name = fields.Char('Name')
+    def _get_date_end(self):
+        return datetime.now() + relativedelta(day=1, days=-1)
+
+    def _get_default_accounting_date(self):
+        return datetime.now() + relativedelta(day=1, days=-1)
+
+    name = fields.Char(
+        'Name',
+        required=True)
     date = fields.Date(
         'Registration Date',
         default=datetime.today())
+    accounting_date = fields.Date(
+        'Accounting Date',
+        default=_get_default_accounting_date,
+        help="If empty, accounting date will be taken from depreciation board"
+    )
     asset_ids = fields.Many2many(
         'account.asset.asset',
         'asset_log_rel',
@@ -1069,10 +1082,10 @@ class AssetDepreciationLog(models.Model):
         readonly=True)
     date_start = fields.Date(
         'Start Date',
-        default=lambda *a: time.strftime('%Y-%m-01'))
+        default=_get_date_start)
     date_end = fields.Date(
         'End Date',
-        default=_get_last_date)
+        default=_get_date_end)
     category_ids = fields.Many2many(
         'account.asset.category',
         'asset_dok_category_ref',
@@ -1099,12 +1112,8 @@ class AssetDepreciationLog(models.Model):
         else:
             asset_ids = ass_obj.search(asset_filter)
         for asset in asset_ids:
-            if asset.depreciation_line_ids and asset.state == 'draft' and \
-                    asset.date <= self.date_end:
-                raise UserError(_('There are unconfirmed assets! Code "%s"!') %
-                                asset.name)
             created_moves += asset._compute_entries(
-                self.date_end, self.date_start, self.id)
+                self.date_end, self.date_start, self.id, self.accounting_date)
         return self.write({'state': 'done', 'move_ids': [(6, 0, created_moves)]})
 
     def button_cancel(self):

@@ -476,11 +476,14 @@
                         </h1>
                     </div>
                     <group>
-                    <field name="date" required="True" attrs="{'readonly': [('state','!=','draft')]}"/>
-                    </group>
-                    <group col="2" colspan="2">
-                        <field name="date_start" required="True" attrs="{'readonly': [('state','!=','draft')]}"/>
-                        <field name="date_end" required="True" attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <group>
+                            <field name="date" required="True" attrs="{'readonly': [('state','!=','draft')]}"/>
+                            <field name="date_start" required="True" attrs="{'readonly': [('state','!=','draft')]}"/>
+                        </group>
+                        <group>
+                            <field name="accounting_date" required="True" attrs="{'readonly': [('state','!=','draft')]}"/>
+                            <field name="date_end" required="True" attrs="{'readonly': [('state','!=','draft')]}"/>
+                        </group>
                     </group>
                     <label for="category_ids"/>
                     <field name="category_ids" attrs="{'readonly': [('state','!=','draft')]}"/>
@@ -516,7 +519,8 @@
         <field name="arch" type="xml">
             <tree string="Asset Depreciation Log">
                 <field name="name"/>
-                <field name="date"/>
+                <field name="date" invisible="1"/>
+                <field name="accounting_date"/>
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="state"/>
@@ -530,7 +534,7 @@
         <field name="arch" type="xml">
             <search string="Asset Depreciation Log">
                 <field name="name" string="Asset"/>
-                <field name="date"/>
+                <field name="accounting_date"/>
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <filter string="Done" name="done" domain="[('state','', ('done'))]"/>
