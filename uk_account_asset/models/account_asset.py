@@ -413,30 +413,6 @@ class AccountAssetAsset(models.Model):
         result = dict(self.env.cr.fetchall())
         return result
 
-    @api.model
-    def _cron_generate_entries(self):
-        self.compute_generated_entries(datetime.today())
-
-    @api.model
-    def compute_generated_entries(self, asset_date, asset_type=None):
-        created_move_ids = []
-        type_domain = []
-        if asset_type:
-            type_domain = [('type', '=', asset_type)]
-
-        ungrouped_assets = self.env['account.asset.asset'].search(
-            type_domain + [('state', '=', 'open'), ('category_id.group_entries', '=', False)])
-        created_move_ids += ungrouped_assets._compute_entries(
-            asset_date, False, False, group_entries=False)
-        for grouped_category in self.env['account.asset.category'].search(
-                type_domain + [('group_entries', '=', True)]):
-            assets = self.env['account.asset.asset'].search(
-                [('state', '=', 'open'),
-                 ('category_id', '=', grouped_category.id)])
-            created_move_ids += assets._compute_entries(
-                asset_date, False, False, group_entries=True)
-        return created_move_ids
-
     def _compute_board_undone_dotation_nb(self, depreciation_date):
         undone_dotation_number = self.method_number
         if self.method_time == 'end':
@@ -1111,7 +1087,7 @@ class AssetDepreciationLog(models.Model):
 
     def asset_compute(self):
         ass_obj = self.env['account.asset.asset']
-        asset_filter = [('state', 'in', ('draft', 'open'))]
+        asset_filter = [('state', '=', 'open')]
         created_moves = []
         if self.category_ids:
             asset_filter.append(
