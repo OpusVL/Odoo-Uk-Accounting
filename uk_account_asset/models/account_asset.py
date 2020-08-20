@@ -194,6 +194,7 @@ class AccountAssetAsset(models.Model):
         string='Reference',
         size=32,
         readonly=True,
+        copy=False,
         states={'draft': [('readonly', False)]})
     currency_id = fields.Many2one(
         'res.currency',
