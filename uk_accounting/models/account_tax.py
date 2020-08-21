@@ -64,23 +64,28 @@ class AccountTaxMargin(models.Model):
         res = super(AccountTaxMargin, taxes).compute_all(
             price_unit, currency, quantity, product, partner,
             is_refund=is_refund, handle_price_include=handle_price_include)
-        total_res = {}
-        total_res['base_tags'] = res['base_tags']
-        total_res['taxes'] = []
-        total_base = 0
-        total_tax = 0
-        for lst_taxes in res['taxes']:
-            if lst_taxes.get('price_include'):
-                lst_taxes.update({'base': price_unit * quantity - lst_taxes['amount']})
-            total_res['taxes'].append(lst_taxes)
-            total_base += lst_taxes['base']
-            total_tax += lst_taxes['amount']
-        # If no taxes are present, we should fallback to res values
-        # rather than arbitrarily leaving total_base and total_tax at 0
-        if not res['taxes']:
-            total_base = res.get('total_excluded', 0.00)
+        if len(res['taxes']) > 1:
+            return res
+        else:
+            total_res = {}
+            total_res['base_tags'] = res['base_tags']
+            total_res['taxes'] = []
+            total_base = 0
             total_tax = 0
-        total_res['total_included'] = total_base + total_tax
-        total_res['total_excluded'] = total_base
-        total_res['total_void'] = total_base + total_tax
-        return total_res
+            for lst_taxes in res['taxes']:
+                if lst_taxes.get('price_include'):
+                    lst_taxes.update(
+                        {'base': price_unit * quantity - lst_taxes['amount']})
+                total_res['taxes'].append(lst_taxes)
+                total_base += lst_taxes['base']
+                total_tax += lst_taxes['amount']
+            # If no taxes are present, we should fallback to res values
+            # rather than arbitrarily leaving total_base and total_tax at 0
+            if not res['taxes']:
+                total_base = res.get('total_excluded', 0.00)
+                total_tax = 0
+            total_res['total_included'] = total_base + total_tax
+            total_res['total_excluded'] = total_base
+            total_res['total_void'] = total_base + total_tax
+            return total_res
+
