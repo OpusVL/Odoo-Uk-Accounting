@@ -1,5 +1,100 @@
 <odoo>
-  <data>
+    <data>
 
-  </data>
+        <record model="ir.ui.view" id="job_role_action_tree_view">
+            <field name="name">job.role.action.tree</field>
+            <field name="model">job.role.action</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="name"/>
+                    <field name="enable_value"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="job_role_action_view_search" model="ir.ui.view">
+            <field name="name">job.role.action.search</field>
+            <field name="model">job.role.action</field>
+            <field name="priority">25</field>
+            <field name="arch" type="xml">
+                <search string="Search Job Role Action">
+                    <field name="name"/>
+                    <group string="Group By">
+                        <filter string="Enable Limit Value"
+                                name="group_by_enable_value"
+                                domain="[]"
+                                context="{'group_by':'enable_value'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="job_role_action_window" model="ir.actions.act_window">
+            <field name="name">Job Role Action</field>
+            <field name="res_model">job.role.action</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="job_role_action_view_search"/>
+        </record>
+
+        <!-- base.group_no_one means Developer Mode is on -->
+        <menuitem action="job_role_action_window"
+                  id="menuitem_job_role_action_window"
+                  parent="hr.menu_human_resources_configuration"
+                  sequence="1"
+                  groups="base.group_no_one"/>
+
+
+        <record id="view_hr_job_form_inherit" model="ir.ui.view">
+            <field name="name">hr.job.form.inherit</field>
+            <field name="model">hr.job</field>
+            <field name="inherit_id" ref="hr.view_hr_job_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='no_of_recruitment']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='no_of_recruitment']/parent::group/parent::group" position="after">
+                    <notebook>
+                        <page string="Approval Rules">
+                            <field name="job_role_ids">
+                                <tree string="Job Roles" editable="bottom">
+                                    <field name="name" invisible="1"/>
+                                    <field name="enable_value" invisible="1"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="role_action_id" options="{'no_create': True}"/>
+                                    <field name="permission"/>
+                                    <field name="min_value" attrs="{'readonly':[('enable_value','=', False)]}"/>
+                                    <field name="max_value" attrs="{'readonly':[('enable_value','=', False)]}"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_hr_job_tree_inherit" model="ir.ui.view">
+            <field name="name">hr.job.tree.inherit</field>
+            <field name="model">hr.job</field>
+            <field name="inherit_id" ref="hr.view_hr_job_tree"/>
+            <field name="arch" type="xml">
+                <field name="no_of_recruitment" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="expected_employees" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="no_of_hired_employee" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+                <field name="state" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+            </field>
+        </record>
+
+    </data>
 </odoo>

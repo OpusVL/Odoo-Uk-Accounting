@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_job_role_action_system,job.role.action.system,model_job_role_action,base.group_system,1,1,0,0
+access_hr_job_role_system,hr.job.role.system,model_hr_job_role,base.group_system,1,1,1,1
 
