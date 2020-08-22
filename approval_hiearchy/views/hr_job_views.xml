@@ -40,8 +40,8 @@
         <!-- base.group_no_one means Developer Mode is on -->
         <menuitem action="job_role_action_window"
                   id="menuitem_job_role_action_window"
-                  parent="hr.menu_human_resources_configuration"
-                  sequence="1"
+                  parent="resource.menu_resource_config"
+                  sequence="100"
                   groups="base.group_no_one"/>
 
 
@@ -66,8 +66,10 @@
                                     <field name="currency_id" invisible="1"/>
                                     <field name="role_action_id" options="{'no_create': True}"/>
                                     <field name="permission"/>
-                                    <field name="min_value" attrs="{'readonly':[('enable_value','=', False)]}"/>
-                                    <field name="max_value" attrs="{'readonly':[('enable_value','=', False)]}"/>
+                                    <field name="min_value"
+                                           attrs="{'invisible':['|', ('enable_value','=', False), ('permission','=', False)], 'required':[('enable_value','=', True), ('permission','=', True)]}"/>
+                                    <field name="max_value"
+                                           attrs="{'invisible':['|', ('enable_value','=', False), ('permission','=', False)], 'required':[('enable_value','=', True), ('permission','=', True)]}"/>
                                 </tree>
                             </field>
                         </page>

@@ -41,19 +41,29 @@ class HrJobRole(models.Model):
     min_value = fields.Monetary(string='Min Value',)
     max_value = fields.Monetary(string='Max Value', )
 
+    _sql_constraints = [
+        (
+            "role_job_unique",
+            "unique (role_action_id,job_id)",
+            "Role must be unique per job position !",
+        )
+    ]
+
     @api.constrains('min_value', 'max_value')
     def _verify_values(self):
         for role in self:
             if role.max_value and role.min_value and role.min_value > role.max_value:
                 raise ValidationError(_(
                     "Min Value must be equal or smaller than max value."))
-            if role.min_value and role.max_value and role.max_value < role.min_value:
-                raise ValidationError(_(
-                    "Max Value must be equal or greater than min value."))
 
     @api.onchange('role_action_id')
     def onchange_role_action_id(self):
         self.name = self.role_action_id and self.role_action_id.name or ''
+
+    @api.onchange('permission')
+    def onchange_permission(self):
+        self.min_value = 0.0
+        self.max_value = 0.0
 
 
 class HrJob(models.Model):
