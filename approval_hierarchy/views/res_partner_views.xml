@@ -1,0 +1,36 @@
+<odoo>
+    <data>
+
+        <record id="view_partner_form_approval_hierarchy" model="ir.ui.view">
+            <field name="name">res.partner.form.approval</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='type']/parent::group/parent::group" position="before">
+                    <group>
+                        <group>
+                            <field name="approval_user_id"
+                                   readonly="1" force_save="1"/>
+                        </group>
+                    </group>
+                </xpath>
+                <xpath expr="//form/sheet" position="before">
+                    <header>
+                        <field name="current_user" invisible="1"/>
+                        <button name="request_approval" states="draft" string="Request Approval" type="object" class="oe_highlight"/>
+                        <button name="action_approve" string="Approve" type="object"
+                                attrs="{'invisible': ['|', ('current_user','=', False), ('state', '!=', 'waiting')]}"
+                                class="oe_highlight"/>
+                        <button name="action_reject"
+                                string="Reject" type="object"
+                                attrs="{'invisible': ['|', ('current_user','=', False), ('state', '!=', 'waiting')]}"
+                                class="oe_highlight"/>
+                        <button name="set_to_draft" string="Set to Draft" type="object" states="rejected"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved,rejected"/>
+                    </header>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
