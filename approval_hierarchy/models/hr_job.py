@@ -108,7 +108,7 @@ class HrEmployee(models.Model):
             return False
         else:
             role_action = self.job_id.job_role_ids.filtered(
-                lambda r: r.role_action_id == action.id and r.permission)
+                lambda r: r.role_action_id == action and r.permission)
             if role_action:
                 return True
             else:
