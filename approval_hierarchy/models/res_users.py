@@ -10,14 +10,22 @@ class ResUsers(models.Model):
         related='employee_id.delegated_user_id',
         readonly=False,
         related_sudo=False,
-        store=True,
     )
     job_id = fields.Many2one(
-        related='employee_id.job_id',
-        readonly=False,
-        related_sudo=False,
+        'hr.job',
+        compute='_get_hr_job',
         store=True,
     )
+    has_delegated = fields.Boolean(compute='_check_has_delegated')
+
+    def _check_has_delegated(self):
+        for rec in self:
+            rec.has_delegated = rec.delegated_user_id and True or False
+
+    @api.depends('employee_ids.job_id')
+    def _get_hr_job(self):
+        for user in self:
+            user.job_id = user.employee_id.job_id
 
     def __init__(self, pool, cr):
         """ Override of __init__ to add access rights.
@@ -26,10 +34,12 @@ class ResUsers(models.Model):
         """
         hr_readable_fields = [
             'job_id',
+            'delegated_user_id',
         ]
 
         hr_writable_fields = [
             'delegated_user_id',
+            'job_id',
         ]
 
         init_res = super(ResUsers, self).__init__(pool, cr)
