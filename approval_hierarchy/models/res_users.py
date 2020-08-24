@@ -9,11 +9,15 @@ class ResUsers(models.Model):
     delegated_user_id = fields.Many2one(
         related='employee_id.delegated_user_id',
         readonly=False,
-        related_sudo=False)
+        related_sudo=False,
+        store=True,
+    )
     job_id = fields.Many2one(
         related='employee_id.job_id',
         readonly=False,
-        related_sudo=False)
+        related_sudo=False,
+        store=True,
+    )
 
     def __init__(self, pool, cr):
         """ Override of __init__ to add access rights.
