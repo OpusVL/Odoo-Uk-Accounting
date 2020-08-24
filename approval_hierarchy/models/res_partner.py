@@ -55,6 +55,11 @@ class ResPartner(models.Model):
             {'state': 'rejected'}
         )
 
+    def action_reject2(self):
+        return self.with_context(supplier_action=True).write(
+            {'state': 'rejected'}
+        )
+
     def set_to_draft(self):
         return self.with_context(supplier_action=True).write(
             {'state': 'draft'}
