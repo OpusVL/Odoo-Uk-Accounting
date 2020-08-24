@@ -32,7 +32,7 @@
     'author': "OpusVL limited",
     'website': "https://opusvl.com",
 
-    'version': '0.1',
+    'version': '0.2',
 
     # any module necessary for this one to work correctly
     'depends': ['uk_accounting', 'hr'],
@@ -42,6 +42,8 @@
         'security/ir.model.access.csv',
         'security/approval_hierarchy_security.xml',
         'data/job_role_action_data.xml',
+        'data/data.xml',
         'views/hr_job_views.xml',
+        'views/res_users_views.xml',
     ],
 }

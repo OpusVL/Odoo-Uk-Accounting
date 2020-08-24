@@ -63,9 +63,10 @@
                                 <tree string="Job Roles" editable="bottom">
                                     <field name="name" invisible="1"/>
                                     <field name="enable_value" invisible="1"/>
-                                    <field name="currency_id" invisible="1"/>
                                     <field name="role_action_id" options="{'no_create': True}"/>
                                     <field name="permission"/>
+                                    <field name="currency_id" attrs="{'invisible':['|', ('enable_value','=', False), ('permission','=', False)], 'required':[('enable_value','=', True), ('permission','=', True)]}"
+                                           groups="base.group_multi_currency"/>
                                     <field name="min_value"
                                            attrs="{'invisible':['|', ('enable_value','=', False), ('permission','=', False)], 'required':[('enable_value','=', True), ('permission','=', True)]}"/>
                                     <field name="max_value"

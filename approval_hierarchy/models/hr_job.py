@@ -26,6 +26,7 @@ class HrJobRole(models.Model):
         'hr.job',
         string='Job Position',
         required=True,
+        ondelete='cascade',
     )
     enable_value = fields.Boolean(
         string='Enable Limit Value',
@@ -44,8 +45,8 @@ class HrJobRole(models.Model):
     _sql_constraints = [
         (
             "role_job_unique",
-            "unique (role_action_id,job_id)",
-            "Role must be unique per job position !",
+            "unique (role_action_id,job_id, currency_id)",
+            "Role must be unique per job !",
         )
     ]
 
@@ -74,3 +75,4 @@ class HrJob(models.Model):
         'job_id',
         string='Job Roles',
     )
+
