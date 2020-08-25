@@ -231,8 +231,16 @@ class ResPartner(models.Model):
 
     @api.model
     def create(self, vals):
+        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+            raise UserError(_('Your configuration are not correct, '
+                              'Please contact with an administrator.'))
+        role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
+        if not self.env.user.employee_id.check_if_has_approval_rights(
+                role_action):
+            raise UserError(_('You dont have rights to create a partner, '
+                              'Please contact with an administrator.'))
         res = super(ResPartner, self).create(vals)
-        if vals and 'parent_id' in vals:
+        if vals and vals.get('parent_id'):
             message = "Contact {} has been created. ".format(
                 res.name)
             res.parent_id.set_to_draft()
@@ -241,8 +249,18 @@ class ResPartner(models.Model):
 
     def write(self, vals):
         if self._context.get('supplier_action'):
-            return super(ResPartner, self).write(vals)
+            return super(ResPartner, self.with_context(
+                supplier_action=True)).write(vals)
         else:
+            if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+                raise UserError(_('Your configuration are not right, '
+                                  'Please contact with an administrator.'))
+            role_action = self.env.ref(
+                'approval_hierarchy.supplier_set_up_role')
+            if not self.env.user.employee_id.check_if_has_approval_rights(
+                    role_action):
+                raise UserError(_('You dont have rights to modify a partner, '
+                                  'Please contact with an administrator.'))
             if 'child_ids' in vals:
                 for child in vals.get('child_ids'):
                     if isinstance(child, tuple) and len(child) == 3 \
@@ -260,6 +278,14 @@ class ResPartner(models.Model):
                 supplier_action=True)).write(vals)
 
     def unlink(self):
+        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+            raise UserError(_('Your configuration are not right, '
+                              'Please contact with an administrator.'))
+        role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
+        if not self.env.user.employee_id.check_if_has_approval_rights(
+                role_action):
+            raise UserError(_('You dont have rights to delete a partner, '
+                              'Please contact with an administrator.'))
         for partner in self:
             if partner.state != 'draft':
                 raise UserError(_('In order to delete a partner, '
