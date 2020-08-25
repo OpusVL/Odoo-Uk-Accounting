@@ -25,12 +25,12 @@
                                 string="Reject" type="object"
                                 attrs="{'invisible': ['|', ('current_user','=', False), ('state', '!=', 'waiting')]}"
                                 class="oe_highlight"/>
-                        <button name="action_reject2"
+                        <button name="action_reject_administrator"
                                 string="Administrator Reject" type="object"
                                 states="waiting"
                                 groups="base.group_system"
                                 class="oe_highlight"/>
-                        <button name="action_approve"
+                        <button name="action_approve_administrator"
                                 string="Administrator Approve" type="object"
                                 states="waiting"
                                 groups="base.group_system"

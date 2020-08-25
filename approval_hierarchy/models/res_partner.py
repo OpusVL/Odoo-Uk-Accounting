@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
 class ResPartner(models.Model):
@@ -212,7 +213,17 @@ class ResPartner(models.Model):
             {'state': 'rejected'}
         )
 
-    def action_reject2(self):
+    def action_approve_administrator(self):
+        self.child_ids and self.child_ids.filtered(
+            lambda r: r.state != 'done'
+        ).with_context(supplier_action=True).write(
+            {'state': 'approved'}
+        )
+        return self.with_context(supplier_action=True).write(
+            {'state': 'approved'}
+        )
+
+    def action_reject_administrator(self):
         return self.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
