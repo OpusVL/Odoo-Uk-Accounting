@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="group_amend_system_users" model="res.groups">
+        <field name="name">Amend system users</field>
+        <field name="comment">If checked the user will have rights to
+            input data in Employee and Job positions</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+    </record>
+
+    <record id="group_approve_system_users" model="res.groups">
+        <field name="name">Approve system users</field>
+        <field name="comment">If checked the user will have rights to
+            approve the changes done in Employee and Job positions</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+    </record>
+
+</odoo>
