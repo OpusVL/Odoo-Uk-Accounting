@@ -242,6 +242,7 @@ class ResPartner(models.Model):
         if vals and 'parent_id' in vals:
             message = "Contact {} has been created. ".format(
                 res.name)
+            res.parent_id.set_to_draft()
             res.parent_id.message_post(body=message)
         return res
 
@@ -249,11 +250,20 @@ class ResPartner(models.Model):
         if self._context.get('supplier_action'):
             return super(ResPartner, self).write(vals)
         else:
-            if self.parent_id:
-                self.parent_id.set_to_draft()
+            if 'child_ids' in vals:
+                for child in vals.get('child_ids'):
+                    if len(child) >= 3 and child[2]:
+                        child[2].update({
+                            'state': 'draft',
+                            'approval_user_id': False,
+                        })
+                        message = "Contact {} has been modified.".format(
+                            self.browse(child[1]).name)
+                        self.message_post(body=message)
             vals['state'] = 'draft'
             vals['approval_user_id'] = False
-            return super(ResPartner, self).write(vals)
+            return super(ResPartner,  self.with_context(
+                supplier_action=True)).write(vals)
 
     def unlink(self):
         for partner in self:
@@ -264,6 +274,7 @@ class ResPartner(models.Model):
                 message = "Contact {} has been deleted.".format(
                     partner.name)
                 partner.parent_id.message_post(body=message)
+                partner.parent_id.set_to_draft()
         return super(ResPartner, self).unlink()
 
 
