@@ -1,0 +1,70 @@
+<odoo noupdate="1">
+
+
+    <record model="job.role.action" id="supplier_set_up_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Supplier set up</field>
+        <field name="enable_value">False</field>
+    </record>
+
+    <record model="job.role.action" id="supplier_approval_role">
+        <field name="name">Supplier Approval</field>
+        <field name="enable_value">False</field>
+    </record>
+
+    <record model="job.role.action" id="export_payment_run_role">
+        <field name="name">Export Payment run</field>
+        <field name="enable_value">False</field>
+    </record>
+
+    <record model="job.role.action" id="post_journal_role">
+        <field name="name">Post Journal</field>
+        <field name="enable_value">True</field>
+    </record>
+
+    <record model="job.role.action" id="input_ap_invoice_role">
+        <field name="name">Input AP invoice</field>
+        <field name="enable_value">False</field>
+    </record>
+
+    <record model="job.role.action" id="approve_ap_invoice_role">
+        <field name="name">Approve AP invoice</field>
+        <field name="enable_value">True</field>
+    </record>
+
+    <record model="job.role.action" id="approve_ap_credit_memo_role">
+        <field name="name">Approve AP Credit memo</field>
+        <field name="enable_value">True</field>
+    </record>
+
+    <record model="job.role.action" id="input_ar_invoice_role">
+        <field name="name">Input AR invoice</field>
+        <field name="enable_value">False</field>
+    </record>
+
+    <record model="job.role.action" id="approve_ar_invoice_role">
+        <field name="name">Approve AR invoice</field>
+        <field name="enable_value">True</field>
+    </record>
+
+    <record model="job.role.action" id="approve_ar_credit_note_role">
+        <field name="name">Approve AR credit note</field>
+        <field name="enable_value">True</field>
+    </record>
+
+    <record model="job.role.action" id="import_bank_statement_role">
+        <field name="name">Import bank statement</field>
+        <field name="enable_value">False</field>
+    </record>
+
+    <record model="job.role.action" id="amend_system_users_role">
+        <field name="name">Amend system users</field>
+        <field name="enable_value">False</field>
+    </record>
+
+    <record model="job.role.action" id="approve_system_users_role">
+        <field name="name">Approve system users</field>
+        <field name="enable_value">False</field>
+    </record>
+
+</odoo>
