@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class JobRoleAction(models.Model):
@@ -50,6 +50,22 @@ class HrJobRole(models.Model):
         )
     ]
 
+    @api.model
+    def create(self, vals):
+        res = super(HrJobRole, self).create(vals)
+        if vals:
+            message = "Job role {} has been created.".format(
+                res.name)
+            res.job_id.message_post(body=message)
+        return res
+
+    def unlink(self):
+        for role in self:
+            message = "Job role {} has been deleted.".format(
+                role.name)
+            role.job_id.message_post(body=message)
+        return super(HrJobRole, self).unlink()
+
     @api.constrains('min_value', 'max_value')
     def _verify_values(self):
         for role in self:
@@ -68,13 +84,104 @@ class HrJobRole(models.Model):
 
 
 class HrJob(models.Model):
-    _inherit = 'hr.job'
+    _name = 'hr.job'
+    _inherit = ['hr.job', 'mail.thread', 'mail.activity.mixin']
 
     job_role_ids = fields.One2many(
         'hr.job.role',
         'job_id',
         string='Job Roles',
     )
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('recruit', 'Recruitment in Progress'),
+        ('open', 'Not Recruiting'),
+        ('waiting', 'Waiting'),
+        ('rejected', 'Rejected'),
+        ('approved', 'Approved')],
+        string='Status',
+        readonly=True,
+        required=True,
+        tracking=True,
+        copy=False,
+        default='draft',)
+    department_id = fields.Many2one(
+        'hr.department',
+        string='Department',
+        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        tracking=True,
+    )
+    description = fields.Text(
+        string='Job Description',
+        tracking=True,
+    )
+    name = fields.Char(
+        string='Job Position',
+        required=True,
+        index=True,
+        translate=True,
+        tracking=True,
+    )
+
+    def request_approval(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_amend_system_users"):
+            raise UserError(_('You dont have the rights to request approval for'
+                              ' this job position, Please contact with '
+                              'an administrator.')
+                            )
+        return self.write({'state': 'waiting'})
+
+    def action_approve(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_approve_system_users"):
+            raise UserError(_('You dont have the rights to approve this job '
+                              'position, Please contact with an administrator.')
+                            )
+        return self.with_context(supplier_action=True).write(
+            {'state': 'approved'}
+        )
+
+    def action_reject(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_approve_system_users"):
+            raise UserError(_('You dont have the rights to reject this job '
+                              'position, Please contact with an administrator.')
+                            )
+        return self.with_context(supplier_action=True).write(
+            {'state': 'rejected'}
+        )
+
+    def set_to_draft(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_amend_system_users"):
+            raise UserError(_('You dont have the rights to send to draft'
+                              ' this job position, Please contact with '
+                              'an administrator.')
+                            )
+        return self.write({'state': 'draft'})
+
+    def write(self, vals):
+        if self._context.get('supplier_action'):
+            return super(HrJob, self.with_context(
+                supplier_action=True)).write(vals)
+        elif self.env.user.has_group(
+                "approval_hierarchy.group_amend_system_users"):
+            vals['state'] = 'draft'
+            if 'job_role_ids' in vals:
+                for job_role in vals.get('job_role_ids'):
+                    if isinstance(job_role, tuple) and len(job_role) == 3 \
+                            and isinstance(job_role[2], dict) and job_role[2]:
+                        role = self.env['hr.job.role'].browse(job_role[1])
+                        message = "Job role {} has been modified.".format(
+                            role.name)
+                        self.message_post(body=message)
+            return super(HrJob, self.with_context(
+                supplier_action=True)).write(vals)
+        else:
+            raise UserError(_('You dont have the rights to modify a job '
+                              'position, Please contact with an administrator.')
+                            )
 
 
 class HrEmployee(models.Model):

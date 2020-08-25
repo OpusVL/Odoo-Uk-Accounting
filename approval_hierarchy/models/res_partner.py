@@ -264,7 +264,7 @@ class ResPartner(models.Model):
             if 'child_ids' in vals:
                 for child in vals.get('child_ids'):
                     if isinstance(child, tuple) and len(child) == 3 \
-                            and isinstance(child[2], dict):
+                            and isinstance(child[2], dict) and child[2]:
                         child[2].update({
                             'state': 'draft',
                             'approval_user_id': False,
