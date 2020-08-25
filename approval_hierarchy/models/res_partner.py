@@ -284,6 +284,8 @@ class ResPartnerBank(models.Model):
              "than the name of the Account Holder",
         tracking=True,
     )
+    sort_code = fields.Char(tracking=True,)
+    short_name = fields.Char(tracking=True,)
 
     @api.model
     def create(self, vals):
