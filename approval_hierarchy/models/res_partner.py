@@ -153,7 +153,7 @@ class ResPartner(models.Model):
 
     def _get_current_user(self):
         for rec in self:
-            rec.current_user = rec.approval_user_id == self.env.user and True or False
+            rec.current_user = rec.approval_user_id == self.env.user
 
     @api.depends('is_company')
     def _compute_company_type(self):
@@ -170,67 +170,56 @@ class ResPartner(models.Model):
                         self.env.user.employee_id.get_approved_user(
                             role_action) or False
         if approved_user == self.env.user:
-            self.child_ids and self.child_ids.filtered(
-                lambda r: r.state == 'draft'
-            ).with_context(supplier_action=True).write(
+            records = self | self.child_ids.filtered(
+                lambda child: child.state == 'draft')
+            records.with_context(supplier_action=True).write(
                 {
                     'state': 'waiting',
                     'approval_user_id': approved_user.id,
                 }
             )
-            self.with_context(supplier_action=True).write(
-                {'state': 'waiting', 'approval_user_id': approved_user.id}
-            )
             self.action_approve()
         else:
-            self.child_ids and self.child_ids.filtered(
-                lambda r: r.state == 'draft'
-            ).with_context(supplier_action=True).write(
+            records = self | self.child_ids.filtered(
+                lambda child: child.state == 'draft')
+            records.with_context(supplier_action=True).write(
                 {
                     'state': 'waiting',
                     'approval_user_id': approved_user and approved_user.id,
                 }
             )
-            return self.with_context(supplier_action=True).write(
-                {
-                    'state': 'waiting',
-                    'approval_user_id': approved_user and approved_user.id,
-                }
-            )
+            return True
 
     def action_approve(self):
-        self.child_ids and self.child_ids.filtered(
-            lambda r: r.state != 'done'
-        ).with_context(supplier_action=True).write(
+        records = self | self.child_ids.filtered(
+            lambda child: child.state != 'done')
+        records.with_context(supplier_action=True).write(
             {'state': 'approved'}
         )
-        return self.with_context(supplier_action=True).write(
-            {'state': 'approved'}
-        )
+        return True
 
     def action_reject(self):
-        self.child_ids and self.child_ids.with_context(
-            supplier_action=True).write({'state': 'rejected'})
-        return self.with_context(supplier_action=True).write(
+        records = self | self.child_ids
+        records.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
+        return True
 
     def action_approve_administrator(self):
-        self.child_ids and self.child_ids.filtered(
+        records = self | self.child_ids.filtered(
             lambda r: r.state != 'done'
-        ).with_context(supplier_action=True).write(
+        )
+        records.with_context(supplier_action=True).write(
             {'state': 'approved'}
         )
-        return self.with_context(supplier_action=True).write(
-            {'state': 'approved'}
-        )
+        return True
 
     def action_reject_administrator(self):
-        self.child_ids and self.child_ids.with_context(
-            supplier_action=True).write({'state': 'rejected'})
-        return self.with_context(supplier_action=True).write(
+        records = self | self.child_ids
+        records.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
+        return True
 
     def set_to_draft(self):
         return self.with_context(supplier_action=True).write(
