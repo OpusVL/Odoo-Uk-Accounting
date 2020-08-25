@@ -57,14 +57,4 @@
         <field name="enable_value">False</field>
     </record>
 
-    <record model="job.role.action" id="amend_system_users_role">
-        <field name="name">Amend system users</field>
-        <field name="enable_value">False</field>
-    </record>
-
-    <record model="job.role.action" id="approve_system_users_role">
-        <field name="name">Approve system users</field>
-        <field name="enable_value">False</field>
-    </record>
-
 </odoo>
