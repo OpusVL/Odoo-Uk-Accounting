@@ -92,19 +92,15 @@ class HrJob(models.Model):
         'job_id',
         string='Job Roles',
     )
-    state = fields.Selection([
-        ('draft', 'Draft'),
-        ('recruit', 'Recruitment in Progress'),
-        ('open', 'Not Recruiting'),
-        ('waiting', 'Waiting'),
-        ('rejected', 'Rejected'),
-        ('approved', 'Approved')],
-        string='Status',
-        readonly=True,
-        required=True,
+    state = fields.Selection(
+        selection_add=[
+            ('draft', 'Draft'),
+            ('waiting', 'Waiting'),
+            ('rejected', 'Rejected'),
+            ('approved', 'Approved')
+        ],
         tracking=True,
-        copy=False,
-        default='draft',)
+    )
     department_id = fields.Many2one(
         'hr.department',
         string='Department',
