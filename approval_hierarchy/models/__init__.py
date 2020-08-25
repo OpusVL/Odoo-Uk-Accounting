@@ -5,8 +5,3 @@ from . import (
     hr_employee_base,
     res_config_setting,
 )
-
-
-
-
-

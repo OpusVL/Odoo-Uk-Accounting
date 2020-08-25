@@ -55,7 +55,7 @@ class HrJobRole(models.Model):
         for role in self:
             if role.max_value and role.min_value and role.min_value > role.max_value:
                 raise ValidationError(_(
-                    "Min Value must be equal or smaller than max value."))
+                    "Min value must be equal or smaller than max value."))
 
     @api.onchange('role_action_id')
     def onchange_role_action_id(self):
