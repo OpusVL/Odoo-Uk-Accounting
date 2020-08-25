@@ -320,21 +320,16 @@ class ResPartnerBank(models.Model):
         return super(ResPartnerBank, self).unlink()
 
     def write(self, vals):
+        res = super(ResPartnerBank, self).write(vals)
+        message = False
         if 'acc_number' in vals:
             message = "Bank Account {} has been modified. " \
                       "View accounts detail for more information".format(
                 vals.get('acc_number'))
-            res = super(ResPartnerBank, self).write(vals)
-            self.partner_id.message_post(body=message)
-            return res
         elif len(vals) != 1 and 'partner_id' not in vals:
-            res = super(ResPartnerBank, self).write(vals)
             message = "Bank Account {} has been modified. " \
                       "View accounts detail for more information".format(
                 self.acc_number)
+        if message:
             self.partner_id.message_post(body=message)
-            return res
-        else:
-            return super(ResPartnerBank, self).write(vals)
-
-
+        return res
