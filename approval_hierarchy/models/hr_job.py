@@ -100,6 +100,7 @@ class HrJob(models.Model):
             ('approved', 'Approved')
         ],
         tracking=True,
+        default='draft',
     )
     department_id = fields.Many2one(
         'hr.department',
