@@ -170,7 +170,7 @@ class HrJob(models.Model):
             vals['state'] = 'draft'
             if 'job_role_ids' in vals:
                 for job_role in vals.get('job_role_ids'):
-                    if isinstance(job_role, tuple) and len(job_role) == 3 \
+                    if isinstance(job_role, list) and len(job_role) == 3 \
                             and isinstance(job_role[2], dict) and job_role[2]:
                         role = self.env['hr.job.role'].browse(job_role[1])
                         message = "Job role {} has been modified.".format(
