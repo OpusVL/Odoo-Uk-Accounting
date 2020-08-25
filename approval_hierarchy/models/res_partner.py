@@ -209,6 +209,8 @@ class ResPartner(models.Model):
         )
 
     def action_reject(self):
+        self.child_ids and self.child_ids.with_context(
+            supplier_action=True).write({'state': 'rejected'})
         return self.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
@@ -224,6 +226,8 @@ class ResPartner(models.Model):
         )
 
     def action_reject_administrator(self):
+        self.child_ids and self.child_ids.with_context(
+            supplier_action=True).write({'state': 'rejected'})
         return self.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
