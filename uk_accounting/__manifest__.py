@@ -52,5 +52,6 @@
         'data/ir_sequence_data.xml',
         'views/account_account_view.xml',
         'views/account_move_view.xml',
+        'views/res_partner_bank_view.xml',
     ],
 }

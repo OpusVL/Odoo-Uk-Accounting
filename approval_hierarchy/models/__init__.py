@@ -4,4 +4,5 @@ from . import (
     res_users,
     hr_employee_base,
     res_config_setting,
+    res_partner,
 )
