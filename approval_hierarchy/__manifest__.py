@@ -40,7 +40,6 @@
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'security/approval_hierarchy_security.xml',
         'data/job_role_action_data.xml',
         'data/data.xml',
         'views/hr_job_views.xml',
