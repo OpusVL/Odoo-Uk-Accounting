@@ -123,17 +123,19 @@ class HrJob(models.Model):
     def request_approval(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
-            raise UserError(_('You dont have the rights to request approval for'
-                              ' this job position, Please contact with '
-                              'an administrator.')
+            raise UserError(_('You do not have the permission to request '
+                              'approval for this job position. '
+                              'Please contact the support team.')
                             )
-        return self.write({'state': 'waiting'})
+        return self.with_context(supplier_action=True).write({'state': 'waiting'})
 
     def action_approve(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
-            raise UserError(_('You dont have the rights to approve this job '
-                              'position, Please contact with an administrator.')
+            raise UserError(_('You do not have the permission to approve '
+                              'this job position. '
+                              'Please contact the support team.'
+                              )
                             )
         return self.with_context(supplier_action=True).write(
             {'state': 'approved'}
@@ -142,8 +144,9 @@ class HrJob(models.Model):
     def action_reject(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
-            raise UserError(_('You dont have the rights to reject this job '
-                              'position, Please contact with an administrator.')
+            raise UserError(_('You do not have the permission to reject '
+                              'this job position. '
+                              'Please contact the support team.')
                             )
         return self.with_context(supplier_action=True).write(
             {'state': 'rejected'}
@@ -152,11 +155,11 @@ class HrJob(models.Model):
     def set_to_draft(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
-            raise UserError(_('You dont have the rights to send to draft'
-                              ' this job position, Please contact with '
-                              'an administrator.')
+            raise UserError(_('You do not have the permission to make changes '
+                              'to this job position. '
+                              'Please contact the support team.')
                             )
-        return self.write({'state': 'draft'})
+        return self.with_context(supplier_action=True).write({'state': 'draft'})
 
     def write(self, vals):
         if self._context.get('supplier_action'):
@@ -170,50 +173,13 @@ class HrJob(models.Model):
                     if isinstance(job_role, list) and len(job_role) == 3 \
                             and isinstance(job_role[2], dict) and job_role[2]:
                         role = self.env['hr.job.role'].browse(job_role[1])
-                        message = "Job role {} has been modified.".format(
+                        message = "Changes made to the job role '{}'.".format(
                             role.name)
                         self.message_post(body=message)
             return super(HrJob, self.with_context(
                 supplier_action=True)).write(vals)
         else:
-            raise UserError(_('You dont have the rights to modify a job '
-                              'position, Please contact with an administrator.')
+            raise UserError(_('You do not have the permission to make changes '
+                              'to this job position. '
+                              'Please contact the support team.')
                             )
-
-
-class HrEmployee(models.Model):
-    _inherit = 'hr.employee'
-
-    def get_approved_user(self, action):
-        approval_user_id = False
-        found = False
-        employee = self
-        while not found and employee:
-            # Checks if employee has approval rights
-            has_approval_rights = employee.check_if_has_approval_rights(
-                action)
-            if has_approval_rights:
-                found = True
-                delegated_user = employee.user_id.delegated_user_id
-                if delegated_user:
-                    while delegated_user:
-                        approval_user_id = delegated_user
-                        delegated_user = delegated_user.delegated_user_id
-                else:
-                    approval_user_id = employee.user_id
-            else:
-                # Replace with employee manager and next loop it will
-                # controll if his manager has approval rights
-                employee = employee.parent_id
-        return approval_user_id
-
-    def check_if_has_approval_rights(self, action):
-        if not self.user_id or not self.job_id:
-            return False
-        else:
-            role_action = self.job_id.job_role_ids.filtered(
-                lambda r: r.role_action_id == action and r.permission)
-            if role_action:
-                return True
-            else:
-                return False

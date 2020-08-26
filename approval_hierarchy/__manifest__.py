@@ -44,6 +44,7 @@
         'data/job_role_action_data.xml',
         'data/data.xml',
         'views/hr_job_views.xml',
+        'views/hr_employee_views.xml',
         'views/res_users_views.xml',
         'views/res_partner_views.xml',
     ],

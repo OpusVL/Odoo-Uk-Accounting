@@ -232,16 +232,17 @@ class ResPartner(models.Model):
     @api.model
     def create(self, vals):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your configuration are not correct, '
-                              'Please contact with an administrator.'))
+            raise UserError(_('Your user account is not configured properly. '
+                              'Please contact the administration team.'))
         role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(_('You dont have rights to create a partner, '
-                              'Please contact with an administrator.'))
+            raise UserError(_('You do not have the permission '
+                              'to create a partner. '
+                              'Please contact the administration team.'))
         res = super(ResPartner, self).create(vals)
         if vals and vals.get('parent_id'):
-            message = "Contact {} has been created. ".format(
+            message = "Contact '{}' is created. ".format(
                 res.name)
             res.parent_id.set_to_draft()
             res.parent_id.message_post(body=message)
@@ -253,14 +254,16 @@ class ResPartner(models.Model):
                 supplier_action=True)).write(vals)
         else:
             if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-                raise UserError(_('Your configuration are not right, '
-                                  'Please contact with an administrator.'))
+                raise UserError(_('Your user account is not configured '
+                                  'properly. '
+                                  'Please contact the support team.'))
             role_action = self.env.ref(
                 'approval_hierarchy.supplier_set_up_role')
             if not self.env.user.employee_id.check_if_has_approval_rights(
                     role_action):
-                raise UserError(_('You dont have rights to modify a partner, '
-                                  'Please contact with an administrator.'))
+                raise UserError(_('You do not have the permission '
+                                  'to modify a partner. '
+                                  'Please contact the support team.'))
             if 'child_ids' in vals:
                 for child in vals.get('child_ids'):
                     if isinstance(child, list) and len(child) == 3 \
@@ -269,7 +272,7 @@ class ResPartner(models.Model):
                             'state': 'draft',
                             'approval_user_id': False,
                         })
-                        message = "Contact {} has been modified.".format(
+                        message = "Changes made to the contact '{}'".format(
                             self.browse(child[1]).name)
                         self.message_post(body=message)
             vals['state'] = 'draft'
@@ -279,19 +282,20 @@ class ResPartner(models.Model):
 
     def unlink(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your configuration are not right, '
-                              'Please contact with an administrator.'))
+            raise UserError(_('Your user account is not configured properly. '
+                              'Please contact the support team.'))
         role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(_('You dont have rights to delete a partner, '
-                              'Please contact with an administrator.'))
+            raise UserError(_('You do not have the permission to delete a '
+                              'partner. Please contact the support team.'
+                              ))
         for partner in self:
             if partner.state != 'draft':
                 raise UserError(_('In order to delete a partner, '
                                   'you must set it first to draft.'))
             if partner.parent_id:
-                message = "Contact {} has been deleted.".format(
+                message = "Contact '{}' is deleted.".format(
                     partner.name)
                 partner.parent_id.message_post(body=message)
                 partner.parent_id.set_to_draft()
@@ -333,7 +337,7 @@ class ResPartnerBank(models.Model):
     def create(self, vals):
         res = super(ResPartnerBank, self).create(vals)
         if vals:
-            message = "Bank Account {} has been created. " \
+            message = "Bank Account '{}' is created. " \
                       "View accounts detail for more information".format(
                 res.acc_number)
             res.partner_id.message_post(body=message)
@@ -341,7 +345,7 @@ class ResPartnerBank(models.Model):
 
     def unlink(self):
         for bank_account in self:
-            message = "Bank Account {} has been deleted.".format(
+            message = "Bank Account '{}' is deleted.".format(
                 bank_account.acc_number)
             bank_account.partner_id.message_post(body=message)
         return super(ResPartnerBank, self).unlink()
@@ -350,11 +354,11 @@ class ResPartnerBank(models.Model):
         res = super(ResPartnerBank, self).write(vals)
         message = False
         if 'acc_number' in vals:
-            message = "Bank Account {} has been modified. " \
+            message = "Changes made to the bank account '{}'." \
                       "View accounts detail for more information".format(
                 vals.get('acc_number'))
         elif len(vals) != 1 and 'partner_id' not in vals:
-            message = "Bank Account {} has been modified. " \
+            message = "Changes made to the bank account '{}'. " \
                       "View accounts detail for more information".format(
                 self.acc_number)
         if message:

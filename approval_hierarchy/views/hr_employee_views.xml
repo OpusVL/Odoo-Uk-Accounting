@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">hr.employee.form.inherit</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//header" position="after">
+                    <header>
+                        <button name="request_approval" string="Request Approval" states="draft"
+                            type="object" class="oe_highlight" groups="approval_hierarchy.group_amend_system_users"/>
+                        <button name="action_approve" string="Approve" states="waiting"
+                                type="object" class="oe_highlight" groups="approval_hierarchy.group_approve_system_users"/>
+                        <button name="action_reject" string="Reject" states="waiting"
+                                type="object" class="oe_highlight" groups="approval_hierarchy.group_approve_system_users"/>
+                        <button name="set_to_draft" string="Set to Draft" groups="approval_hierarchy.group_amend_system_users"
+                                type="object" states="rejected,recruit,open"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved,rejected"/>
+                    </header>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
