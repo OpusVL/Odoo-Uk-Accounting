@@ -12,6 +12,15 @@
                     <field name="has_delegated" invisible="1"/>
                     <field name="delegated_user_id" domain="[('job_id', '=', job_id), ('id', '!=', uid), ('has_delegated', '=', False)]" options="{'no_create': True}"/>
                 </xpath>
+                <xpath expr="//field[@name='hr_presence_state']" position="after">
+                    <field name="current_user" invisible="1"/>
+                </xpath>
+                <xpath expr="//page[@name='personal_information']" position="attributes">
+                    <attribute name="attrs">{'invisible': [('current_user', '=', False)]}</attribute>
+                </xpath>
+                <xpath expr="//page[@name='hr_settings']" position="attributes">
+                    <attribute name="attrs">{'invisible': [('current_user', '=', False)]}</attribute>
+                </xpath>
             </field>
         </record>
 
@@ -28,6 +37,11 @@
                     </group>
                 </xpath>
             </field>
+        </record>
+
+
+        <record id="hr.res_users_action_my" model="ir.actions.act_window">
+            <field name="target">new</field>
         </record>
 
     </data>

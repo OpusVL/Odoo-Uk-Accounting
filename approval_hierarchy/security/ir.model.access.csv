@@ -10,3 +10,24 @@ access_job_role_action_all_users,job.role.action.user,model_job_role_action,base
 access_hr_job_role_all_users,hr.job.role.user,model_hr_job_role,base.group_user,1,0,0,0
 access_hr_job_all_users,hr.job.user,hr.model_hr_job,base.group_user,1,0,0,0
 hr.access_hr_job_user,hr.job user,hr.model_hr_job,hr.group_hr_user,1,0,0,0
+hr.access_hr_employee_user,hr.employee user,hr.model_hr_employee,hr.group_hr_user,1,0,0,0
+access_hr_employee_amend_user,hr.employee.amend.user,hr.model_hr_employee,approval_hierarchy.group_amend_system_users,1,1,1,1
+access_hr_employee_approve_user,hr.employee.approve.user,hr.model_hr_employee,approval_hierarchy.group_approve_system_users,1,1,0,0
+hr.access_hr_department_user,hr.department.user,hr.model_hr_department,hr.group_hr_user,1,0,0,0
+access_hr_department_amend_user,hr.department.amend.user,hr.model_hr_department,approval_hierarchy.group_amend_system_users,1,1,1,1
+access_hr_department_approve_user,hr.department.approve.user,hr.model_hr_department,approval_hierarchy.group_approve_system_users,1,1,0,0
+base.access_res_users_group_erp_manager,res_users group_erp_manager,base.model_res_users,base.group_erp_manager,1,1,0,0
+access_res_users_amend_user,res.users.amend.user,base.model_res_users,approval_hierarchy.group_amend_system_users,1,1,1,1
+access_res_users_approve_user,res.users.approve.user,base.model_res_users,approval_hierarchy.group_approve_system_users,1,1,0,0
+hr.access_hr_employee_resource_user,resource.resource.user,resource.model_resource_resource,hr.group_hr_user,1,0,0,0
+access_hr_employee_resource_amend_user,hr.employee.resource.amend.user,resource.model_resource_resource,approval_hierarchy.group_amend_system_users,1,1,1,1
+access_hr_employee_resource_approve_user,hr.employee.resource.approve.user,resource.model_resource_resource,approval_hierarchy.group_approve_system_users,1,1,0,0
+hr.access_hr_employee_category_user,hr.employee.category.user,hr.model_hr_employee_category,hr.group_hr_user,1,0,0,0
+access_hr_employee_category_amend_user,hr.employee.category.amend.user,hr.model_hr_employee_category,approval_hierarchy.group_amend_system_users,1,1,1,1
+access_hr_employee_category_approve_user,hr.employee.category.approve.user,hr.model_hr_employee_category,approval_hierarchy.group_approve_system_users,1,1,0,0
+access_hr_plan_activity_type_amend_user,access_hr_plan_activity_type amend_user,hr.model_hr_plan_activity_type,approval_hierarchy.group_amend_system_users,1,1,1,1
+access_hr_plan_activity_type_approve_user,access_hr_plan_activity_type approve_user,hr.model_hr_plan_activity_type,approval_hierarchy.group_approve_system_users,1,1,0,0
+access_hr_plan_amend_user,access_hr_plan_amend_user,hr.model_hr_plan,approval_hierarchy.group_amend_system_users,1,1,1,1
+access_hr_plan_approve_user,access_hr_plan_approve_user,hr.model_hr_plan,approval_hierarchy.group_approve_system_users,1,1,0,0
+access_ir_property_amend_user,ir_property amend_user,base.model_ir_property,approval_hierarchy.group_amend_system_users,1,1,1,0
+access_ir_property_approve_user,ir_property approve_user,base.model_ir_property,approval_hierarchy.group_approve_system_users,1,1,1,0

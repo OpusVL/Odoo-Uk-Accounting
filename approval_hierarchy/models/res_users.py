@@ -17,6 +17,11 @@ class ResUsers(models.Model):
         store=True,
     )
     has_delegated = fields.Boolean(compute='_check_has_delegated')
+    current_user = fields.Boolean(compute='_compute_current_user')
+
+    def _compute_current_user(self):
+        for user in self:
+            user.current_user = user == self.env.user
 
     def _check_has_delegated(self):
         for rec in self:
