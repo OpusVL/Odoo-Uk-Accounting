@@ -2,6 +2,7 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.addons.base.models.res_partner import WARNING_MESSAGE, WARNING_HELP
 
 
 class ResPartner(models.Model):
@@ -148,6 +149,17 @@ class ResPartner(models.Model):
         help="This account will be used instead of the default one as the "
              "receivable account for the current partner",
         required=True,
+        tracking=True,
+    )
+    payment_warn = fields.Selection(
+        WARNING_MESSAGE,
+        'Purchase Order',
+        help=WARNING_HELP,
+        default="no-message",
+        tracking=True,
+    )
+    payment_warn_msg = fields.Text(
+        'Message for Purchase Order',
         tracking=True,
     )
 

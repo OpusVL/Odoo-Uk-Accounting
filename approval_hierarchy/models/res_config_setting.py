@@ -1,8 +1,13 @@
-from odoo import models, api
+from odoo import models, api, fields
 
 
 class ResConfigSetting(models.TransientModel):
     _inherit = 'res.config.settings'
+
+    group_warning_payment = fields.Boolean(
+        "Payment Warnings",
+        implied_group='approval_hierarchy.group_warning_payment'
+    )
     
     @api.model
     def set_approval_config(self):

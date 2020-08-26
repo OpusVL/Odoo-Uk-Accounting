@@ -15,4 +15,9 @@
         <field name="category_id" ref="base.module_category_hidden"/>
     </record>
 
+    <record id="group_warning_payment" model="res.groups">
+        <field name="name">A warning can be set on a partner (Payment)</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+    </record>
+
 </odoo>

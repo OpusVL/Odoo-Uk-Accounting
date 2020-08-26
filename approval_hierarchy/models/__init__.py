@@ -5,4 +5,5 @@ from . import (
     hr_employee,
     res_config_setting,
     res_partner,
+    account_payment,
 )
