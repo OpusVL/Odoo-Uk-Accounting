@@ -171,10 +171,20 @@ class HrJob(models.Model):
             if 'job_role_ids' in vals:
                 for job_role in vals.get('job_role_ids'):
                     if isinstance(job_role, list) and len(job_role) == 3 \
-                            and isinstance(job_role[2], dict) and job_role[2]:
+                            and isinstance(job_role[2], dict) and job_role[2] \
+                            and isinstance(job_role[1], int):
                         role = self.env['hr.job.role'].browse(job_role[1])
                         message = "Changes made to the job role '{}'.".format(
                             role.name)
+                        if 'permission' in job_role[2]:
+                            message += '\nPermission: {}'.format(
+                                job_role[2]['permission'])
+                        if 'min_value' in job_role[2]:
+                            message += '\nMin Value: {}'.format(
+                                job_role[2]['min_value'])
+                        if 'max_value' in job_role[2]:
+                            message += '\nMax Value: {}'.format(
+                                job_role[2]['max_value'])
                         self.message_post(body=message)
             return super(HrJob, self.with_context(
                 supplier_action=True)).write(vals)
