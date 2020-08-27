@@ -153,13 +153,13 @@ class ResPartner(models.Model):
     )
     payment_warn = fields.Selection(
         WARNING_MESSAGE,
-        'Purchase Order',
+        'Payment',
         help=WARNING_HELP,
         default="no-message",
         tracking=True,
     )
     payment_warn_msg = fields.Text(
-        'Message for Purchase Order',
+        'Message for Payment',
         tracking=True,
     )
 
