@@ -147,10 +147,9 @@ class AccountMove(models.Model):
                         _('You do not have the permission to request '
                           'approval. Please contact the support team.'))
         approval_role_action = self.get_approval_role_action()
-        value = 1
         approved_user = approval_role_action and self.env.user.employee_id and \
                         self.env.user.employee_id.get_approved_user_amount_interval(
-                            approval_role_action, value, self.currency_id) or False
+                            approval_role_action, self.amount_total, self.currency_id) or False
         if approved_user == self.env.user:
             self.with_context(supplier_action=True).write(
                 {
@@ -177,9 +176,8 @@ class AccountMove(models.Model):
             raise UserError(_('Your user account is not configured properly. '
                               'Please contact the support team.'))
         role_action = self.get_approval_role_action()
-        value = 1
         if not role_action or not self.env.user.employee_id.check_if_has_approval_rights_amount_interval(
-                role_action, value, self.currency_id):
+                role_action, self.amount_total, self.currency_id):
             raise UserError(_('You do not have the permission to approve this '
                               'record. Please contact the support team.'))
         return super(AccountMove, self.with_context(
@@ -192,9 +190,8 @@ class AccountMove(models.Model):
             raise UserError(_('Your user account is not configured properly. '
                               'Please contact the support team.'))
         role_action = self.get_approval_role_action()
-        value = 1
         if not role_action or not self.env.user.employee_id.check_if_has_approval_rights_amount_interval(
-                role_action, value, self.currency_id):
+                role_action, self.amount_total, self.currency_id):
             raise UserError(_('You do not have the permission to reject this '
                               'record. Please contact the support team.'))
         return self.with_context(supplier_action=True).write(
