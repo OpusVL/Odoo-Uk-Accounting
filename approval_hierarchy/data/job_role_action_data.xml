@@ -24,7 +24,7 @@
 
     <record model="job.role.action" id="input_account_move_role">
         <field name="name">Journal set up</field>
-        <field name="enable_value">True</field>
+        <field name="enable_value">False</field>
     </record>
 
     <record model="job.role.action" id="input_ap_invoice_role">
