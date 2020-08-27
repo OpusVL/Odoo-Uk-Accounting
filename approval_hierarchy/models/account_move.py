@@ -141,12 +141,12 @@ class AccountMove(models.Model):
         elif self.type == 'entry':
             amend_role_action = self.env.ref(
                 'approval_hierarchy.input_account_move_role')
-        if amend_role_action and not self.env.user.employee_id.check_if_has_approval_rights(
+        if not self.env.user.employee_id.check_if_has_approval_rights(
                 amend_role_action):
             raise UserError(_('You do not have the permission to request '
                               'approval. Please contact the support team.'))
         approval_role_action = self.get_approval_role_action()
-        approved_user = self.env.user.employee_id.get_approved_user_amount_interval(
+        approved_user = self.env.user.employee_id.get_approved_user(
             approval_role_action, self.amount_total, self.currency_id)
         if approved_user == self.env.user:
             self.with_context(supplier_action=True).write(
@@ -171,7 +171,7 @@ class AccountMove(models.Model):
             raise UserError(_('Your user account is not configured properly. '
                               'Please contact the support team.'))
         role_action = self.get_approval_role_action()
-        if not self.env.user.employee_id.check_if_has_approval_rights_amount_interval(
+        if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action, self.amount_total, self.currency_id):
             raise UserError(_('You do not have the permission to approve this '
                               'record. Please contact the support team.'))
@@ -185,7 +185,7 @@ class AccountMove(models.Model):
             raise UserError(_('Your user account is not configured properly. '
                               'Please contact the support team.'))
         role_action = self.get_approval_role_action()
-        if not self.env.user.employee_id.check_if_has_approval_rights_amount_interval(
+        if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action, self.amount_total, self.currency_id):
             raise UserError(_('You do not have the permission to reject this '
                               'record. Please contact the support team.'))

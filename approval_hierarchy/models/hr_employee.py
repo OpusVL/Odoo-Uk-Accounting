@@ -273,49 +273,13 @@ class HrEmployee(models.Model):
         for rec in self:
             rec.has_delegated = rec.delegated_user_id and True or False
 
-    def get_approved_user(self, action):
+    def get_approved_user(self, action, value=0, currency=False):
         approval_user_id = False
         found = False
         employee = self
         while not found and employee:
             # Checks if employee has approval rights
             has_approval_rights = employee.check_if_has_approval_rights(
-                action)
-            if has_approval_rights:
-                found = True
-                delegated_user = employee.user_id.delegated_user_id
-                if delegated_user:
-                    while delegated_user:
-                        approval_user_id = delegated_user
-                        delegated_user = delegated_user.delegated_user_id
-                else:
-                    approval_user_id = employee.user_id
-            else:
-                # Replace with employee manager and next loop it will
-                # controll if his manager has approval rights
-                employee = employee.parent_id
-        return approval_user_id
-
-    def check_if_has_approval_rights(self, action):
-        if not self.user_id or not self.job_id or not \
-                self.job_id.state == 'approved' or not self.state == 'approved':
-            return False
-        else:
-            role_action = self.job_id.job_role_ids.filtered(
-                lambda r: r.role_action_id == action and r.permission)
-            if role_action:
-                return True
-            else:
-                return False
-
-    def get_approved_user_amount_interval(self, action,
-                                          value, currency):
-        approval_user_id = False
-        found = False
-        employee = self
-        while not found and employee:
-            # Checks if employee has approval rights
-            has_approval_rights = employee.check_if_has_approval_rights_amount_interval(
                 action, value, currency)
             if has_approval_rights:
                 found = True
@@ -332,24 +296,24 @@ class HrEmployee(models.Model):
                 employee = employee.parent_id
         return approval_user_id
 
-    def check_if_has_approval_rights_amount_interval(self, action,
-                                                     value, currency):
+    def check_if_has_approval_rights(self, action, value=0, currency=False):
         if not self.user_id or not self.job_id or not \
                 self.job_id.state == 'approved' or not self.state == 'approved':
             return False
         else:
-            role_action = self.job_id.job_role_ids.filtered(
-                lambda r: r.role_action_id == action and r.permission and
-                          r.currency_id == currency)
-            if role_action:
-                # As a result of constraint unique if
-                # role_action the length will be 1
+            role_access = False
+            if value:
+                role_action = self.job_id.job_role_ids.filtered(
+                    lambda r: r.role_action_id == action and r.permission and
+                              r.currency_id == currency)
                 if role_action[0].min_value <= value <= role_action[0].max_value:
-                    return True
-                else:
-                    return False
+                    role_access = True
             else:
-                return False
+                role_action = self.job_id.job_role_ids.filtered(
+                    lambda r: r.role_action_id == action and r.permission)
+                if role_action:
+                    role_access = True
+            return role_access
 
     def request_approval(self):
         if not self.env.user.has_group(

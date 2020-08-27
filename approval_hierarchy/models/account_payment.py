@@ -79,7 +79,7 @@ class AccountPayment(models.Model):
 
     @api.onchange('payment_date')
     def onchange_payment_date_warning(self):
-        if not self.payment_date or not self.payment_date or not \
+        if not self.payment_date or not self.partner_id or not \
                 self.register_payment_action or not self.env.user.has_group(
                     'approval_hierarchy.group_warning_payment'):
             return {}
