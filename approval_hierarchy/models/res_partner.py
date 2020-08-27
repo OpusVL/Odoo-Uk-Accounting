@@ -191,7 +191,7 @@ class ResPartner(models.Model):
             'approval_hierarchy.supplier_approval_role')
         approved_user = self.env.user.employee_id and \
                         self.env.user.employee_id.get_approved_user(
-                            approval_role_action) or False
+                            approval_role_action)
         if approved_user == self.env.user:
             records = self | self.child_ids.filtered(
                 lambda child: child.state == 'draft')
