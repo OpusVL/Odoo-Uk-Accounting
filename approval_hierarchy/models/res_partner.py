@@ -177,10 +177,21 @@ class ResPartner(models.Model):
             partner.is_company = partner.company_type == 'company'
 
     def request_approval(self):
-        role_action = self.env.ref('approval_hierarchy.supplier_approval_role')
+        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+            raise UserError(_('Your user account is not configured properly. '
+                              'Please contact the administration team.'))
+        amend_role_action = self.env.ref(
+            'approval_hierarchy.supplier_set_up_role')
+        if not self.env.user.employee_id.check_if_has_approval_rights(
+                amend_role_action):
+            raise UserError(_('You do not have the permission '
+                              'to request approval. '
+                              'Please contact the administration team.'))
+        approval_role_action = self.env.ref(
+            'approval_hierarchy.supplier_approval_role')
         approved_user = self.env.user.employee_id and \
                         self.env.user.employee_id.get_approved_user(
-                            role_action) or False
+                            approval_role_action) or False
         if approved_user == self.env.user:
             records = self | self.child_ids.filtered(
                 lambda child: child.state == 'draft')
@@ -203,6 +214,16 @@ class ResPartner(models.Model):
             return True
 
     def action_approve(self):
+        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+            raise UserError(_('Your user account is not configured properly. '
+                              'Please contact the administration team.'))
+        role_action = self.env.ref(
+            'approval_hierarchy.supplier_approval_role')
+        if not self.env.user.employee_id.check_if_has_approval_rights(
+                role_action):
+            raise UserError(_('You do not have the permission '
+                              'to approve a partner. '
+                              'Please contact the administration team.'))
         records = self | self.child_ids.filtered(
             lambda child: child.state != 'done')
         records.with_context(supplier_action=True).write(
@@ -211,6 +232,16 @@ class ResPartner(models.Model):
         return True
 
     def action_reject(self):
+        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+            raise UserError(_('Your user account is not configured properly. '
+                              'Please contact the administration team.'))
+        role_action = self.env.ref(
+            'approval_hierarchy.supplier_approval_role')
+        if not self.env.user.employee_id.check_if_has_approval_rights(
+                role_action):
+            raise UserError(_('You do not have the permission '
+                              'to reject a partner. '
+                              'Please contact the administration team.'))
         records = self | self.child_ids
         records.with_context(supplier_action=True).write(
             {'state': 'rejected'}
@@ -234,6 +265,17 @@ class ResPartner(models.Model):
         return True
 
     def set_to_draft(self):
+        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+            raise UserError(_('Your user account is not configured '
+                              'properly. '
+                              'Please contact the support team.'))
+        role_action = self.env.ref(
+            'approval_hierarchy.supplier_set_up_role')
+        if not self.env.user.employee_id.check_if_has_approval_rights(
+                role_action):
+            raise UserError(_('You do not have the permission '
+                              'to modify a partner. '
+                              'Please contact the support team.'))
         return self.with_context(supplier_action=True).write(
             {
                 'state': 'draft',
@@ -256,7 +298,6 @@ class ResPartner(models.Model):
         if vals and vals.get('parent_id'):
             message = "Contact '{}' is created. ".format(
                 res.name)
-            res.parent_id.set_to_draft()
             res.parent_id.message_post(body=message)
         return res
 
@@ -288,6 +329,9 @@ class ResPartner(models.Model):
                         message = "Changes made to the contact '{}'".format(
                             self.browse(child[1]).name)
                         self.message_post(body=message)
+            if 'child_ids' in vals and len(vals) == 1:
+                return super(ResPartner, self.with_context(
+                    supplier_action=True)).write(vals)
             vals['state'] = 'draft'
             vals['approval_user_id'] = False
             return super(ResPartner,  self.with_context(
