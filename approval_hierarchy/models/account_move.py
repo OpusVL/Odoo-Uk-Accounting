@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from datetime import datetime
 from odoo.exceptions import UserError
 
 
 class AccountMove(models.Model):
-    _name = "account.move"
+    _inherit = "account.move"
 
     @api.model_create_multi
     def create(self, vals_list):
