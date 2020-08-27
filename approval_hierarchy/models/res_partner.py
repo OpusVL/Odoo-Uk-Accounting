@@ -214,6 +214,9 @@ class ResPartner(models.Model):
             return True
 
     def action_approve(self):
+        # double validation, in fact buttons action_approve and action_reject
+        # are visible only for a single user which has been filled when
+        # requesting approval.
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
             raise UserError(_('Your user account is not configured properly. '
                               'Please contact the administration team.'))
@@ -329,6 +332,8 @@ class ResPartner(models.Model):
                         message = "Changes made to the contact '{}'".format(
                             self.browse(child[1]).name)
                         self.message_post(body=message)
+            # Not to change the status of parent if is
+            # changed only the field child_ids
             if 'child_ids' in vals and len(vals) == 1:
                 return super(ResPartner, self.with_context(
                     supplier_action=True)).write(vals)

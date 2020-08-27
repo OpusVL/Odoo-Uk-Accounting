@@ -56,6 +56,8 @@ class HrJobRole(models.Model):
         if vals:
             message = "Job role {} has been created.".format(
                 res.name)
+            # There is no need to control if res.job_id because is a
+            # one2many field and always will have value
             res.job_id.message_post(body=message)
         return res
 
@@ -182,6 +184,8 @@ class HrJob(models.Model):
                         role = self.env['hr.job.role'].browse(job_role[1])
                         message = "Changes made to the job role '{}'.".format(
                             role.name)
+                        # I could not find a way to make these lines look
+                        # better, without if-s
                         if 'permission' in job_role[2]:
                             message += '\nPermission: {}'.format(
                                 job_role[2]['permission'])

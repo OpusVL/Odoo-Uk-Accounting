@@ -46,14 +46,15 @@ class AccountMove(models.Model):
 
     def check_move_approval_access_rights(self):
         if self.type in ('out_invoice', 'out_refund'):
-            # Check Input C Invoice access rights
+            # Check Input customer invoice and credit note access rights
             self.with_context(approval_origin='unlink'
                               )._check_customer_invoice_access_rights()
         elif self.type in ('in_invoice', 'in_refund'):
-            # Check Input AP Invoice access rights
+            # Check Input supplier bill and refund access rights
             self.with_context(approval_origin='unlink'
                               )._check_vendor_bill_access_rights()
         else:
+            # Check Input journal entry access rights
             self.with_context(approval_origin='write'
                               )._check_account_move_access_rights()
         return True
@@ -114,13 +115,13 @@ class AccountMove(models.Model):
                 role_action):
             custom_error_messages = {
                 'create': _('You do not have the permission to create a '
-                            'journal. Please contact the support team.'
+                            'journal entry. Please contact the support team.'
                             ),
                 'write': _('You do not have the permission to modify a '
-                           'journal. Please contact the support team.'
+                           'journal entry. Please contact the support team.'
                            ),
                 'unlink': _('You do not have the permission to delete a '
-                            'journal. Please contact the support team.'
+                            'journal entry. Please contact the support team.'
                             ),
             }
             raise UserError(custom_error_messages.get(self._context.get(
