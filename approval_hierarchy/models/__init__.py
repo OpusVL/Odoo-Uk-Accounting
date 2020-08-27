@@ -6,4 +6,5 @@ from . import (
     res_config_setting,
     res_partner,
     account_payment,
+    account_move,
 )
