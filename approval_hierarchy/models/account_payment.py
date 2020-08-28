@@ -15,13 +15,14 @@ def _get_warn_partner_id(partner):
 class AccountPayment(models.Model):
     _inherit = "account.payment"
 
+    # Override the field cause i needed to remove the default,
+    # and to input the default value in default_get
     payment_date = fields.Date(
         string='Date',
         required=True,
         readonly=True,
         states={'draft': [('readonly', False)]},
         copy=False,
-        tracking=True,
     )
     register_payment_action = fields.Boolean()
 

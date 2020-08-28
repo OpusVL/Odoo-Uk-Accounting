@@ -2,6 +2,7 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.addons.approval_hierarchy import helpers
 
 
 class JobRoleAction(models.Model):
@@ -107,25 +108,7 @@ class HrJob(models.Model):
             ('rejected', 'Rejected'),
             ('approved', 'Approved')
         ],
-        tracking=True,
         default='draft',
-    )
-    department_id = fields.Many2one(
-        'hr.department',
-        string='Department',
-        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
-        tracking=True,
-    )
-    description = fields.Text(
-        string='Job Description',
-        tracking=True,
-    )
-    name = fields.Char(
-        string='Job Position',
-        required=True,
-        index=True,
-        translate=True,
-        tracking=True,
     )
 
     def request_approval(self):
@@ -175,27 +158,30 @@ class HrJob(models.Model):
                 supplier_action=True)).write(vals)
         elif self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
-            vals['state'] = 'draft'
-            if 'job_role_ids' in vals:
-                for job_role in vals.get('job_role_ids'):
-                    if isinstance(job_role, list) and len(job_role) == 3 \
-                            and isinstance(job_role[2], dict) and job_role[2] \
-                            and isinstance(job_role[1], int):
-                        role = self.env['hr.job.role'].browse(job_role[1])
-                        message = "Changes made to the job role '{}'.".format(
-                            role.name)
-                        # I could not find a way to make these lines look
-                        # better, without if-s
-                        if 'permission' in job_role[2]:
-                            message += '\nPermission: {}'.format(
-                                job_role[2]['permission'])
-                        if 'min_value' in job_role[2]:
-                            message += '\nMin Value: {}'.format(
-                                job_role[2]['min_value'])
-                        if 'max_value' in job_role[2]:
-                            message += '\nMax Value: {}'.format(
-                                job_role[2]['max_value'])
-                        self.message_post(body=message)
+            fields_to_be_tracked = helpers.get_fields_to_be_tracked()
+            if any(field in vals for field in
+                   fields_to_be_tracked.get('hr.job')):
+                vals['state'] = 'draft'
+                if 'job_role_ids' in vals:
+                    for job_role in vals.get('job_role_ids'):
+                        if isinstance(job_role, list) and len(job_role) == 3 \
+                                and isinstance(job_role[2], dict) and job_role[2] \
+                                and isinstance(job_role[1], int):
+                            role = self.env['hr.job.role'].browse(job_role[1])
+                            message = "Changes made to the job role '{}'.".format(
+                                role.name)
+                            # I could not find a way to make these lines look
+                            # better, without if-s
+                            if 'permission' in job_role[2]:
+                                message += '\nPermission: {}'.format(
+                                    job_role[2]['permission'])
+                            if 'min_value' in job_role[2]:
+                                message += '\nMin Value: {}'.format(
+                                    job_role[2]['min_value'])
+                            if 'max_value' in job_role[2]:
+                                message += '\nMax Value: {}'.format(
+                                    job_role[2]['max_value'])
+                            self.message_post(body=message)
             return super(HrJob, self.with_context(
                 supplier_action=True)).write(vals)
         else:

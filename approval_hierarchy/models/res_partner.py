@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.addons.base.models.res_partner import WARNING_MESSAGE, WARNING_HELP
+from odoo.addons.approval_hierarchy import helpers
 
 
 class ResPartner(models.Model):
@@ -20,147 +21,20 @@ class ResPartner(models.Model):
             ("rejected", "Rejected"),
         ],
         default="draft",
-        tracking=True,
     )
     approval_user_id = fields.Many2one(
         'res.users',
         string='Approved by',
-        tracking=True,
     )
     current_user = fields.Boolean(compute='_get_current_user')
-    name = fields.Char(index=True, tracking=True,)
-    # company_type is only an interface field, do not use it in business logic
-    company_type = fields.Selection(
-        string='Company Type',
-        selection=[('person', 'Individual'), ('company', 'Company')],
-        compute='_compute_company_type',
-        inverse='_write_company_type',
-        tracking=True,
-    )
-    street = fields.Char(tracking=True,)
-    street2 = fields.Char(tracking=True,)
-    zip = fields.Char(change_default=True, tracking=True,)
-    city = fields.Char(tracking=True,)
-    state_id = fields.Many2one(
-        "res.country.state",
-        string='State',
-        ondelete='restrict',
-        domain="[('country_id', '=?', country_id)]",
-        tracking=True,
-    )
-    country_id = fields.Many2one(
-        'res.country',
-        string='Country',
-        ondelete='restrict',
-        tracking=True,
-    )
-    vat = fields.Char(
-        string='Tax ID',
-        help="The Tax Identification Number. Complete it if the contact is "
-             "subjected to government taxes. Used in some legal statements.",
-        tracking=True,
-    )
-    phone = fields.Char(tracking=True,)
-    mobile = fields.Char(tracking=True,)
-    email = fields.Char(tracking=True,)
-    website = fields.Char('Website Link', tracking=True,)
-    category_id = fields.Many2many(
-        'res.partner.category',
-        column1='partner_id',
-        column2='category_id',
-        string='Tags',
-        default=_default_category,
-        tracking=True,
-    )
-    user_id = fields.Many2one(
-        'res.users',
-        string='Salesperson',
-        help='The internal user in charge of this contact.',
-        tracking=True,
-    )
-    industry_id = fields.Many2one(
-        'res.partner.industry',
-        'Industry',
-        tracking=True,
-    )
-    ref = fields.Char(
-        string='Reference',
-        index=True,
-        tracking=True,
-    )
-    comment = fields.Text(string='Notes', tracking=True,)
-    property_supplier_payment_term_id = fields.Many2one(
-        'account.payment.term',
-        company_dependent=True,
-        string='Vendor Payment Terms',
-        help="This payment term will be used instead of the default one for "
-             "purchase orders and vendor bills",
-        tracking=True,
-    )
-    property_payment_term_id = fields.Many2one(
-        'account.payment.term',
-        company_dependent=True,
-        string='Customer Payment Terms',
-        help="This payment term will be used instead of the default one for "
-             "sales orders and customer invoices",
-        tracking=True,
-    )
-    property_account_position_id = fields.Many2one(
-        'account.fiscal.position',
-        company_dependent=True,
-        string="Fiscal Position",
-        help="The fiscal position determines the taxes/accounts used for "
-             "this contact.",
-        tracking=True,
-    )
-    property_stock_customer = fields.Many2one(
-        'stock.location',
-        string="Customer Location",
-        company_dependent=True,
-        check_company=True,
-        domain="['|', ('company_id', '=', False), ('company_id', '=', allowed_company_ids[0])]",
-        help="The stock location used as destination when sending goods to this contact.",
-        tracking=True,
-    )
-    property_stock_supplier = fields.Many2one(
-        'stock.location',
-        string="Vendor Location",
-        company_dependent=True,
-        check_company=True,
-        domain="['|', ('company_id', '=', False), ('company_id', '=', allowed_company_ids[0])]",
-        help="The stock location used as source when receiving goods from this contact.",
-        tracking=True,
-    )
-    property_account_payable_id = fields.Many2one(
-        'account.account',
-        company_dependent=True,
-        string="Account Payable",
-        domain="[('internal_type', '=', 'payable'), ('deprecated', '=', False)]",
-        help="This account will be used instead of the default one as "
-             "the payable account for the current partner",
-        required=True,
-        tracking=True,
-    )
-    property_account_receivable_id = fields.Many2one(
-        'account.account',
-        company_dependent=True,
-        string="Account Receivable",
-        domain="[('internal_type', '=', 'receivable'), ('deprecated', '=', False)]",
-        help="This account will be used instead of the default one as the "
-             "receivable account for the current partner",
-        required=True,
-        tracking=True,
-    )
     payment_warn = fields.Selection(
         WARNING_MESSAGE,
         'Payment',
         help=WARNING_HELP,
         default="no-message",
-        tracking=True,
     )
     payment_warn_msg = fields.Text(
         'Message for Payment',
-        tracking=True,
     )
 
     def _get_current_user(self):
@@ -305,40 +179,43 @@ class ResPartner(models.Model):
         return res
 
     def write(self, vals):
+        fields_to_be_tracked = helpers.get_fields_to_be_tracked()
         if self._context.get('supplier_action'):
             return super(ResPartner, self.with_context(
                 supplier_action=True)).write(vals)
         else:
-            if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-                raise UserError(_('Your user account is not configured '
-                                  'properly. '
-                                  'Please contact the support team.'))
-            role_action = self.env.ref(
-                'approval_hierarchy.supplier_set_up_role')
-            if not self.env.user.employee_id.check_if_has_approval_rights(
-                    role_action):
-                raise UserError(_('You do not have the permission '
-                                  'to modify a partner. '
-                                  'Please contact the support team.'))
-            if 'child_ids' in vals:
-                for child in vals.get('child_ids'):
-                    if isinstance(child, list) and len(child) == 3 \
-                            and isinstance(child[2], dict) and child[2] and \
-                            isinstance(child[1], int):
-                        child[2].update({
-                            'state': 'draft',
-                            'approval_user_id': False,
-                        })
-                        message = "Changes made to the contact '{}'".format(
-                            self.browse(child[1]).name)
-                        self.message_post(body=message)
-            # Not to change the status of parent if is
-            # changed only the field child_ids
-            if 'child_ids' in vals and len(vals) == 1:
-                return super(ResPartner, self.with_context(
-                    supplier_action=True)).write(vals)
-            vals['state'] = 'draft'
-            vals['approval_user_id'] = False
+            if any(field in vals for field in
+                   fields_to_be_tracked.get('res.partner')):
+                if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
+                    raise UserError(_('Your user account is not configured '
+                                      'properly. '
+                                      'Please contact the support team.'))
+                role_action = self.env.ref(
+                    'approval_hierarchy.supplier_set_up_role')
+                if not self.env.user.employee_id.check_if_has_approval_rights(
+                        role_action):
+                    raise UserError(_('You do not have the permission '
+                                      'to modify a partner. '
+                                      'Please contact the support team.'))
+                if 'child_ids' in vals:
+                    for child in vals.get('child_ids'):
+                        if isinstance(child, list) and len(child) == 3 \
+                                and isinstance(child[2], dict) and child[2] and \
+                                isinstance(child[1], int):
+                            child[2].update({
+                                'state': 'draft',
+                                'approval_user_id': False,
+                            })
+                            message = "Changes made to the contact '{}'".format(
+                                self.browse(child[1]).name)
+                            self.message_post(body=message)
+                # Not to change the status of parent if is
+                # changed only the field child_ids
+                if 'child_ids' in vals and len(vals) == 1:
+                    return super(ResPartner, self.with_context(
+                        supplier_action=True)).write(vals)
+                vals['state'] = 'draft'
+                vals['approval_user_id'] = False
             return super(ResPartner,  self.with_context(
                 supplier_action=True)).write(vals)
 
@@ -367,33 +244,6 @@ class ResPartner(models.Model):
 class ResPartnerBank(models.Model):
     _name = 'res.partner.bank'
     _inherit = ['res.partner.bank', 'mail.thread', 'mail.activity.mixin']
-
-    acc_number = fields.Char(
-        'Account Number',
-        required=True,
-        tracking=True,
-    )
-    acc_type = fields.Selection(
-        selection=lambda x: x.env['res.partner.bank'].get_supported_account_types(),
-        compute='_compute_acc_type',
-        string='Type',
-        help='Bank account type: Normal or IBAN. '
-             'Inferred from the bank account number.',
-        tracking=True,
-    )
-    bank_id = fields.Many2one(
-        'res.bank',
-        string='Bank',
-        tracking=True,
-    )
-    acc_holder_name = fields.Char(
-        string='Account Holder Name',
-        help="Account holder name, in case it is different "
-             "than the name of the Account Holder",
-        tracking=True,
-    )
-    sort_code = fields.Char(tracking=True,)
-    short_name = fields.Char(tracking=True,)
 
     @api.model
     def create(self, vals):

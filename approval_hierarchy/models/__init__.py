@@ -7,4 +7,5 @@ from . import (
     res_partner,
     account_payment,
     account_move,
+    ir_model_fields,
 )
