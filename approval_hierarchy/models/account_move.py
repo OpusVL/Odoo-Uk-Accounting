@@ -3,6 +3,15 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
+custom_error_messages = {
+    'create': _('You do not have the permission to create a %s. '
+                'Please contact the support team.'),
+    'write': _('You do not have the permission to modify a %s. '
+               'Please contact the support team.'),
+    'unlink': _('You do not have the permission to modify %s. '
+                'Please contact the support team.'),
+}
+
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -27,7 +36,8 @@ class AccountMove(models.Model):
     def create(self, vals_list):
         moves = super(AccountMove, self).create(vals_list)
         for move in moves:
-            move.check_move_approval_access_rights()
+            move.with_context(approval_origin='create'
+                              ).check_move_approval_access_rights()
         return moves
 
     def write(self, vals):
@@ -35,28 +45,29 @@ class AccountMove(models.Model):
             return super(AccountMove, self.with_context(
                 supplier_action=True)).write(vals)
         for move in self:
-            move.check_move_approval_access_rights()
+            move.with_context(approval_origin='write'
+                              ).check_move_approval_access_rights()
         return super(AccountMove, self.with_context(
                 supplier_action=True)).write(vals)
 
     def unlink(self):
         for move in self:
-            move.check_move_approval_access_rights()
+            move.with_context(approval_origin='unlink'
+                              ).check_move_approval_access_rights()
         return super(AccountMove, self).unlink()
 
     def check_move_approval_access_rights(self):
-        if self.type in ('out_invoice', 'out_refund'):
-            # Check Input customer invoice and credit note access rights
-            self.with_context(approval_origin='unlink'
-                              )._check_customer_invoice_access_rights()
-        elif self.type in ('in_invoice', 'in_refund'):
-            # Check Input supplier bill and refund access rights
-            self.with_context(approval_origin='unlink'
-                              )._check_vendor_bill_access_rights()
-        else:
-            # Check Input journal entry access rights
-            self.with_context(approval_origin='write'
-                              )._check_account_move_access_rights()
+        approval_access_dict = {
+            'out_invoice': '_check_customer_invoice_access_rights',
+            'out_refund': '_check_customer_invoice_access_rights',
+            'in_invoice': '_check_vendor_bill_access_rights',
+            'in_refund': '_check_vendor_bill_access_rights',
+            'entry': '_check_account_move_access_rights',
+            'out_receipt': '_check_customer_invoice_access_rights',
+            'in_receipt': '_check_vendor_bill_access_rights',
+        }
+        getattr(self.with_context(approval_origin=self._context.get(
+            'approval_origin')), approval_access_dict.get(self.type))()
         return True
 
     def _check_customer_invoice_access_rights(self):
@@ -68,19 +79,8 @@ class AccountMove(models.Model):
             'approval_hierarchy.input_ar_invoice_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            custom_error_messages = {
-                'create': _('You do not have the permission to create a '
-                            'customer invoice. Please contact the support team.'
-                            ),
-                'write': _('You do not have the permission to modify a '
-                           'customer invoice. Please contact the support team.'
-                           ),
-                'unlink': _('You do not have the permission to delete a '
-                            'customer invoice. Please contact the support team.'
-                            ),
-            }
             raise UserError(custom_error_messages.get(self._context.get(
-                'approval_origin')))
+                'approval_origin')) % 'customer invoice')
         return True
 
     def _check_vendor_bill_access_rights(self):
@@ -92,16 +92,8 @@ class AccountMove(models.Model):
             'approval_hierarchy.input_ap_invoice_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            custom_error_messages = {
-                'create': _('You do not have the permission to create a vendor '
-                            'bill. Please contact the support team.'),
-                'write': _('You do not have the permission to modify a vendor '
-                           'bill. Please contact the support team.'),
-                'unlink': _('You do not have the permission to modify a vendor '
-                            'bill. Please contact the support team.'),
-            }
             raise UserError(custom_error_messages.get(self._context.get(
-                'approval_origin')))
+                'approval_origin')) % 'vendor bill')
         return True
 
     def _check_account_move_access_rights(self):
@@ -113,19 +105,8 @@ class AccountMove(models.Model):
             'approval_hierarchy.input_account_move_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            custom_error_messages = {
-                'create': _('You do not have the permission to create a '
-                            'journal entry. Please contact the support team.'
-                            ),
-                'write': _('You do not have the permission to modify a '
-                           'journal entry. Please contact the support team.'
-                           ),
-                'unlink': _('You do not have the permission to delete a '
-                            'journal entry. Please contact the support team.'
-                            ),
-            }
             raise UserError(custom_error_messages.get(self._context.get(
-                'approval_origin')))
+                'approval_origin')) % 'journal entry')
         return True
 
     def request_approval(self):
@@ -195,20 +176,13 @@ class AccountMove(models.Model):
         )
 
     def get_approval_role_action(self):
-        role_action = False
-        if self.type == 'out_invoice':
-            role_action = self.env.ref(
-                'approval_hierarchy.approve_ar_invoice_role')
-        elif self.type == 'in_invoice':
-            role_action = self.env.ref(
-                'approval_hierarchy.approve_ap_invoice_role')
-        elif self.type == 'out_refund':
-            role_action = self.env.ref(
-                'approval_hierarchy.approve_ar_credit_note_role')
-        elif self.type == 'in_refund':
-            role_action = self.env.ref(
-                'approval_hierarchy.approve_ap_credit_note_role')
-        elif self.type == 'entry':
-            role_action = self.env.ref(
-                'approval_hierarchy.post_journal_role')
-        return role_action
+        role_action_dict = {
+            'out_invoice': 'approval_hierarchy.approve_ar_invoice_role',
+            'in_invoice': 'approval_hierarchy.approve_ap_invoice_role',
+            'out_refund': 'approval_hierarchy.approve_ar_credit_note_role',
+            'in_refund': 'approval_hierarchy.approve_ap_credit_note_role',
+            'entry': 'approval_hierarchy.post_journal_role',
+            'out_receipt': 'approval_hierarchy.approve_ar_invoice_role',
+            'in_receipt': 'approval_hierarchy.approve_ap_invoice_role'
+        }
+        return self.env.ref(role_action_dict.get(self.type))
