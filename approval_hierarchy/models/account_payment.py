@@ -4,6 +4,14 @@ from odoo import models, fields, api, _
 from datetime import datetime
 
 
+def _get_warn_partner_id(partner):
+    # If partner has no warning, check its company
+    if partner.payment_warn != 'block' and partner.parent_id and \
+            partner.parent_id.payment_warn == 'block':
+        partner = partner.parent_id
+    return partner
+
+
 class AccountPayment(models.Model):
     _inherit = "account.payment"
 
@@ -32,9 +40,7 @@ class AccountPayment(models.Model):
             return rec
         partner = self.env['res.partner'].browse(rec.get(
                 'partner_id'))
-        # If partner has no warning, check its company
-        if partner.payment_warn == 'no-message' and partner.parent_id:
-            partner = partner.parent_id
+        partner = _get_warn_partner_id(partner)
         if partner.payment_warn and partner.payment_warn != 'no-message':
             payment_date = False
         rec.update({
@@ -62,10 +68,7 @@ class AccountPayment(models.Model):
         if partner.payment_warn == 'no-message' and partner.parent_id:
             partner = partner.parent_id
         if partner.payment_warn and partner.payment_warn != 'no-message':
-            # Block if partner only has warning but parent company is blocked
-            if partner.payment_warn != 'block' and partner.parent_id and \
-                    partner.parent_id.payment_warn == 'block':
-                partner = partner.parent_id
+            partner = _get_warn_partner_id(partner)
             title = _("Warning for %s") % partner.name
             message = partner.payment_warn_msg
             warning = {
@@ -84,10 +87,7 @@ class AccountPayment(models.Model):
                     'approval_hierarchy.group_warning_payment'):
             return {}
         partner = self.partner_id
-
-        # If partner has no warning, check its company
-        if partner.payment_warn == 'no-message' and partner.parent_id:
-            partner = partner.parent_id
+        partner = _get_warn_partner_id(partner)
         if partner.payment_warn and partner.payment_warn != 'no-message':
             # Block if partner only has warning but parent company is blocked
             if partner.payment_warn != 'block' and partner.parent_id and partner.parent_id.payment_warn == 'block':
@@ -111,9 +111,7 @@ class PaymentRegister(models.TransientModel):
         payment_vals = super(PaymentRegister, self)._prepare_payment_vals(
             invoices)
         partner = invoices[0].commercial_partner_id
-        # If partner has no warning, check its company
-        if partner.payment_warn == 'no-message' and partner.parent_id:
-            partner = partner.parent_id
+        partner = _get_warn_partner_id(partner)
         if partner.payment_warn and partner.payment_warn != 'no-message':
             payment_vals.update({'partner_id': False})
         return payment_vals
