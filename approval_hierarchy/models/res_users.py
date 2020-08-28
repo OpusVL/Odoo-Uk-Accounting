@@ -25,7 +25,7 @@ class ResUsers(models.Model):
 
     def _check_has_delegated(self):
         for rec in self:
-            rec.has_delegated = rec.delegated_user_id and True or False
+            rec.has_delegated = bool(rec.delegated_user_id)
 
     @api.depends('employee_ids.job_id')
     def _get_hr_job(self):

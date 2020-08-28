@@ -271,7 +271,7 @@ class HrEmployee(models.Model):
 
     def _check_has_delegated(self):
         for rec in self:
-            rec.has_delegated = rec.delegated_user_id and True or False
+            rec.has_delegated = bool(rec.delegated_user_id)
 
     def get_approved_user(self, action, value=0, currency=False):
         approval_user_id = False
