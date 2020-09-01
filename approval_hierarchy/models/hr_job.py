@@ -19,9 +19,10 @@ class HrJobRole(models.Model):
 
     name = fields.Char(string='Name', required=True, )
     role_action_id = fields.Many2one(
-        'job.role.action',
+        'res.groups',
         string='Role',
         required=True,
+        domain=[('approval_group', '=', True)]
     )
     job_id = fields.Many2one(
         'hr.job',
@@ -78,7 +79,7 @@ class HrJobRole(models.Model):
             if role.permission and role.enable_value and role.min_value <= 0:
                 raise ValidationError(_(
                     "Min value must be greater than 0."))
-            if role.permission and role.enable_value and not role.max_value <= 0:
+            if role.permission and role.enable_value and role.max_value <= 0:
                 raise ValidationError(_(
                     "Max value must be greater than 0."))
 
@@ -128,6 +129,7 @@ class HrJob(models.Model):
                               'Please contact the support team.'
                               )
                             )
+        self.update_user_groups()
         return self.with_context(supplier_action=True).write(
             {'state': 'approved'}
         )
@@ -151,6 +153,19 @@ class HrJob(models.Model):
                               'Please contact the support team.')
                             )
         return self.with_context(supplier_action=True).write({'state': 'draft'})
+
+    def update_user_groups(self):
+        users = self.env['res.users']
+        for employee in self.employee_ids:
+            if employee.user_id not in users:
+                users |= employee.user_id
+        for checked_role in self.job_role_ids.filtered(
+                lambda role: role.permission):
+            users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
+        for unchecked_role in self.job_role_ids.filtered(
+                lambda role: not role.permission):
+            users.write(dict(groups_id=[(3, unchecked_role.role_action_id.id)]))
+        return True
 
     def write(self, vals):
         if self._context.get('supplier_action'):

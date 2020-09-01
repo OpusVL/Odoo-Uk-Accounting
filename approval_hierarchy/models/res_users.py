@@ -53,3 +53,10 @@ class ResUsers(models.Model):
         type(self).SELF_WRITEABLE_FIELDS = type(self).SELF_WRITEABLE_FIELDS + hr_writable_fields
         return init_res
 
+
+class Groups(models.Model):
+    _inherit = "res.groups"
+
+    enable_value = fields.Boolean(string='Enable Limit Value', )
+    approval_group = fields.Boolean(string='Approval Group', )
+

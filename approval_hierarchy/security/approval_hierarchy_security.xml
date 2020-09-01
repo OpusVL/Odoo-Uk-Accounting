@@ -1,19 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <record model="ir.module.category" id="module_category_approval_hierarchy">
+        <field name="name">Approval Hierarchy</field>
+        <field name="sequence">10</field>
+        <field name="visible" eval="0" />
+    </record>
+
+    <record model="res.groups" id="supplier_set_up_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Supplier set up</field>
+        <field name="comment">If checked the user will have rights to
+            input data in Partners</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="supplier_set_up_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Supplier set up</field>
+        <field name="comment">If checked the user will have rights to
+            input data in Partners</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="supplier_approval_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Supplier Approval</field>
+        <field name="comment">If checked the user will have rights to
+            approve Partners</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="export_payment_run_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Export Payment run</field>
+        <field name="comment">If checked the user will have rights to
+            approve export payments</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="post_journal_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Approve journals</field>
+        <field name="comment">If checked the user will have rights to
+            post journal entries</field>
+        <field name="enable_value">True</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="input_account_move_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Post journal</field>
+        <field name="comment">If checked the user will have rights to
+            create journal entries</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="input_ap_invoice_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Input AP invoice</field>
+        <field name="comment">If checked the user will have rights to
+            create vendor bills</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="approve_ap_invoice_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Approve AP invoice</field>
+        <field name="comment">If checked the user will have rights to
+            approve vendor bills</field>
+        <field name="enable_value">True</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="approve_ap_credit_memo_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Approve AP Credit memo</field>
+        <field name="comment">If checked the user will have rights to
+            approve supplier refunds</field>
+        <field name="enable_value">True</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+     <record model="res.groups" id="input_ar_invoice_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Input AR invoice</field>
+        <field name="comment">If checked the user will have rights to
+            create customer invoices</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="approve_ar_invoice_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Approve AR invoice</field>
+        <field name="comment">If checked the user will have rights to
+            approve customer invoices</field>
+        <field name="enable_value">True</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+     <record model="res.groups" id="approve_ar_credit_note_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Approve AR credit note</field>
+        <field name="comment">If checked the user will have rights to
+            approve customer credit notes</field>
+        <field name="enable_value">True</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
+    <record model="res.groups" id="import_bank_statement_role">
+        <!-- Create and edit supplier-->
+        <field name="name">Import bank statement</field>
+        <field name="comment">If checked the user will have rights to
+            create bank statements</field>
+        <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
+    </record>
+
     <record id="group_amend_system_users" model="res.groups">
         <field name="name">Amend system users</field>
         <field name="comment">If checked the user will have rights to
             input data in Employee and Job positions</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
+         <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
     </record>
 
     <record id="group_approve_system_users" model="res.groups">
         <field name="name">Approve system users</field>
         <field name="comment">If checked the user will have rights to
             approve the changes done in Employee and Job positions</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
+         <field name="enable_value">False</field>
+        <field name="approval_group">True</field>
+        <field name="category_id" ref="approval_hierarchy.module_category_approval_hierarchy"/>
     </record>
+
+
 
     <record id="group_warning_payment" model="res.groups">
         <field name="name">A warning can be set on a partner (Payment)</field>

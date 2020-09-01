@@ -41,7 +41,6 @@
     'data': [
         'security/approval_hierarchy_security.xml',
         'security/ir.model.access.csv',
-        'data/job_role_action_data.xml',
         'data/data.xml',
         'views/hr_job_views.xml',
         'views/hr_employee_views.xml',

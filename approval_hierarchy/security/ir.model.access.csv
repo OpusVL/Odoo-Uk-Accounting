@@ -1,12 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_job_role_action_system,job.role.action.system,model_job_role_action,base.group_system,1,1,0,0
-access_job_role_action_amend_user,job.role.action.amend.user,model_job_role_action,approval_hierarchy.group_amend_system_users,1,0,0,0
-access_job_role_action_approve_user,job.role.action.approve.user,model_job_role_action,base.group_user,1,0,0,0
 access_hr_job_role_amend_user,hr.job.role.amend.user,model_hr_job_role,approval_hierarchy.group_amend_system_users,1,1,1,1
 access_hr_job_amend_user,hr.job.amend.user,hr.model_hr_job,approval_hierarchy.group_amend_system_users,1,1,1,1
 access_hr_job_approve_user,hr.job.approve.user,hr.model_hr_job,approval_hierarchy.group_approve_system_users,1,1,0,0
 
-access_job_role_action_all_users,job.role.action.user,model_job_role_action,base.group_user,1,0,0,0
 access_hr_job_role_all_users,hr.job.role.user,model_hr_job_role,base.group_user,1,0,0,0
 access_hr_job_all_users,hr.job.user,hr.model_hr_job,base.group_user,1,0,0,0
 hr.access_hr_job_user,hr.job user,hr.model_hr_job,hr.group_hr_user,1,0,0,0
