@@ -35,7 +35,7 @@
     'version': '0.2',
 
     # any module necessary for this one to work correctly
-    'depends': ['uk_accounting', 'hr'],
+    'depends': ['uk_accounting', 'hr', 'account_bank_statement_import'],
 
     # always loaded
     'data': [
@@ -49,5 +49,6 @@
         'views/res_config_settings_views.xml',
         'views/account_payment_views.xml',
         'views/account_move_views.xml',
+        'views/account_bank_statement_import_view.xml',
     ],
 }
