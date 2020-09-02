@@ -178,15 +178,18 @@ class HrJob(models.Model):
                                 role.name)
                             # I could not find a way to make these lines look
                             # better, without if-s
-                            if 'permission' in job_role[2]:
-                                message += '\nPermission: {}'.format(
-                                    job_role[2]['permission'])
-                            if 'min_value' in job_role[2]:
-                                message += '\nMin Value: {}'.format(
-                                    job_role[2]['min_value'])
-                            if 'max_value' in job_role[2]:
-                                message += '\nMax Value: {}'.format(
-                                    job_role[2]['max_value'])
+                            data = job_role[2]
+                            message_mapping = {
+                                'permission': '\nPermission: {}'.format(
+                                    data.get('permission')),
+                                'min_value': '\nMin Value: {}'.format(
+                                    data.get('min_value')),
+                                'max_value': '\nMax Value: {}'.format(
+                                    data.get('max_value')),
+                            }
+                            for message_type, message_str in message_mapping.items():
+                                if message_type in data:
+                                    message += message_str
                             self.message_post(body=message)
             return super(HrJob, self.with_context(
                 supplier_action=True)).write(vals)
