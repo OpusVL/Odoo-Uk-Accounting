@@ -16,7 +16,7 @@ def reset_config_settings_sysparam(cr):
 # are added or removed other fields. Actually are added all fields that are
 # visible in gui on the respective models
 def get_fields_to_be_tracked():
-    fields_to_be_tracked = {
+    return {
         'res.partner': [
             'company_type',
             'name',
@@ -117,4 +117,3 @@ def get_fields_to_be_tracked():
             'job_role_ids',
         ],
     }
-    return fields_to_be_tracked
