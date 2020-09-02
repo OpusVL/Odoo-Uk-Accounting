@@ -2,15 +2,7 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-
-custom_error_messages = {
-    'create': _('You do not have the permission to create a %s. '
-                'Please contact the support team.'),
-    'write': _('You do not have the permission to modify a %s. '
-               'Please contact the support team.'),
-    'unlink': _('You do not have the permission to modify %s. '
-                'Please contact the support team.'),
-}
+from odoo.addons.approval_hierarchy.helpers import CONFIGURATION_ERROR_MESSAGE, CUSTOM_ERROR_MESSAGES
 
 
 class AccountMove(models.Model):
@@ -72,47 +64,40 @@ class AccountMove(models.Model):
 
     def _check_customer_invoice_access_rights(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured '
-                              'properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref(
             'approval_hierarchy.input_ar_invoice_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(custom_error_messages.get(self._context.get(
+            raise UserError(CUSTOM_ERROR_MESSAGES.get(self._context.get(
                 'approval_origin')) % 'customer invoice')
         return True
 
     def _check_vendor_bill_access_rights(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured '
-                              'properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref(
             'approval_hierarchy.input_ap_invoice_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(custom_error_messages.get(self._context.get(
+            raise UserError(CUSTOM_ERROR_MESSAGES.get(self._context.get(
                 'approval_origin')) % 'vendor bill')
         return True
 
     def _check_account_move_access_rights(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured '
-                              'properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref(
             'approval_hierarchy.input_account_move_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(custom_error_messages.get(self._context.get(
+            raise UserError(CUSTOM_ERROR_MESSAGES.get(self._context.get(
                 'approval_origin')) % 'journal entry')
         return True
 
     def request_approval(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         amend_role_action = False
         if self.type in ('out_invoice', 'out_refund'):
             amend_role_action = self.env.ref(
@@ -125,8 +110,7 @@ class AccountMove(models.Model):
                 'approval_hierarchy.input_account_move_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 amend_role_action):
-            raise UserError(_('You do not have the permission to request '
-                              'approval. Please contact the support team.'))
+            raise UserError(CUSTOM_ERROR_MESSAGES.get('request'))
         approval_role_action = self.get_approval_role_action()
         approved_user = self.env.user.employee_id.get_approved_user(
             approval_role_action, self.amount_total, self.currency_id)
@@ -150,13 +134,12 @@ class AccountMove(models.Model):
         # Double check in code if the user that
         # is approving has rights to approve
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.get_approval_role_action()
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action, self.amount_total, self.currency_id):
-            raise UserError(_('You do not have the permission to approve this '
-                              'record. Please contact the support team.'))
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('approve') % 'a journal entry')
         return super(AccountMove, self.with_context(
                 supplier_action=True)).action_post()
 
@@ -164,13 +147,12 @@ class AccountMove(models.Model):
         # Double check in code if the user that
         # is rejecting has rights to reject
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.get_approval_role_action()
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action, self.amount_total, self.currency_id):
-            raise UserError(_('You do not have the permission to reject this '
-                              'record. Please contact the support team.'))
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('reject') % 'a journal entry')
         return self.with_context(supplier_action=True).write(
             {'state': 'cancel'}
         )

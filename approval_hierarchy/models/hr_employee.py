@@ -3,6 +3,7 @@
 from odoo import fields, models, _
 from odoo.exceptions import UserError
 from odoo.addons.approval_hierarchy import helpers
+from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES
 
 
 class HrEmployeePublic(models.Model):
@@ -87,10 +88,7 @@ class HrEmployee(models.Model):
     def request_approval(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
-            raise UserError(_('You do not have the permission to request '
-                              'approval for this employee. '
-                              'Please contact the support team.')
-                            )
+            raise UserError(CUSTOM_ERROR_MESSAGES.get('request'))
         return self.with_context(supplier_action=True).write(
             {'state': 'waiting'}
         )
@@ -98,11 +96,8 @@ class HrEmployee(models.Model):
     def action_approve(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
-            raise UserError(_('You do not have the permission to approve '
-                              'this employee. '
-                              'Please contact the support team.'
-                              )
-                            )
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('approve') % 'an employee')
         return self.with_context(supplier_action=True).write(
             {'state': 'approved'}
         )
@@ -110,10 +105,8 @@ class HrEmployee(models.Model):
     def action_reject(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
-            raise UserError(_('You do not have the permission to reject '
-                              'this employee. '
-                              'Please contact the support team.')
-                            )
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('reject') % 'an employee')
         return self.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
@@ -121,10 +114,8 @@ class HrEmployee(models.Model):
     def set_to_draft(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
-            raise UserError(_('You do not have the permission to make changes '
-                              'to this employee. '
-                              'Please contact the support team.')
-                            )
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('write') % 'an employee')
         return self.with_context(supplier_action=True).write({'state': 'draft'})
 
     def write(self, vals):
@@ -135,9 +126,7 @@ class HrEmployee(models.Model):
                 return super(HrEmployee, self).write(vals)
             else:
                 raise UserError(
-                    _('You do not have the permission to make changes '
-                      'to this employee. '
-                      'Please contact the support team.'))
+                    CUSTOM_ERROR_MESSAGES.get('write') % 'an employee')
         elif self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
             fields_to_be_tracked = helpers.get_fields_to_be_tracked()
@@ -147,6 +136,5 @@ class HrEmployee(models.Model):
             return super(HrEmployee, self.with_context(
                 supplier_action=True)).write(vals)
         else:
-            raise UserError(_('You do not have the permission to make changes '
-                              'to this employee. '
-                              'Please contact the support team.'))
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('write') % 'an employee')

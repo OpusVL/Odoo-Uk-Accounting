@@ -4,6 +4,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.addons.base.models.res_partner import WARNING_MESSAGE, WARNING_HELP
 from odoo.addons.approval_hierarchy import helpers
+from odoo.addons.approval_hierarchy.helpers import CONFIGURATION_ERROR_MESSAGE, CUSTOM_ERROR_MESSAGES
 
 
 class ResPartner(models.Model):
@@ -52,15 +53,12 @@ class ResPartner(models.Model):
 
     def request_approval(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the administration team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         amend_role_action = self.env.ref(
             'approval_hierarchy.supplier_set_up_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 amend_role_action):
-            raise UserError(_('You do not have the permission '
-                              'to request approval. '
-                              'Please contact the administration team.'))
+            raise UserError(CUSTOM_ERROR_MESSAGES.get('request'))
         approval_role_action = self.env.ref(
             'approval_hierarchy.supplier_approval_role')
         approved_user = self.env.user.employee_id and \
@@ -92,15 +90,13 @@ class ResPartner(models.Model):
         # are visible only for a single user which has been filled when
         # requesting approval.
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the administration team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref(
             'approval_hierarchy.supplier_approval_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(_('You do not have the permission '
-                              'to approve a partner. '
-                              'Please contact the administration team.'))
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('approve') % 'a partner')
         records = self | self.child_ids.filtered(
             lambda child: child.state != 'done')
         records.with_context(supplier_action=True).write(
@@ -110,15 +106,13 @@ class ResPartner(models.Model):
 
     def action_reject(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the administration team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref(
             'approval_hierarchy.supplier_approval_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(_('You do not have the permission '
-                              'to reject a partner. '
-                              'Please contact the administration team.'))
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('reject') % 'a partner')
         records = self | self.child_ids
         records.with_context(supplier_action=True).write(
             {'state': 'rejected'}
@@ -143,16 +137,13 @@ class ResPartner(models.Model):
 
     def set_to_draft(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured '
-                              'properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref(
             'approval_hierarchy.supplier_set_up_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(_('You do not have the permission '
-                              'to modify a partner. '
-                              'Please contact the support team.'))
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('write') % 'a partner')
         return self.with_context(supplier_action=True).write(
             {
                 'state': 'draft',
@@ -163,14 +154,11 @@ class ResPartner(models.Model):
     @api.model
     def create(self, vals):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the administration team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(_('You do not have the permission '
-                              'to create a partner. '
-                              'Please contact the administration team.'))
+            raise UserError(CUSTOM_ERROR_MESSAGES.get('create') % 'a partner')
         res = super(ResPartner, self).create(vals)
         if vals and vals.get('parent_id'):
             message = "Contact '{}' is created. ".format(
@@ -187,16 +175,13 @@ class ResPartner(models.Model):
             if any(field in vals for field in
                    fields_to_be_tracked.get('res.partner')):
                 if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-                    raise UserError(_('Your user account is not configured '
-                                      'properly. '
-                                      'Please contact the support team.'))
+                    raise UserError(CONFIGURATION_ERROR_MESSAGE)
                 role_action = self.env.ref(
                     'approval_hierarchy.supplier_set_up_role')
                 if not self.env.user.employee_id.check_if_has_approval_rights(
                         role_action):
-                    raise UserError(_('You do not have the permission '
-                                      'to modify a partner. '
-                                      'Please contact the support team.'))
+                    raise UserError(
+                        CUSTOM_ERROR_MESSAGES.get('write') % 'a partner')
                 if 'child_ids' in vals:
                     for child in vals.get('child_ids'):
                         if isinstance(child, list) and len(child) == 3 \
@@ -221,14 +206,11 @@ class ResPartner(models.Model):
 
     def unlink(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(_('Your user account is not configured properly. '
-                              'Please contact the support team.'))
+            raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action):
-            raise UserError(_('You do not have the permission to delete a '
-                              'partner. Please contact the support team.'
-                              ))
+            raise UserError(CUSTOM_ERROR_MESSAGES.get('unlink') % 'a partner')
         for partner in self:
             if partner.state != 'draft':
                 raise UserError(_('In order to delete a partner, '

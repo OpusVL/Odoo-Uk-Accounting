@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.addons.approval_hierarchy import helpers
+from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES
 
 
 class JobRoleAction(models.Model):
@@ -115,20 +116,14 @@ class HrJob(models.Model):
     def request_approval(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
-            raise UserError(_('You do not have the permission to request '
-                              'approval for this job position. '
-                              'Please contact the support team.')
-                            )
+            raise UserError(CUSTOM_ERROR_MESSAGES.get('request'))
         return self.with_context(supplier_action=True).write({'state': 'waiting'})
 
     def action_approve(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
-            raise UserError(_('You do not have the permission to approve '
-                              'this job position. '
-                              'Please contact the support team.'
-                              )
-                            )
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('approve') % 'a job position')
         self.update_user_groups()
         return self.with_context(supplier_action=True).write(
             {'state': 'approved'}
@@ -137,10 +132,8 @@ class HrJob(models.Model):
     def action_reject(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
-            raise UserError(_('You do not have the permission to reject '
-                              'this job position. '
-                              'Please contact the support team.')
-                            )
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('reject') % 'a job position')
         return self.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
@@ -148,10 +141,8 @@ class HrJob(models.Model):
     def set_to_draft(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_amend_system_users"):
-            raise UserError(_('You do not have the permission to make changes '
-                              'to this job position. '
-                              'Please contact the support team.')
-                            )
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('write') % 'a job position')
         return self.with_context(supplier_action=True).write({'state': 'draft'})
 
     def update_user_groups(self):
@@ -200,7 +191,5 @@ class HrJob(models.Model):
             return super(HrJob, self.with_context(
                 supplier_action=True)).write(vals)
         else:
-            raise UserError(_('You do not have the permission to make changes '
-                              'to this job position. '
-                              'Please contact the support team.')
-                            )
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('write') % 'a job position')

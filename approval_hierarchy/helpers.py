@@ -1,3 +1,5 @@
+from odoo import _
+
 
 def reset_config_settings_sysparam(cr):
     """
@@ -117,3 +119,22 @@ def get_fields_to_be_tracked():
             'job_role_ids',
         ],
     }
+
+
+CUSTOM_ERROR_MESSAGES = {
+    'create': _('You do not have the permission to create a %s. '
+                'Please contact the support team.'),
+    'write': _('You do not have the permission to modify a %s. '
+               'Please contact the support team.'),
+    'unlink': _('You do not have the permission to delete %s. '
+                'Please contact the support team.'),
+    'approve': _('You do not have the permission to approve a %s. '
+                 'Please contact the administration team.'),
+    'reject': _('You do not have the permission to reject a %s. '
+                'Please contact the administration team.'),
+    'request': _('You do not have the permission to request approval. '
+                 'Please contact the administration team.'),
+}
+
+CONFIGURATION_ERROR_MESSAGE = _('Your user account is not configured properly. '
+                                'Please contact the support team.')
