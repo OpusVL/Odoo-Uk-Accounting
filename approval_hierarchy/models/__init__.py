@@ -9,4 +9,5 @@ from . import (
     account_move,
     account_journal,
     ir_model_fields,
+    mail_thread,
 )

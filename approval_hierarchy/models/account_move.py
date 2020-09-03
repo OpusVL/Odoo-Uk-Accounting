@@ -162,7 +162,7 @@ class AccountMove(models.Model):
             'out_invoice': 'approval_hierarchy.approve_ar_invoice_role',
             'in_invoice': 'approval_hierarchy.approve_ap_invoice_role',
             'out_refund': 'approval_hierarchy.approve_ar_credit_note_role',
-            'in_refund': 'approval_hierarchy.approve_ap_credit_note_role',
+            'in_refund': 'approval_hierarchy.approve_ap_credit_memo_role',
             'entry': 'approval_hierarchy.post_journal_role',
             'out_receipt': 'approval_hierarchy.approve_ar_invoice_role',
             'in_receipt': 'approval_hierarchy.approve_ap_invoice_role'
