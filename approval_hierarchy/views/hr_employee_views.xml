@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record model="ir.ui.menu" id="hr.menu_hr_employee_payroll">
+            <field name="groups_id" eval="[(6, 0, [ref('approval_hierarchy.group_amend_system_users'), ref('approval_hierarchy.group_approve_system_users')])]"/>
+        </record>
+
+        <record id="view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">hr.employee.form.inherit</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//notebook/page[@name='personal_information']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='phone']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='km_home_work']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='identification_id']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='passport_id']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='place_of_birth']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='country_of_birth']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='spouse_complete_name']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//field[@name='spouse_birthdate']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <xpath expr="//notebook/page[@name='hr_settings']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+                <field name="department_id" position="after">
+                    <field name="has_delegated" invisible="1"/>
+                    <field name="delegated_user_id" domain="[('job_id', '=', job_id), ('has_delegated', '=', False)]" options="{'no_create': True}"/>
+                </field>
+                <xpath expr="//header" position="after">
+                    <header>
+                        <button name="request_approval" string="Request Approval" states="draft"
+                            type="object" class="oe_highlight" groups="approval_hierarchy.group_amend_system_users"/>
+                        <button name="action_approve" string="Approve" states="waiting"
+                                type="object" class="oe_highlight" groups="approval_hierarchy.group_approve_system_users"/>
+                        <button name="action_reject" string="Reject" states="waiting"
+                                type="object" class="oe_highlight" groups="approval_hierarchy.group_approve_system_users"/>
+                        <button name="set_to_draft" string="Set to Draft" groups="approval_hierarchy.group_amend_system_users"
+                                type="object" states="rejected,recruit,open"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,waiting,approved,rejected"/>
+                    </header>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_employee_filter_inherit" model="ir.ui.view">
+            <field name="name">hr.employee.search.inherit</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='category_ids']" position="attributes">
+                    <attribute name="groups">approval_hierarchy.group_amend_system_users,approval_hierarchy.group_approve_system_users</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="hr_employee_public_view_form_approval_inherit" model="ir.ui.view">
+            <field name="name">hr.employee.public.form.inherit.approval</field>
+            <field name="model">hr.employee.public</field>
+            <field name="inherit_id" ref="hr.hr_employee_public_view_form"/>
+            <field name="arch" type="xml">
+                <field name="department_id" position="after">
+                    <field name="delegated_user_id"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -35,15 +35,20 @@
     'version': '0.2',
 
     # any module necessary for this one to work correctly
-    'depends': ['uk_accounting', 'hr'],
+    'depends': ['uk_accounting', 'hr', 'account_bank_statement_import'],
 
     # always loaded
     'data': [
+        'security/approval_hierarchy_security.xml',
         'security/ir.model.access.csv',
-        'data/job_role_action_data.xml',
         'data/data.xml',
         'views/hr_job_views.xml',
+        'views/hr_employee_views.xml',
         'views/res_users_views.xml',
         'views/res_partner_views.xml',
+        'views/res_config_settings_views.xml',
+        'views/account_payment_views.xml',
+        'views/account_move_views.xml',
+        'views/account_bank_statement_import_view.xml',
     ],
 }

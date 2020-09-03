@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_move_form_approval_inherit" model="ir.ui.view">
+            <field name="name">account.move.form.inherit.approval</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <button name="action_post" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|', ('current_user','=', False), ('state', '!=', 'waiting')]}</attribute>
+                </button>
+                <button name="action_post" position="before">
+                    <field name="current_user" invisible="1"/>
+                        <button name="request_approval" states="draft" string="Request Approval" type="object" class="oe_highlight"/>
+                        <button name="action_reject"
+                                string="Reject" type="object"
+                                attrs="{'invisible': ['|', ('current_user','=', False), ('state', '!=', 'waiting')]}"
+                                class="oe_highlight"/>
+                </button>
+                <xpath expr="//field[@name='invoice_vendor_bill_id']" position="after">
+                    <field name="approval_user_id" readonly="1" force_save="1"/>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

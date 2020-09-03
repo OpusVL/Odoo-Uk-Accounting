@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
+from odoo.addons.approval_hierarchy import helpers
+from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES
 
 
 class JobRoleAction(models.Model):
@@ -18,9 +20,10 @@ class HrJobRole(models.Model):
 
     name = fields.Char(string='Name', required=True, )
     role_action_id = fields.Many2one(
-        'job.role.action',
+        'res.groups',
         string='Role',
         required=True,
+        domain=[('approval_group', '=', True)]
     )
     job_id = fields.Many2one(
         'hr.job',
@@ -50,12 +53,36 @@ class HrJobRole(models.Model):
         )
     ]
 
+    @api.model
+    def create(self, vals):
+        res = super(HrJobRole, self).create(vals)
+        if vals:
+            message = "Job role {} has been created.".format(
+                res.name)
+            # There is no need to control if res.job_id because is a
+            # one2many field and always will have value
+            res.job_id.message_post(body=message)
+        return res
+
+    def unlink(self):
+        for role in self:
+            message = "Job role {} has been deleted.".format(
+                role.name)
+            role.job_id.message_post(body=message)
+        return super(HrJobRole, self).unlink()
+
     @api.constrains('min_value', 'max_value')
     def _verify_values(self):
         for role in self:
             if role.max_value and role.min_value and role.min_value > role.max_value:
                 raise ValidationError(_(
                     "Min value must be equal or smaller than max value."))
+            if role.permission and role.enable_value and role.min_value <= 0:
+                raise ValidationError(_(
+                    "Min value must be greater than 0."))
+            if role.permission and role.enable_value and role.max_value <= 0:
+                raise ValidationError(_(
+                    "Max value must be greater than 0."))
 
     @api.onchange('role_action_id')
     def onchange_role_action_id(self):
@@ -68,48 +95,104 @@ class HrJobRole(models.Model):
 
 
 class HrJob(models.Model):
-    _inherit = 'hr.job'
+    _name = 'hr.job'
+    _inherit = ['hr.job', 'mail.thread', 'mail.activity.mixin']
 
     job_role_ids = fields.One2many(
         'hr.job.role',
         'job_id',
         string='Job Roles',
     )
+    state = fields.Selection(
+        selection_add=[
+            ('draft', 'Draft'),
+            ('waiting', 'Waiting'),
+            ('rejected', 'Rejected'),
+            ('approved', 'Approved')
+        ],
+        default='draft',
+    )
 
+    def request_approval(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_amend_system_users"):
+            raise UserError(CUSTOM_ERROR_MESSAGES.get('request'))
+        return self.with_context(supplier_action=True).write({'state': 'waiting'})
 
-class HrEmployee(models.Model):
-    _inherit = 'hr.employee'
+    def action_approve(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_approve_system_users"):
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('approve') % 'a job position')
+        self.update_user_groups()
+        return self.with_context(supplier_action=True).write(
+            {'state': 'approved'}
+        )
 
-    def get_approved_user(self, action):
-        approval_user_id = False
-        found = False
-        employee = self
-        while not found and employee:
-            # Checks if employee has approval rights
-            has_approval_rights = employee.check_if_has_approval_rights(
-                action)
-            if has_approval_rights:
-                found = True
-                delegated_user = employee.user_id.delegated_user_id
-                if delegated_user:
-                    while delegated_user:
-                        approval_user_id = delegated_user
-                        delegated_user = delegated_user.delegated_user_id
-                else:
-                    approval_user_id = employee.user_id
-            else:
-                # Replace with employee manager and next loop it will
-                # controll if his manager has approval rights
-                employee = employee.parent_id
-        return approval_user_id
+    def action_reject(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_approve_system_users"):
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('reject') % 'a job position')
+        return self.with_context(supplier_action=True).write(
+            {'state': 'rejected'}
+        )
 
-    def check_if_has_approval_rights(self, action):
-        if not self.user_id or not self.job_id:
-            return False
+    def set_to_draft(self):
+        if not self.env.user.has_group(
+                "approval_hierarchy.group_amend_system_users"):
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('write') % 'a job position')
+        return self.with_context(supplier_action=True).write({'state': 'draft'})
+
+    def update_user_groups(self):
+        users = self.env['res.users']
+        for employee in self.employee_ids:
+            if employee.user_id not in users:
+                users |= employee.user_id
+        for checked_role in self.job_role_ids.filtered(
+                lambda role: role.permission):
+            users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
+        for unchecked_role in self.job_role_ids.filtered(
+                lambda role: not role.permission):
+            users.write(dict(groups_id=[(3, unchecked_role.role_action_id.id)]))
+        return True
+
+    def write(self, vals):
+        if self._context.get('supplier_action'):
+            return super(HrJob, self.with_context(
+                supplier_action=True)).write(vals)
+        elif self.env.user.has_group(
+                "approval_hierarchy.group_amend_system_users"):
+            fields_to_be_tracked = helpers.get_fields_to_be_tracked()
+            if any(field in vals for field in
+                   fields_to_be_tracked.get('hr.job')):
+                vals['state'] = 'draft'
+                if 'job_role_ids' in vals:
+                    for job_role in vals.get('job_role_ids'):
+                        if isinstance(job_role, list) and len(job_role) == 3 \
+                                and isinstance(job_role[2], dict) and job_role[2] \
+                                and isinstance(job_role[1], int):
+                            role = self.env['hr.job.role'].browse(job_role[1])
+                            message = "Changes made to the job role '{}'.".format(
+                                role.name)
+                            # I could not find a way to make these lines look
+                            # better, without if-s
+                            data = job_role[2]
+                            message_mapping = {
+                                'permission': '\nPermission: {}'.format(
+                                    data.get('permission')),
+                                'min_value': '\nMin Value: {}'.format(
+                                    data.get('min_value')),
+                                'max_value': '\nMax Value: {}'.format(
+                                    data.get('max_value')),
+                            }
+                            for message_type, message_str in message_mapping.items():
+                                if message_type in data:
+                                    message += message_str
+                            self.message_post(body=message)
+            return super(HrJob, self.with_context(
+                supplier_action=True)).write(vals)
         else:
-            role_action = self.job_id.job_role_ids.filtered(
-                lambda r: r.role_action_id == action and r.permission)
-            if role_action:
-                return True
-            else:
-                return False
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('write') % 'a job position')

@@ -17,10 +17,15 @@ class ResUsers(models.Model):
         store=True,
     )
     has_delegated = fields.Boolean(compute='_check_has_delegated')
+    current_user = fields.Boolean(compute='_compute_current_user')
+
+    def _compute_current_user(self):
+        for user in self:
+            user.current_user = user == self.env.user
 
     def _check_has_delegated(self):
         for rec in self:
-            rec.has_delegated = rec.delegated_user_id and True or False
+            rec.has_delegated = bool(rec.delegated_user_id)
 
     @api.depends('employee_ids.job_id')
     def _get_hr_job(self):
@@ -47,4 +52,11 @@ class ResUsers(models.Model):
         type(self).SELF_READABLE_FIELDS = type(self).SELF_READABLE_FIELDS + hr_readable_fields + hr_writable_fields
         type(self).SELF_WRITEABLE_FIELDS = type(self).SELF_WRITEABLE_FIELDS + hr_writable_fields
         return init_res
+
+
+class Groups(models.Model):
+    _inherit = "res.groups"
+
+    enable_value = fields.Boolean(string='Enable Limit Value', )
+    approval_group = fields.Boolean(string='Approval Group', )
 

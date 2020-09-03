@@ -101,6 +101,14 @@
                         </templates>
                     </kanban>
                 </xpath>
+                <page name="internal_notes" position="inside">
+                    <group colspan="2" col="2" groups="approval_hierarchy.group_warning_payment">
+                        <separator string="Warning on the Payments" colspan="4"/>
+                        <field name="payment_warn" nolabel="1" />
+                        <field name="payment_warn_msg" colspan="3" nolabel="1"
+                                attrs="{'required':[('payment_warn', '!=', False), ('payment_warn','!=','no-message')],'readonly':[('payment_warn','=','no-message')]}"/>
+                    </group>
+                </page>
             </field>
         </record>
 

@@ -2,57 +2,33 @@
 <odoo>
     <data>
 
-        <record model="ir.ui.view" id="job_role_action_tree_view">
-            <field name="name">job.role.action.tree</field>
-            <field name="model">job.role.action</field>
-            <field name="type">tree</field>
-            <field name="arch" type="xml">
-                <tree editable="bottom">
-                    <field name="name"/>
-                    <field name="enable_value"/>
-                </tree>
-            </field>
-        </record>
-
-        <record id="job_role_action_view_search" model="ir.ui.view">
-            <field name="name">job.role.action.search</field>
-            <field name="model">job.role.action</field>
-            <field name="priority">25</field>
-            <field name="arch" type="xml">
-                <search string="Search Job Role Action">
-                    <field name="name"/>
-                    <group string="Group By">
-                        <filter string="Enable Limit Value"
-                                name="group_by_enable_value"
-                                domain="[]"
-                                context="{'group_by':'enable_value'}"/>
-                    </group>
-                </search>
-            </field>
-        </record>
-
-        <record id="job_role_action_window" model="ir.actions.act_window">
-            <field name="name">Job Role Action</field>
-            <field name="res_model">job.role.action</field>
-            <field name="view_mode">tree,form</field>
-            <field name="search_view_id" ref="job_role_action_view_search"/>
-        </record>
-
-        <!-- base.group_no_one means Developer Mode is on -->
-        <menuitem action="job_role_action_window"
-                  id="menuitem_job_role_action_window"
-                  parent="resource.menu_resource_config"
-                  sequence="100"
-                  groups="base.group_no_one"/>
-
-
         <record id="view_hr_job_form_inherit" model="ir.ui.view">
             <field name="name">hr.job.form.inherit</field>
             <field name="model">hr.job</field>
             <field name="inherit_id" ref="hr.view_hr_job_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//header" position="attributes">
+                <xpath expr="//header/button[@name='set_recruit']" position="attributes">
                     <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//header/button[@name='set_open']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//header/field[@name='state']" position="attributes">
+                    <attribute name="statusbar_visible">draft,waiting,rejected,approved</attribute>
+                </xpath>
+                <xpath expr="//field[@name='message_follower_ids']" position="after">
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </xpath>
+                <xpath expr="//header/button[@name='set_recruit']" position="after">
+                    <button name="request_approval" string="Request Approval" states="draft"
+                            type="object" class="oe_highlight" groups="approval_hierarchy.group_amend_system_users"/>
+                    <button name="action_approve" string="Approve" states="waiting"
+                            type="object" class="oe_highlight" groups="approval_hierarchy.group_approve_system_users"/>
+                    <button name="action_reject" string="Reject" states="waiting"
+                            type="object" class="oe_highlight" groups="approval_hierarchy.group_approve_system_users"/>
+                    <button name="set_to_draft" string="Set to Draft" groups="approval_hierarchy.group_amend_system_users"
+                            type="object" states="rejected,recruit,open"/>
                 </xpath>
                 <xpath expr="//field[@name='no_of_recruitment']" position="attributes">
                     <attribute name="invisible">1</attribute>
