@@ -6,12 +6,6 @@ from odoo.addons.approval_hierarchy import helpers
 from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES
 
 
-class HrEmployeePublic(models.Model):
-    _inherit = "hr.employee.public"
-
-    delegated_user_id = fields.Many2one(readonly=True)
-
-
 class HrEmployeeBase(models.AbstractModel):
     _inherit = "hr.employee.base"
 
@@ -138,3 +132,9 @@ class HrEmployee(models.Model):
         else:
             raise UserError(
                 CUSTOM_ERROR_MESSAGES.get('write') % 'an employee')
+
+
+class HrEmployeePublic(models.Model):
+    _inherit = "hr.employee.public"
+
+    delegated_user_id = fields.Many2one(readonly=True)

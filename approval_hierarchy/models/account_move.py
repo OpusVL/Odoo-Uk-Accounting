@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.addons.approval_hierarchy.helpers import CONFIGURATION_ERROR_MESSAGE, CUSTOM_ERROR_MESSAGES
+from odoo.api import SUPERUSER_ID
 
 
 class AccountMove(models.Model):
@@ -49,6 +50,8 @@ class AccountMove(models.Model):
         return super(AccountMove, self).unlink()
 
     def check_move_approval_access_rights(self):
+        if self.env.user.id == SUPERUSER_ID:
+            return True
         approval_access_dict = {
             'out_invoice': '_check_customer_invoice_access_rights',
             'out_refund': '_check_customer_invoice_access_rights',
