@@ -151,6 +151,9 @@ class HrJob(models.Model):
         return True
 
     def write(self, vals):
+        if self.env.user.is_superuser():
+            return super(HrJob, self.with_context(
+                supplier_action=True)).write(vals)
         if self._context.get('supplier_action'):
             return super(HrJob, self.with_context(
                 supplier_action=True)).write(vals)

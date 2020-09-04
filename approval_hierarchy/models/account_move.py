@@ -3,7 +3,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.addons.approval_hierarchy.helpers import CONFIGURATION_ERROR_MESSAGE, CUSTOM_ERROR_MESSAGES
-from odoo.api import SUPERUSER_ID
 
 
 class AccountMove(models.Model):
@@ -27,6 +26,8 @@ class AccountMove(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        if self.env.user.is_superuser():
+            return super(AccountMove, self).create(vals_list)
         moves = super(AccountMove, self).create(vals_list)
         for move in moves:
             move.with_context(approval_origin='create'
@@ -34,6 +35,8 @@ class AccountMove(models.Model):
         return moves
 
     def write(self, vals):
+        if self.env.user.is_superuser():
+            return super(AccountMove, self).write(vals)
         if self._context.get('supplier_action'):
             return super(AccountMove, self.with_context(
                 supplier_action=True)).write(vals)
@@ -44,13 +47,15 @@ class AccountMove(models.Model):
                 supplier_action=True)).write(vals)
 
     def unlink(self):
+        if self.env.user.is_superuser():
+            return super(AccountMove, self).unlink()
         for move in self:
             move.with_context(approval_origin='unlink'
                               ).check_move_approval_access_rights()
         return super(AccountMove, self).unlink()
 
     def check_move_approval_access_rights(self):
-        if self.env.user.id == SUPERUSER_ID:
+        if self.env.user.is_superuser():
             return True
         approval_access_dict = {
             'out_invoice': '_check_customer_invoice_access_rights',
@@ -134,6 +139,9 @@ class AccountMove(models.Model):
             )
 
     def action_post(self):
+        if self.env.user.is_superuser():
+            return super(AccountMove, self.with_context(
+                supplier_action=True)).action_post()
         # Double check in code if the user that
         # is approving has rights to approve
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
