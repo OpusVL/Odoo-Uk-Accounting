@@ -5,6 +5,7 @@ from odoo.exceptions import UserError
 from odoo.addons.base.models.res_partner import WARNING_MESSAGE, WARNING_HELP
 from odoo.addons.approval_hierarchy import helpers
 from odoo.addons.approval_hierarchy.helpers import CONFIGURATION_ERROR_MESSAGE, CUSTOM_ERROR_MESSAGES
+from odoo.api import SUPERUSER_ID
 
 
 class ResPartner(models.Model):
@@ -153,6 +154,8 @@ class ResPartner(models.Model):
 
     @api.model
     def create(self, vals):
+        if self.env.user.id == SUPERUSER_ID:
+            return super(ResPartner, self).create(vals)
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
             raise UserError(CONFIGURATION_ERROR_MESSAGE)
         role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
@@ -167,6 +170,9 @@ class ResPartner(models.Model):
         return res
 
     def write(self, vals):
+        if self.env.user.id == SUPERUSER_ID:
+            return super(ResPartner, self.with_context(
+                supplier_action=True)).write(vals)
         fields_to_be_tracked = helpers.get_fields_to_be_tracked()
         if self._context.get('supplier_action'):
             return super(ResPartner, self.with_context(
