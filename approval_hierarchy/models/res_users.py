@@ -5,7 +5,8 @@ from odoo.api import SUPERUSER_ID
 
 
 class ResUsers(models.Model):
-    _inherit = 'res.users'
+    _name = 'res.users'
+    _inherit = ['res.users', 'mail.thread', 'mail.activity.mixin']
 
     delegated_user_id = fields.Many2one(
         related='employee_id.delegated_user_id',
