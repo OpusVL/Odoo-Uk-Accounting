@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
+from odoo.api import SUPERUSER_ID
 
 
 class ResUsers(models.Model):
@@ -22,6 +23,13 @@ class ResUsers(models.Model):
     def _compute_current_user(self):
         for user in self:
             user.current_user = user == self.env.user
+
+    def is_superuser(self):
+        self.ensure_one()
+        if self.id == SUPERUSER_ID:
+            return True
+        else:
+            return False
 
     def _check_has_delegated(self):
         for rec in self:

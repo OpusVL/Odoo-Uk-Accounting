@@ -6,14 +6,6 @@ from odoo.addons.approval_hierarchy import helpers
 from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES
 
 
-class JobRoleAction(models.Model):
-    _name = 'job.role.action'
-    _description = 'Job Role Action'
-
-    name = fields.Char(string='Name', required=True,)
-    enable_value = fields.Boolean(string='Enable Limit Value',)
-
-
 class HrJobRole(models.Model):
     _name = 'hr.job.role'
     _description = 'Job roles'
@@ -159,6 +151,9 @@ class HrJob(models.Model):
         return True
 
     def write(self, vals):
+        if self.env.user.is_superuser():
+            return super(HrJob, self.with_context(
+                supplier_action=True)).write(vals)
         if self._context.get('supplier_action'):
             return super(HrJob, self.with_context(
                 supplier_action=True)).write(vals)

@@ -113,7 +113,10 @@ class HrEmployee(models.Model):
         return self.with_context(supplier_action=True).write({'state': 'draft'})
 
     def write(self, vals):
-        if self._context.get('supplier_action') :
+        if self.env.user.is_superuser():
+            return super(HrEmployee, self.with_context(
+                supplier_action=True)).write(vals)
+        if self._context.get('supplier_action'):
             return super(HrEmployee, self).write(vals)
         elif self._context.get('from_my_profile'):
             if self.env.user == self.user_id:

@@ -8,6 +8,8 @@ class AccountJournal(models.Model):
     _inherit = "account.journal"
 
     def import_statement(self):
+        if self.env.user.is_superuser():
+            return super(AccountJournal, self).import_statement()
         if not self.env.su and not self.env.user.has_group(
                 "approval_hierarchy.import_bank_statement_role"):
             raise AccessError(
