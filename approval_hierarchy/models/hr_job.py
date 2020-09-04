@@ -90,10 +90,23 @@ class HrJob(models.Model):
     _name = 'hr.job'
     _inherit = ['hr.job', 'mail.thread', 'mail.activity.mixin']
 
+    def default_job_role_ids(self):
+        job_role_ids = []
+        groups = self.env['res.groups'].search([('approval_group', '=', True)])
+        for group in groups:
+            job_role_ids.append(
+                (0, 0, {
+                    'name': group.name,
+                    'role_action_id': group.id,
+                    'currency_id': self.env.user.company_id.currency_id.id,
+                }))
+        return job_role_ids
+
     job_role_ids = fields.One2many(
         'hr.job.role',
         'job_id',
         string='Job Roles',
+        default=default_job_role_ids
     )
     state = fields.Selection(
         selection_add=[
