@@ -2,6 +2,8 @@
 
 from odoo import models, fields, api, _
 from datetime import datetime
+from odoo.exceptions import UserError
+from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES
 
 
 def _get_warn_partner_id(partner):
@@ -103,6 +105,14 @@ class AccountPayment(models.Model):
                 self.update({'payment_date': False})
             return {'warning': warning}
         return {}
+
+    def export_data(self, fields_to_export):
+        """ Override to check if user has rights to export """
+        if not self.env.user.has_group(
+                "approval_hierarchy.export_payment_run_role"):
+            raise UserError(
+                CUSTOM_ERROR_MESSAGES.get('export') % 'payments')
+        return super(AccountPayment, self).export_data(fields_to_export)
 
 
 class PaymentRegister(models.TransientModel):

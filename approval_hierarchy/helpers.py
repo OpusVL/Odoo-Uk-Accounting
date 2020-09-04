@@ -134,6 +134,8 @@ CUSTOM_ERROR_MESSAGES = {
                 'Please contact the administration team.'),
     'request': _('You do not have the permission to request approval. '
                  'Please contact the administration team.'),
+    'export': _('You do not have the permission to export %s. '
+                'Please contact the administration team.'),
 }
 
 CONFIGURATION_ERROR_MESSAGE = _('Your user account is not configured properly. '
