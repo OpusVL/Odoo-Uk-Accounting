@@ -68,3 +68,9 @@ class Groups(models.Model):
     enable_value = fields.Boolean(string='Enable Limit Value', )
     approval_group = fields.Boolean(string='Approval Group', )
 
+    def _get_hidden_extra_categories(self):
+        result = super(Groups, self)._get_hidden_extra_categories()
+        result.append(
+            'approval_hierarchy.module_category_approval_hierarchy'
+        )
+        return result
