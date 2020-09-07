@@ -102,8 +102,7 @@ class HrEmployee(models.Model):
     def update_user_groups(self, job):
         users = self.env['res.users']
         for employee in self:
-            if employee.user_id not in users:
-                users |= employee.user_id
+            users |= employee.user_id
         for checked_role in job.job_role_ids.filtered(
                 lambda role: role.permission):
             users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
