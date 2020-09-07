@@ -104,9 +104,7 @@ class HrEmployee(models.Model):
         Propagate the roles defined against the `job`s role ids to the
         users which are linked to the employee(s) under self
         """
-        users = self.env['res.users']
-        for employee in self:
-            users |= employee.user_id
+        users = self.mapped('user_id')
         for checked_role in job.job_role_ids.filtered(
                 lambda role: role.permission):
             users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
