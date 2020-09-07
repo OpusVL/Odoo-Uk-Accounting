@@ -5,7 +5,8 @@ from odoo.api import SUPERUSER_ID
 
 
 class ResUsers(models.Model):
-    _inherit = 'res.users'
+    _name = 'res.users'
+    _inherit = ['res.users', 'mail.thread', 'mail.activity.mixin']
 
     delegated_user_id = fields.Many2one(
         related='employee_id.delegated_user_id',
@@ -68,3 +69,9 @@ class Groups(models.Model):
     enable_value = fields.Boolean(string='Enable Limit Value', )
     approval_group = fields.Boolean(string='Approval Group', )
 
+    def _get_hidden_extra_categories(self):
+        result = super(Groups, self)._get_hidden_extra_categories()
+        result.append(
+            'approval_hierarchy.module_category_approval_hierarchy'
+        )
+        return result

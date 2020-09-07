@@ -92,9 +92,26 @@ class HrEmployee(models.Model):
                 "approval_hierarchy.group_approve_system_users"):
             raise UserError(
                 CUSTOM_ERROR_MESSAGES.get('approve') % 'an employee')
+        if self.job_id and self.job_id.state == 'approved':
+            self.update_user_groups(self.job_id)
         return self.with_context(supplier_action=True).write(
             {'state': 'approved'}
         )
+
+    def update_user_groups(self, job):
+        """
+        @param job: hr.job recordset
+        Propagate the roles defined against the `job`s role ids to the
+        users which are linked to the employee(s) under self
+        """
+        users = self.mapped('user_id')
+        for checked_role in job.job_role_ids.filtered(
+                lambda role: role.permission):
+            users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
+        for unchecked_role in job.job_role_ids.filtered(
+                lambda role: not role.permission):
+            users.write(dict(groups_id=[(3, unchecked_role.role_action_id.id)]))
+        return True
 
     def action_reject(self):
         if not self.env.user.has_group(
