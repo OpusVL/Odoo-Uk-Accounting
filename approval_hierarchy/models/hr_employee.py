@@ -92,7 +92,6 @@ class HrEmployee(models.Model):
                 "approval_hierarchy.group_approve_system_users"):
             raise UserError(
                 CUSTOM_ERROR_MESSAGES.get('approve') % 'an employee')
-        # Update employee rights if linked job position is approved
         if self.job_id and self.job_id.state == 'approved':
             self.update_user_groups(self.job_id)
         return self.with_context(supplier_action=True).write(
