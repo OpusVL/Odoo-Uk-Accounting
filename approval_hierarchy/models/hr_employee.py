@@ -99,6 +99,11 @@ class HrEmployee(models.Model):
         )
 
     def update_user_groups(self, job):
+        """
+        @param job: hr.job recordset
+        Propagate the roles defined against the `job`s role ids to the
+        users which are linked to the employee(s) under self
+        """
         users = self.env['res.users']
         for employee in self:
             users |= employee.user_id
