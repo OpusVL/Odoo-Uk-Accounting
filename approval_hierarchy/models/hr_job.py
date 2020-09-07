@@ -129,7 +129,7 @@ class HrJob(models.Model):
                 "approval_hierarchy.group_approve_system_users"):
             raise UserError(
                 CUSTOM_ERROR_MESSAGES.get('approve') % 'a job position')
-        self.update_user_groups()
+        self.employee_ids.update_user_groups(job=self)
         return self.with_context(supplier_action=True).write(
             {'state': 'approved'}
         )
@@ -149,19 +149,6 @@ class HrJob(models.Model):
             raise UserError(
                 CUSTOM_ERROR_MESSAGES.get('write') % 'a job position')
         return self.with_context(supplier_action=True).write({'state': 'draft'})
-
-    def update_user_groups(self):
-        users = self.env['res.users']
-        for employee in self.employee_ids:
-            if employee.user_id not in users:
-                users |= employee.user_id
-        for checked_role in self.job_role_ids.filtered(
-                lambda role: role.permission):
-            users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
-        for unchecked_role in self.job_role_ids.filtered(
-                lambda role: not role.permission):
-            users.write(dict(groups_id=[(3, unchecked_role.role_action_id.id)]))
-        return True
 
     def write(self, vals):
         if self.env.user.is_superuser():
