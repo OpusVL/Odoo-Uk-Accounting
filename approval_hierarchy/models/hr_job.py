@@ -99,6 +99,9 @@ class HrJob(models.Model):
                     'name': group.name,
                     'role_action_id': group.id,
                     'currency_id': self.env.user.company_id.currency_id.id,
+                    'enable_value': group.enable_value,
+                    'min_value': 0.0,
+                    'max_value': 0.0,
                 }))
         return job_role_ids
 

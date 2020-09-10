@@ -70,7 +70,7 @@ class HrEmployee(models.Model):
                 role_action = self.job_id.job_role_ids.filtered(
                     lambda r: r.role_action_id == action and r.permission and
                               r.currency_id == currency)
-                if role_action[0].min_value <= value <= role_action[0].max_value:
+                if role_action and role_action[0].min_value <= value <= role_action[0].max_value:
                     role_access = True
             else:
                 role_action = self.job_id.job_role_ids.filtered(
