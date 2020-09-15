@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.addons.approval_hierarchy.helpers import CONFIGURATION_ERROR_MESSAGE, CUSTOM_ERROR_MESSAGES
+from odoo.addons.approval_hierarchy import helpers
 
 
 class AccountMove(models.Model):
@@ -38,6 +39,11 @@ class AccountMove(models.Model):
         if self.env.user.is_superuser():
             return super(AccountMove, self).write(vals)
         if self._context.get('supplier_action'):
+            return super(AccountMove, self.with_context(
+                supplier_action=True)).write(vals)
+        fields_to_be_skipped = helpers.get_fields_to_be_excluded()
+        if any(field in vals for field in
+               fields_to_be_skipped.get('account.move')):
             return super(AccountMove, self.with_context(
                 supplier_action=True)).write(vals)
         for move in self:

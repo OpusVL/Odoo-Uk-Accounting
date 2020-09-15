@@ -121,6 +121,14 @@ def get_fields_to_be_tracked():
     }
 
 
+def get_fields_to_be_excluded():
+    return {
+        'account.move': [
+            'posted_date',
+        ],
+    }
+
+
 CUSTOM_ERROR_MESSAGES = {
     'create': _('You do not have the permission to create a %s. '
                 'Please contact the support team.'),
