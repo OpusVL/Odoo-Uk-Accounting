@@ -91,7 +91,7 @@ class HrEmployee(models.Model):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
             raise UserError(
-                CUSTOM_ERROR_MESSAGES.get('approve') % 'an employee')
+                CUSTOM_ERROR_MESSAGES.get('approve') % self._description)
         if self.job_id and self.job_id.state == 'approved':
             self.update_user_groups(self.job_id)
         return self.with_context(supplier_action=True).write(
@@ -105,19 +105,25 @@ class HrEmployee(models.Model):
         users which are linked to the employee(s) under self
         """
         users = self.mapped('user_id')
-        for checked_role in job.job_role_ids.filtered(
-                lambda role: role.permission):
+        groups = self.env['res.groups']
+        all_groups = groups.search([
+            ('approval_group', '=', True)
+        ])
+        checked_roles = job.job_role_ids.filtered(
+                lambda role: role.permission)
+        for checked_role in checked_roles:
+            groups |= checked_role.role_action_id
             users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
-        for unchecked_role in job.job_role_ids.filtered(
-                lambda role: not role.permission):
-            users.write(dict(groups_id=[(3, unchecked_role.role_action_id.id)]))
+        for unchecked_group in all_groups.filtered(
+                lambda group: group not in groups):
+            users.write(dict(groups_id=[(3, unchecked_group.id)]))
         return True
 
     def action_reject(self):
         if not self.env.user.has_group(
                 "approval_hierarchy.group_approve_system_users"):
             raise UserError(
-                CUSTOM_ERROR_MESSAGES.get('reject') % 'an employee')
+                CUSTOM_ERROR_MESSAGES.get('reject') % self._description)
         return self.with_context(supplier_action=True).write(
             {'state': 'rejected'}
         )
@@ -130,28 +136,15 @@ class HrEmployee(models.Model):
         return self.with_context(supplier_action=True).write({'state': 'draft'})
 
     def write(self, vals):
-        if self.env.user.is_superuser():
-            return super(HrEmployee, self.with_context(
-                supplier_action=True)).write(vals)
-        if self._context.get('supplier_action'):
-            return super(HrEmployee, self).write(vals)
-        elif self._context.get('from_my_profile'):
-            if self.env.user == self.user_id:
-                return super(HrEmployee, self).write(vals)
-            else:
-                raise UserError(
-                    CUSTOM_ERROR_MESSAGES.get('write') % 'an employee')
-        elif self.env.user.has_group(
-                "approval_hierarchy.group_amend_system_users"):
-            fields_to_be_tracked = helpers.get_fields_to_be_tracked()
-            if any(field in vals for field in
-                   fields_to_be_tracked.get('hr.employee')):
-                vals['state'] = 'draft'
-            return super(HrEmployee, self.with_context(
-                supplier_action=True)).write(vals)
-        else:
-            raise UserError(
-                CUSTOM_ERROR_MESSAGES.get('write') % 'an employee')
+        # I tried to transfer this hook on BaseModel but the record
+        # state was not changing
+        fields_to_be_tracked = helpers.get_fields_to_be_tracked()
+        if fields_to_be_tracked.get(
+                self._name) and any(field in vals for field in
+                                    fields_to_be_tracked.get(self._name)) and \
+                not self._context.get('supplier_action'):
+            vals['state'] = 'draft'
+        return super(HrEmployee, self).write(vals)
 
 
 class HrEmployeePublic(models.Model):

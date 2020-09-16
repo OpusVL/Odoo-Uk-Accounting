@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api, _
+from odoo import models, fields, _
 from odoo.exceptions import UserError
 from odoo.addons.approval_hierarchy.helpers import CONFIGURATION_ERROR_MESSAGE, CUSTOM_ERROR_MESSAGES
+from odoo.addons.approval_hierarchy import helpers
 
 
 class AccountMove(models.Model):
@@ -23,85 +24,6 @@ class AccountMove(models.Model):
     def _get_current_user(self):
         for rec in self:
             rec.current_user = rec.approval_user_id == self.env.user
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        if self.env.user.is_superuser():
-            return super(AccountMove, self).create(vals_list)
-        moves = super(AccountMove, self).create(vals_list)
-        for move in moves:
-            move.with_context(approval_origin='create'
-                              ).check_move_approval_access_rights()
-        return moves
-
-    def write(self, vals):
-        if self.env.user.is_superuser():
-            return super(AccountMove, self).write(vals)
-        if self._context.get('supplier_action'):
-            return super(AccountMove, self.with_context(
-                supplier_action=True)).write(vals)
-        for move in self:
-            move.with_context(approval_origin='write'
-                              ).check_move_approval_access_rights()
-        return super(AccountMove, self.with_context(
-                supplier_action=True)).write(vals)
-
-    def unlink(self):
-        if self.env.user.is_superuser():
-            return super(AccountMove, self).unlink()
-        for move in self:
-            move.with_context(approval_origin='unlink'
-                              ).check_move_approval_access_rights()
-        return super(AccountMove, self).unlink()
-
-    def check_move_approval_access_rights(self):
-        if self.env.user.is_superuser():
-            return True
-        approval_access_dict = {
-            'out_invoice': '_check_customer_invoice_access_rights',
-            'out_refund': '_check_customer_invoice_access_rights',
-            'in_invoice': '_check_vendor_bill_access_rights',
-            'in_refund': '_check_vendor_bill_access_rights',
-            'entry': '_check_account_move_access_rights',
-            'out_receipt': '_check_customer_invoice_access_rights',
-            'in_receipt': '_check_vendor_bill_access_rights',
-        }
-        getattr(self.with_context(approval_origin=self._context.get(
-            'approval_origin')), approval_access_dict.get(self.type))()
-        return True
-
-    def _check_customer_invoice_access_rights(self):
-        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(CONFIGURATION_ERROR_MESSAGE)
-        role_action = self.env.ref(
-            'approval_hierarchy.input_ar_invoice_role')
-        if not self.env.user.employee_id.check_if_has_approval_rights(
-                role_action):
-            raise UserError(CUSTOM_ERROR_MESSAGES.get(self._context.get(
-                'approval_origin')) % 'customer invoice')
-        return True
-
-    def _check_vendor_bill_access_rights(self):
-        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(CONFIGURATION_ERROR_MESSAGE)
-        role_action = self.env.ref(
-            'approval_hierarchy.input_ap_invoice_role')
-        if not self.env.user.employee_id.check_if_has_approval_rights(
-                role_action):
-            raise UserError(CUSTOM_ERROR_MESSAGES.get(self._context.get(
-                'approval_origin')) % 'vendor bill')
-        return True
-
-    def _check_account_move_access_rights(self):
-        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(CONFIGURATION_ERROR_MESSAGE)
-        role_action = self.env.ref(
-            'approval_hierarchy.input_account_move_role')
-        if not self.env.user.employee_id.check_if_has_approval_rights(
-                role_action):
-            raise UserError(CUSTOM_ERROR_MESSAGES.get(self._context.get(
-                'approval_origin')) % 'journal entry')
-        return True
 
     def request_approval(self):
         if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
@@ -138,6 +60,16 @@ class AccountMove(models.Model):
                 }
             )
 
+    def write(self, vals):
+        # I tried to transfer this hook on BaseModel but the record
+        # state was not changing
+        fields_to_be_tracked = helpers.get_fields_to_be_tracked()
+        if fields_to_be_tracked.get(
+                self._name) and any(field in vals for field in
+                                    fields_to_be_tracked.get(self._name)):
+            vals['state'] = 'draft'
+        return super(AccountMove, self).write(vals)
+
     def action_post(self):
         if self.env.user.is_superuser():
             return super(AccountMove, self.with_context(
@@ -150,7 +82,7 @@ class AccountMove(models.Model):
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action, self.amount_total, self.currency_id):
             raise UserError(
-                CUSTOM_ERROR_MESSAGES.get('approve') % 'a journal entry')
+                CUSTOM_ERROR_MESSAGES.get('approve') % self._description)
         return super(AccountMove, self.with_context(
                 supplier_action=True)).action_post()
 
@@ -163,7 +95,7 @@ class AccountMove(models.Model):
         if not self.env.user.employee_id.check_if_has_approval_rights(
                 role_action, self.amount_total, self.currency_id):
             raise UserError(
-                CUSTOM_ERROR_MESSAGES.get('reject') % 'a journal entry')
+                CUSTOM_ERROR_MESSAGES.get('reject') % self._description)
         return self.with_context(supplier_action=True).write(
             {'state': 'cancel'}
         )

@@ -22,6 +22,7 @@ def get_fields_to_be_tracked():
         'res.partner': [
             'company_type',
             'name',
+            'state',
             'approval_user_id',
             'street',
             'street2',
@@ -110,6 +111,8 @@ def get_fields_to_be_tracked():
             'spouse_complete_name',
             'spouse_birthdate',
             'phone',
+            'mobile_phone',
+            'job_id',
         ],
         'hr.job': [
             'state',
@@ -121,16 +124,39 @@ def get_fields_to_be_tracked():
     }
 
 
+def get_fields_to_be_excluded():
+    return {
+        'account.move': [
+            'posted_date',
+        ],
+    }
+
+
+def get_create_write_unlink_access_groups():
+    return {
+        'hr.employee': 'approval_hierarchy.group_amend_system_users',
+        'hr.job': 'approval_hierarchy.group_amend_system_users',
+        'res.partner': 'approval_hierarchy.supplier_set_up_role',
+        'account.move.out_invoice': 'approval_hierarchy.input_ar_invoice_role',
+        'account.move.out_refund': 'approval_hierarchy.input_ar_invoice_role',
+        'account.move.out_receipt': 'approval_hierarchy.input_ar_invoice_role',
+        'account.move.in_invoice': 'approval_hierarchy.input_ap_invoice_role',
+        'account.move.in_refund': 'approval_hierarchy.input_ap_invoice_role',
+        'account.move.in_receipt': 'approval_hierarchy.input_ap_invoice_role',
+        'account.move.entry': 'approval_hierarchy.input_account_move_role',
+    }
+
+
 CUSTOM_ERROR_MESSAGES = {
-    'create': _('You do not have the permission to create a %s. '
+    'create': _('You do not have the permission to create %s. '
                 'Please contact the support team.'),
-    'write': _('You do not have the permission to modify a %s. '
+    'write': _('You do not have the permission to modify %s. '
                'Please contact the support team.'),
     'unlink': _('You do not have the permission to delete %s. '
                 'Please contact the support team.'),
-    'approve': _('You do not have the permission to approve a %s. '
+    'approve': _('You do not have the permission to approve %s. '
                  'Please contact the administration team.'),
-    'reject': _('You do not have the permission to reject a %s. '
+    'reject': _('You do not have the permission to reject %s. '
                 'Please contact the administration team.'),
     'request': _('You do not have the permission to request approval. '
                  'Please contact the administration team.'),

@@ -153,14 +153,6 @@ class ResPartner(models.Model):
 
     @api.model
     def create(self, vals):
-        if self.env.user.is_superuser():
-            return super(ResPartner, self).create(vals)
-        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(CONFIGURATION_ERROR_MESSAGE)
-        role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
-        if not self.env.user.employee_id.check_if_has_approval_rights(
-                role_action):
-            raise UserError(CUSTOM_ERROR_MESSAGES.get('create') % 'a partner')
         res = super(ResPartner, self).create(vals)
         if vals and vals.get('parent_id'):
             message = "Contact '{}' is created. ".format(
@@ -169,55 +161,33 @@ class ResPartner(models.Model):
         return res
 
     def write(self, vals):
-        if self.env.user.is_superuser():
-            return super(ResPartner, self.with_context(
-                supplier_action=True)).write(vals)
+        # I tried to transfer this hook on BaseModel but the record
+        # state was not changing
         fields_to_be_tracked = helpers.get_fields_to_be_tracked()
-        if self._context.get('supplier_action'):
-            return super(ResPartner, self.with_context(
-                supplier_action=True)).write(vals)
-        else:
-            if any(field in vals for field in
-                   fields_to_be_tracked.get('res.partner')):
-                if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-                    raise UserError(CONFIGURATION_ERROR_MESSAGE)
-                role_action = self.env.ref(
-                    'approval_hierarchy.supplier_set_up_role')
-                if not self.env.user.employee_id.check_if_has_approval_rights(
-                        role_action):
-                    raise UserError(
-                        CUSTOM_ERROR_MESSAGES.get('write') % 'a partner')
-                if 'child_ids' in vals:
-                    for child in vals.get('child_ids'):
-                        if isinstance(child, list) and len(child) == 3 \
-                                and isinstance(child[2], dict) and child[2] and \
-                                isinstance(child[1], int):
-                            child[2].update({
-                                'state': 'draft',
-                                'approval_user_id': False,
-                            })
-                            message = "Changes made to the contact '{}'".format(
-                                self.browse(child[1]).name)
-                            self.message_post(body=message)
-                # Not to change the status of parent if is
-                # changed only the field child_ids
-                if 'child_ids' in vals and len(vals) == 1:
-                    return super(ResPartner, self.with_context(
-                        supplier_action=True)).write(vals)
+        if fields_to_be_tracked.get(
+                self._name) and any(field in vals for field in
+                                    fields_to_be_tracked.get(self._name)) and \
+                not self._context.get('supplier_action'):
+            vals['state'] = 'draft'
+        if 'child_ids' in vals:
+            if len(vals) == 1:
+                return super(ResPartner, self).write(vals)
+            for child in vals.get('child_ids'):
+                if isinstance(child, list) and len(child) == 3 \
+                        and isinstance(child[2], dict) and child[2] and \
+                        isinstance(child[1], int):
+                    child[2].update({
+                        'state': 'draft',
+                        'approval_user_id': False,
+                    })
+                    message = "Changes made to the contact '{}'".format(
+                        self.browse(child[1]).name)
+                    self.message_post(body=message)
                 vals['state'] = 'draft'
                 vals['approval_user_id'] = False
-            return super(ResPartner,  self.with_context(
-                supplier_action=True)).write(vals)
+        return super(ResPartner,  self).write(vals)
 
     def unlink(self):
-        if self.env.user.is_superuser():
-            return super(ResPartner, self).unlink()
-        if not self.env.user.employee_id or not self.env.user.employee_id.job_id:
-            raise UserError(CONFIGURATION_ERROR_MESSAGE)
-        role_action = self.env.ref('approval_hierarchy.supplier_set_up_role')
-        if not self.env.user.employee_id.check_if_has_approval_rights(
-                role_action):
-            raise UserError(CUSTOM_ERROR_MESSAGES.get('unlink') % 'a partner')
         for partner in self:
             if partner.state != 'draft':
                 raise UserError(_('In order to delete a partner, '
