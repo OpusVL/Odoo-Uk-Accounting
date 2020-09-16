@@ -161,6 +161,8 @@ class ResPartner(models.Model):
         return res
 
     def write(self, vals):
+        # I tried to transfer this hook on BaseModel but the record
+        # state was not changing
         fields_to_be_tracked = helpers.get_fields_to_be_tracked()
         if fields_to_be_tracked.get(
                 self._name) and any(field in vals for field in
