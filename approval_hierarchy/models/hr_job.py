@@ -154,43 +154,33 @@ class HrJob(models.Model):
         return self.with_context(supplier_action=True).write({'state': 'draft'})
 
     def write(self, vals):
-        if self.env.user.is_superuser():
-            return super(HrJob, self.with_context(
-                supplier_action=True)).write(vals)
-        if self._context.get('supplier_action'):
-            return super(HrJob, self.with_context(
-                supplier_action=True)).write(vals)
-        elif self.env.user.has_group(
-                "approval_hierarchy.group_amend_system_users"):
-            fields_to_be_tracked = helpers.get_fields_to_be_tracked()
-            if any(field in vals for field in
-                   fields_to_be_tracked.get('hr.job')):
-                vals['state'] = 'draft'
-                if 'job_role_ids' in vals:
-                    for job_role in vals.get('job_role_ids'):
-                        if isinstance(job_role, list) and len(job_role) == 3 \
-                                and isinstance(job_role[2], dict) and job_role[2] \
-                                and isinstance(job_role[1], int):
-                            role = self.env['hr.job.role'].browse(job_role[1])
-                            message = "Changes made to the job role '{}'.".format(
-                                role.name)
-                            # I could not find a way to make these lines look
-                            # better, without if-s
-                            data = job_role[2]
-                            message_mapping = {
-                                'permission': '\nPermission: {}'.format(
-                                    data.get('permission')),
-                                'min_value': '\nMin Value: {}'.format(
-                                    data.get('min_value')),
-                                'max_value': '\nMax Value: {}'.format(
-                                    data.get('max_value')),
-                            }
-                            for message_type, message_str in message_mapping.items():
-                                if message_type in data:
-                                    message += message_str
-                            self.message_post(body=message)
-            return super(HrJob, self.with_context(
-                supplier_action=True)).write(vals)
-        else:
-            raise UserError(
-                CUSTOM_ERROR_MESSAGES.get('write') % 'a job position')
+        fields_to_be_tracked = helpers.get_fields_to_be_tracked()
+        if fields_to_be_tracked.get(
+                self._name) and any(field in vals for field in
+                                    fields_to_be_tracked.get(self._name)) and \
+                not self._context.get('supplier_action'):
+            vals['state'] = 'draft'
+        if 'job_role_ids' in vals:
+            for job_role in vals.get('job_role_ids'):
+                if isinstance(job_role, list) and len(job_role) == 3 \
+                        and isinstance(job_role[2], dict) and job_role[2] \
+                        and isinstance(job_role[1], int):
+                    role = self.env['hr.job.role'].browse(job_role[1])
+                    message = "Changes made to the job role '{}'.".format(
+                        role.name)
+                    # I could not find a way to make these lines look
+                    # better, without if-s
+                    data = job_role[2]
+                    message_mapping = {
+                        'permission': '\nPermission: {}'.format(
+                            data.get('permission')),
+                        'min_value': '\nMin Value: {}'.format(
+                            data.get('min_value')),
+                        'max_value': '\nMax Value: {}'.format(
+                            data.get('max_value')),
+                    }
+                    for message_type, message_str in message_mapping.items():
+                        if message_type in data:
+                            message += message_str
+                    self.message_post(body=message)
+        return super(HrJob, self).write(vals)

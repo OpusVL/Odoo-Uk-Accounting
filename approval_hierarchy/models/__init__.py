@@ -10,4 +10,5 @@ from . import (
     account_journal,
     ir_model_fields,
     mail_thread,
+    models,
 )
