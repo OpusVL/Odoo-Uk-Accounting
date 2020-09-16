@@ -147,14 +147,6 @@ def get_create_write_unlink_access_groups():
     }
 
 
-def get_create_access_groups():
-    return {
-        'hr.employee': 'approval_hierarchy.group_amend_system_users',
-        'hr.job': 'approval_hierarchy.group_amend_system_users',
-        'res.partner': 'approval_hierarchy.supplier_set_up_role',
-    }
-
-
 CUSTOM_ERROR_MESSAGES = {
     'create': _('You do not have the permission to create %s. '
                 'Please contact the support team.'),
