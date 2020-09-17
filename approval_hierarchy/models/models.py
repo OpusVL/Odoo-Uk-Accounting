@@ -46,6 +46,8 @@ class BaseModel(models.AbstractModel):
         return super(BaseModel, self).write(vals)
 
     def unlink(self):
+        if self.env.user.is_superuser():
+            return super(BaseModel, self).unlink()
         model_access_rights = helpers.get_create_write_unlink_access_groups()
         if self._name in model_access_rights:
             if not self.env.user.has_group(
@@ -63,6 +65,8 @@ class BaseModel(models.AbstractModel):
 
     @api.model_create_multi
     def create(self, vals_list):
+        if self.env.user.is_superuser():
+            return super(BaseModel, self).create(vals_list)
         model_access_rights = helpers.get_create_write_unlink_access_groups()
         if self._name in model_access_rights:
             if not self.env.user.has_group(
