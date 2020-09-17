@@ -5,11 +5,6 @@ from odoo.addons.approval_hierarchy import helpers
 from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES, CONFIGURATION_ERROR_MESSAGE
 from odoo.exceptions import UserError
 
-import sys
-sys.path.append("/mnt/pycharm-debug")
-import pydevd_pycharm
-pydevd_pycharm.settrace('10.10.4.172', port=11114, suspend=False)
-
 
 class BaseModel(models.AbstractModel):
     _inherit = 'base'
