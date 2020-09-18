@@ -144,6 +144,8 @@ def get_create_write_unlink_access_groups():
         'account.move.in_refund': 'approval_hierarchy.input_ap_invoice_role',
         'account.move.in_receipt': 'approval_hierarchy.input_ap_invoice_role',
         'account.move.entry': 'approval_hierarchy.input_account_move_role',
+        'account.bank.statement':
+            'approval_hierarchy.import_bank_statement_role',
     }
 
 
