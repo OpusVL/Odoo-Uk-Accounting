@@ -112,7 +112,7 @@ class AccountAssetCategory(models.Model):
              "won't go beyond.")
     method_end = fields.Date('Ending date')
     prorata = fields.Boolean(
-        string='Prorata Temporis',
+        string='Depreciate from Date of asset',
         help='Indicates that the first depreciation entry for this asset have '
              'to be done from the purchase date instead of the first of January'
     )
@@ -229,7 +229,7 @@ class AccountAssetAsset(models.Model):
         readonly=True,
         states={'draft': [('readonly', False)]})
     date = fields.Date(
-        string='Date',
+        string='Date of asset',
         required=True,
         readonly=True,
         states={'draft': [('readonly', False)]},
@@ -307,7 +307,7 @@ class AccountAssetAsset(models.Model):
         store=True,
         string='Residual Value')
     prorata = fields.Boolean(
-        string='Prorata Temporis',
+        string='Depreciate from Date of asset',
         readonly=True,
         states={'draft': [('readonly', False)]},
         help='Indicates that the first depreciation entry for this asset have '
