@@ -191,7 +191,7 @@ class AccountAssetAsset(models.Model):
         readonly=True,
         states={'draft': [('readonly', False)]})
     code = fields.Char(
-        string='Asset Number',
+        string='Asset ID',
         size=32,
         readonly=True,
         copy=False,
