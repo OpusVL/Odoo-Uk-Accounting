@@ -96,7 +96,7 @@
                     <group string="Journal Entries" name="journal_entries">
                         <group>
                             <field name="journal_id"/>
-                            <field name="account_net_value_id"/>
+                            <field name="account_depreciation_disposal_id"/>
                             <field name="account_analytic_id" groups="analytic.group_analytic_accounting"/>
                         </group>
                         <group>
