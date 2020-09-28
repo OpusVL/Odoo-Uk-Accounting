@@ -138,6 +138,12 @@ class AccountAssetCategory(models.Model):
         'Currency',
         required=True,
         default=lambda self: self.env.company.currency_id)
+    account_depreciation_accumulated_id = fields.Many2one(
+        'account.account',
+        string='Accumulated Intermediate Account',
+        required=True,
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
+        help="Account used when .")
 
     def name_get(self):
         res = []
@@ -804,9 +810,30 @@ class AccountAssetAsset(models.Model):
             if len(aset_ids) >= sasia:
                 raise UserError(_('Cannot create more assets '
                                   'than the available quantity!') )
-        asset = super(AccountAssetAsset, self.with_context(
-            mail_create_nolog=True)).create(vals)
-        asset.compute_depreciation_board()
+        if vals.get('value_alr_accumulated', 0.0) and vals.get(
+                'date_value_alr_acc', False):
+            # remove this fields from vals and modify asset with these values after created
+            value_alr_accumulated = vals.get('value_alr_accumulated', 0.0)
+            date_value_alr_acc = vals.get('date_value_alr_acc', 0.0)
+            vals.pop('date_value_alr_acc')
+            vals.pop('value_alr_accumulated')
+            asset = super(AccountAssetAsset, self.with_context(
+                mail_create_nolog=True)).create(vals)
+            datas = {
+                'value_accumulated': value_alr_accumulated,
+                'stock_output_account': asset.category_id.account_depreciation_id.id,
+                'stock_input_account': asset.category_id.account_depreciation_accumulated_id.id,
+                'stock_journal': asset.category_id.journal_id.id,
+                'date_value_acc': date_value_alr_acc,
+            }
+            asset.do_change_accumulated_account(
+                datas
+            )
+            asset.compute_depreciation_board()
+        else:
+            asset = super(AccountAssetAsset, self.with_context(
+                mail_create_nolog=True)).create(vals)
+            asset.compute_depreciation_board()
         return asset
 
     def write(self, vals):

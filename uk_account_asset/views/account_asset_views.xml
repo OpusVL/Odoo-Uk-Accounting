@@ -115,6 +115,11 @@
                                 <label for="account_depreciation_expense_id" string="Recognition Account" attrs="{'invisible': [('type','!=','sale')]}"/>
                                 <field name="account_depreciation_expense_id" nolabel="1"/>
                             </div>
+                            <div>
+                                <label for="account_depreciation_accumulated_id" attrs="{'invisible': [('type','!=','purchase')]}"/>
+                                <label for="account_depreciation_accumulated_id" string="Accumulated Intermediate Account" attrs="{'invisible': [('type','!=','sale')]}"/>
+                                <field name="account_depreciation_accumulated_id" nolabel="1"/>
+                            </div>
                         </group>
                     </group>
                     <group string="Periodicity" name="periodicity">
