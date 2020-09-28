@@ -439,7 +439,8 @@ class AccountAssetAsset(models.Model):
             return False
         if not self.method_progress_factor:
             return False
-        amount_to_depr = depreciation_factor = remaining_value = self.value_residual
+        amount_to_depr = remaining_value = self.value_residual
+        depreciation_factor = self.value
         depreciation_date = self._get_last_depreciation_date()[self.id]
         depreciation_date = (depreciation_date - relativedelta(
             days=depreciation_date.day - 1)) + relativedelta(months=1)
