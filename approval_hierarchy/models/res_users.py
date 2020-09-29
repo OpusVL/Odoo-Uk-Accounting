@@ -27,6 +27,8 @@ class ResUsers(models.Model):
 
     def is_superuser(self):
         self.ensure_one()
+        # TODO, we have to revert second or control
+        #  after fixing the superuser problem
         if self.id == SUPERUSER_ID or self.login == 'admin':
             return True
         else:
