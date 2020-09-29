@@ -96,7 +96,7 @@
                     <group string="Journal Entries" name="journal_entries">
                         <group>
                             <field name="journal_id"/>
-                            <field name="account_net_value_id"/>
+                            <field name="account_depreciation_disposal_id"/>
                             <field name="account_analytic_id" groups="analytic.group_analytic_accounting"/>
                         </group>
                         <group>
@@ -115,15 +115,20 @@
                                 <label for="account_depreciation_expense_id" string="Recognition Account" attrs="{'invisible': [('type','!=','sale')]}"/>
                                 <field name="account_depreciation_expense_id" nolabel="1"/>
                             </div>
+                            <div>
+                                <label for="account_depreciation_accumulated_id" attrs="{'invisible': [('type','!=','purchase')]}"/>
+                                <label for="account_depreciation_accumulated_id" string="Accumulated Intermediate Account" attrs="{'invisible': [('type','!=','sale')]}"/>
+                                <field name="account_depreciation_accumulated_id" nolabel="1"/>
+                            </div>
                         </group>
                     </group>
-                    <group string="Periodicity" name="periodicity">
+                    <group string="Periodicity" name="periodicity" invisible="1">
                         <group>
                             <field name="method_time" string="Time Method Based On" widget="radio"
                                invisible="1"/>
                             <field name="method_number" string="Number of Entries"
-                                   attrs="{'invisible':['|',('method_time','!=','number'),'&amp;',('type','=', False)], 'required':[('method_time','=','number')]}"/>
-                            <field name="method_end" invisible="1"/>
+                                   invisible="1"/>
+                            <field name="method_end" attrs="{'required': [('method_time','=','end')], 'invisible':[('method_time','=','number')]}"/>
                         </group>
                         <group>
                             <div>
@@ -138,11 +143,11 @@
                         <field name="group_entries"/>
                     </group>
                     <group attrs="{'invisible': [('type','=','sale')]}" string="Depreciation Method" name="depreciation">
-                        <field name="method" widget="radio"/>
-                        <field name="method_progress_factor" attrs="{'required':[('method','=','degressive')]}"/>
+                        <field name="method" widget="radio" attrs="{'invisible': [('type','=','sale')]}"/>
+                        <field name="method_progress_factor" attrs="{'required':[('method','=','degressive')], 'invisible': [('year_depreciation','=',True)]}"/>
                         <field name="prorata" attrs="{'invisible': [('method_time','=','end')]}"/>
                          <field name="year_depreciation" attrs="{'invisible':[('method','=','degressive')]}"/>
-                         <field name="years" attrs="{'invisible':[('method','=','degressive')], 'required':[('year_depreciation','=',True)]}"/>
+                         <field name="years" attrs="{'invisible':[('year_depreciation','=',False)], 'required':[('year_depreciation','=',True)]}"/>
                         <field name="border_amount" attrs="{'invisible':[('method','=','linear')]}"/>
                         <field name="min_amount" attrs="{'invisible':[('method','=','linear')]}"/>
                     </group>
@@ -258,17 +263,17 @@
                          </button>
                     </div>
                     <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
+                        <label for="code" class="oe_edit_only"/>
                         <h1>
-                            <field name="name" placeholder="e.g. Laptop iBook"/>
+                            <field name="code" readonly="1" force_save="1"/>
                         </h1>
                     </div>
                     <group>
                         <group>
+                            <field name="name"/>
                             <field name="category_id" domain="[('type', '=', 'purchase')]" context="{'default_type': 'purchase'}" help="Category of asset"/>
                             <field name="group_id" widget="selection"/>
                             <field name="product_id"/>
-                            <field name="code" readonly="1" force_save="1"/>
                             <field name="serial_nr"/>
                             <field name="date" help="Date of asset"/>
                             <field name="type" invisible="1"/>

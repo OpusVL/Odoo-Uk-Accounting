@@ -69,8 +69,7 @@ class AccountAssetCategory(models.Model):
              "the asset as expense.")
     account_net_value_id = fields.Many2one(
         'account.account',
-        string='Net Value Account',
-        required=True)
+        string='Net Value Account',)
     journal_id = fields.Many2one(
         'account.journal',
         string='Journal',
@@ -112,7 +111,7 @@ class AccountAssetCategory(models.Model):
              "won't go beyond.")
     method_end = fields.Date('Ending date')
     prorata = fields.Boolean(
-        string='Prorata Temporis',
+        string='Depreciate from Date of asset',
         help='Indicates that the first depreciation entry for this asset have '
              'to be done from the purchase date instead of the first of January'
     )
@@ -138,6 +137,18 @@ class AccountAssetCategory(models.Model):
         'Currency',
         required=True,
         default=lambda self: self.env.company.currency_id)
+    account_depreciation_accumulated_id = fields.Many2one(
+        'account.account',
+        string='Accumulated Intermediate Account',
+        required=True,
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
+        help="Account used when .")
+    account_depreciation_disposal_id = fields.Many2one(
+        'account.account',
+        string='Asset Disposal Account',
+        required=True,
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
+        help="Account used when .")
 
     def name_get(self):
         res = []
@@ -191,7 +202,7 @@ class AccountAssetAsset(models.Model):
         readonly=True,
         states={'draft': [('readonly', False)]})
     code = fields.Char(
-        string='Reference',
+        string='Asset ID',
         size=32,
         readonly=True,
         copy=False,
@@ -229,7 +240,7 @@ class AccountAssetAsset(models.Model):
         readonly=True,
         states={'draft': [('readonly', False)]})
     date = fields.Date(
-        string='Date',
+        string='Date of asset',
         required=True,
         readonly=True,
         states={'draft': [('readonly', False)]},
@@ -287,7 +298,6 @@ class AccountAssetAsset(models.Model):
     method_progress_factor = fields.Float(
         string='Degressive Factor',
         readonly=True,
-        default=0.3,
         states={'draft': [('readonly', False)]})
     method_time = fields.Selection(
         [('number', 'Number of Entries'), ('end', 'Ending Date')],
@@ -307,7 +317,7 @@ class AccountAssetAsset(models.Model):
         store=True,
         string='Residual Value')
     prorata = fields.Boolean(
-        string='Prorata Temporis',
+        string='Depreciate from Date of asset',
         readonly=True,
         states={'draft': [('readonly', False)]},
         help='Indicates that the first depreciation entry for this asset have '
@@ -439,7 +449,8 @@ class AccountAssetAsset(models.Model):
             return False
         if not self.method_progress_factor:
             return False
-        amount_to_depr = depreciation_factor = remaining_value = self.value_residual
+        amount_to_depr = remaining_value = self.value_residual
+        depreciation_factor = self.value
         depreciation_date = self._get_last_depreciation_date()[self.id]
         depreciation_date = (depreciation_date - relativedelta(
             days=depreciation_date.day - 1)) + relativedelta(months=1)
@@ -615,8 +626,7 @@ class AccountAssetAsset(models.Model):
             asset.message_post(subject=_('Asset created'),
                                tracking_value_ids=tracking_value_ids)
 
-    def _get_disposal_moves(self):
-        move_ids = []
+    def set_to_close(self):
         for asset in self:
             unposted_depreciation_line_ids = asset.depreciation_line_ids.filtered(
                 lambda x: not x.move_check)
@@ -653,27 +663,9 @@ class AccountAssetAsset(models.Model):
                     tracked_fields, old_values)
                 if changes:
                     asset.message_post(subject=_('Asset sold or disposed. Accounting entry awaiting for validation.'), tracking_value_ids=tracking_value_ids)
-                move_ids += asset.depreciation_line_ids[-1].create_move(
-                    post_move=False)
-        return move_ids
-
-    def set_to_close(self):
-        move_ids = self._get_disposal_moves()
-        if move_ids:
-            name = _('Disposal Move')
-            view_mode = 'form'
-            if len(move_ids) > 1:
-                name = _('Disposal Moves')
-                view_mode = 'tree,form'
-            return {
-                'name': name,
-                'view_type': 'form',
-                'view_mode': view_mode,
-                'res_model': 'account.move',
-                'type': 'ir.actions.act_window',
-                'target': 'current',
-                'res_id': move_ids[0],
-            }
+                asset.depreciation_line_ids[-1].create_disposal_move(
+                    post_move=True)
+        return True
 
     def set_to_draft(self):
         if self.mapped('move_ids'):
@@ -803,9 +795,32 @@ class AccountAssetAsset(models.Model):
             if len(aset_ids) >= sasia:
                 raise UserError(_('Cannot create more assets '
                                   'than the available quantity!') )
-        asset = super(AccountAssetAsset, self.with_context(
-            mail_create_nolog=True)).create(vals)
-        asset.compute_depreciation_board()
+        if vals.get('value_alr_accumulated', 0.0) and vals.get(
+                'date_value_alr_acc', False):
+            # remove this fields from vals and modify asset with these values after created
+            value_alr_accumulated = vals.get('value_alr_accumulated', 0.0)
+            date_value_alr_acc = vals.get('date_value_alr_acc', 0.0)
+            vals.pop('date_value_alr_acc')
+            vals.pop('value_alr_accumulated')
+            asset = super(AccountAssetAsset, self.with_context(
+                mail_create_nolog=True)).create(vals)
+            datas = {
+                'value_accumulated': value_alr_accumulated,
+                'stock_output_account': asset.category_id.account_depreciation_id.id,
+                'stock_input_account': asset.category_id.account_depreciation_accumulated_id.id,
+                'stock_journal': asset.category_id.journal_id.id,
+                'date_value_acc': date_value_alr_acc,
+            }
+            asset.onchange_category_id()
+            asset.do_change_accumulated_account(
+                datas
+            )
+            asset.compute_depreciation_board()
+        else:
+            asset = super(AccountAssetAsset, self.with_context(
+                mail_create_nolog=True)).create(vals)
+            asset.onchange_category_id()
+            asset.compute_depreciation_board()
         return asset
 
     def write(self, vals):
@@ -898,64 +913,172 @@ class AccountAssetDepreciationLine(models.Model):
 
     def create_move(self, post_move=True, log_id=False, accounting_date=False):
         created_moves = self.env['account.move']
-        prec = self.env['decimal.precision'].precision_get('Account')
         for line in self:
-            category_id = line.asset_id.category_id
-            depreciation_date = accounting_date or self.env.context.get('depreciation_date') or line.depreciation_date or fields.Date.context_today(self)
-            company_currency = line.asset_id.company_id.currency_id
-            current_currency = line.asset_id.currency_id
-            amount = current_currency.with_context(
-                date=depreciation_date).compute(line.amount, company_currency)
-            asset_name = line.asset_id.name + ' (%s/%s)' % (line.sequence, len(
-                line.asset_id.depreciation_line_ids))
-            move_line_1 = {
-                'name': asset_name,
-                'account_id': category_id.account_depreciation_id.id,
-                'debit': 0.0 if float_compare(
-                    amount, 0.0, precision_digits=prec) > 0 else -amount,
-                'credit': amount if float_compare(
-                    amount, 0.0, precision_digits=prec) > 0 else 0.0,
-                'journal_id': category_id.journal_id.id,
-                'partner_id': line.asset_id.partner_id.id,
-                'analytic_account_id': category_id.account_analytic_id.id if
-                category_id.type == 'sale' else False,
-                'currency_id': company_currency != current_currency and
-                               current_currency.id or False,
-                'amount_currency': company_currency != current_currency
-                                   and - 1.0 * line.amount or 0.0,
-            }
-            move_line_2 = {
-                'name': asset_name,
-                'account_id': category_id.account_depreciation_expense_id.id,
-                'credit': 0.0 if float_compare(
-                    amount, 0.0, precision_digits=prec) > 0 else -amount,
-                'debit': amount if float_compare(
-                    amount, 0.0, precision_digits=prec) > 0 else 0.0,
-                'journal_id': category_id.journal_id.id,
-                'partner_id': line.asset_id.partner_id.id,
-                'analytic_account_id': category_id.account_analytic_id.id if
-                category_id.type == 'purchase' else False,
-                'currency_id': company_currency != current_currency and
-                               current_currency.id or False,
-                'amount_currency': company_currency != current_currency and
-                                   line.amount or 0.0,
-            }
-            move_vals = {
-                'ref': line.asset_id.code,
-                'date': depreciation_date or False,
-                'journal_id': category_id.journal_id.id,
-                'line_ids': [(0, 0, move_line_1), (0, 0, move_line_2)],
-                'asset_log_id': log_id,
-                'asset_id': line.asset_id.id
-            }
+            move_lines = line.get_move_lines(accounting_date)
+            move_vals = line.get_move_vals(move_lines, log_id)
             move = self.env['account.move'].create(move_vals)
             line.write({'move_id': move.id, 'move_check': True})
             created_moves |= move
-
         if post_move and created_moves:
             for created_move in created_moves:
                 created_move.post()
         return [x.id for x in created_moves]
+
+    def create_disposal_move(self, post_move=True):
+        created_moves = self.env['account.move']
+        for line in self:
+            move_lines = line.get_disposal_move_lines()
+            move_vals = line.get_move_vals(move_lines)
+            move = self.env['account.move'].create(move_vals)
+            line.write({'move_id': move.id, 'move_check': True})
+            created_moves |= move
+        if post_move and created_moves:
+            for created_move in created_moves:
+                created_move.post()
+        return True
+
+    def get_move_vals(self, move_lines, log_id=False):
+        depreciation_date = self.env.context.get(
+            'depreciation_date') or self.depreciation_date or fields.Date.context_today(
+            self)
+        return {
+            'ref': self.asset_id.code,
+            'date': depreciation_date or False,
+            'journal_id': self.asset_id.category_id.journal_id.id,
+            'line_ids': [(0, 0, move_line) for move_line in move_lines],
+            'asset_log_id': log_id,
+            'asset_id': self.asset_id.id
+        }
+
+    def get_disposal_move_lines(self):
+        prec = self.env['decimal.precision'].precision_get('Account')
+        company_currency = self.asset_id.company_id.currency_id
+        current_currency = self.asset_id.currency_id
+        depreciation_date = self.env.context.get(
+            'depreciation_date') or self.depreciation_date or fields.Date.context_today(
+            self)
+        amount = current_currency.with_context(
+            date=depreciation_date).compute(self.amount, company_currency)
+        total_amount = current_currency.with_context(
+            date=depreciation_date).compute(self.asset_id.value, company_currency)
+        depreciated_amount = total_amount - amount
+        return [
+            {
+                'name': '{} {}/{}'.format(
+                    self.asset_id.name,
+                    self.sequence,
+                    len(self.asset_id.depreciation_line_ids)
+                ),
+                'account_id': self.asset_id.category_id.account_asset_id.id,
+                'debit': 0.0 if float_compare(
+                    total_amount, 0.0, precision_digits=prec) > 0 else -total_amount,
+                'credit': total_amount if float_compare(
+                    total_amount, 0.0, precision_digits=prec) > 0 else 0.0,
+                'journal_id': self.asset_id.category_id.journal_id.id,
+                'partner_id': self.asset_id.partner_id.id,
+                'analytic_account_id':
+                    self.asset_id.category_id.account_analytic_id.id if
+                    self.asset_id.category_id.type == 'sale' else False,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and - 1.0 * self.asset_id.value or 0.0,
+            },
+            {
+                'name': '{} {}/{}'.format(
+                    self.asset_id.name,
+                    self.sequence,
+                    len(self.asset_id.depreciation_line_ids)
+                ),
+                'account_id': self.asset_id.category_id.account_depreciation_id.id,
+                'credit': 0.0 if float_compare(
+                    depreciated_amount, 0.0, precision_digits=prec) > 0 else -depreciated_amount,
+                'debit': depreciated_amount if float_compare(
+                    depreciated_amount, 0.0, precision_digits=prec) > 0 else 0.0,
+                'journal_id': self.asset_id.category_id.journal_id.id,
+                'partner_id': self.asset_id.partner_id.id,
+                'analytic_account_id': False,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and self.asset_id.value - self.amount or 0.0,
+            },
+            {
+                'name': '{} {}/{}'.format(
+                    self.asset_id.name,
+                    self.sequence,
+                    len(self.asset_id.depreciation_line_ids)
+                ),
+                'account_id': self.asset_id.category_id.account_depreciation_disposal_id.id,
+                'credit': 0.0 if float_compare(
+                    amount, 0.0, precision_digits=prec) > 0 else -amount,
+                'debit': amount if float_compare(
+                    amount, 0.0, precision_digits=prec) > 0 else 0.0,
+                'journal_id': self.asset_id.category_id.journal_id.id,
+                'partner_id': self.asset_id.partner_id.id,
+                'analytic_account_id':
+                    self.asset_id.category_id.account_analytic_id.id if
+                    self.asset_id.category_id.type == 'purchase' else False,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and self.amount or 0.0,
+            }
+        ]
+
+    def get_move_lines(self, accounting_date):
+        prec = self.env['decimal.precision'].precision_get('Account')
+        company_currency = self.asset_id.company_id.currency_id
+        current_currency = self.asset_id.currency_id
+        depreciation_date = accounting_date or self.env.context.get(
+            'depreciation_date') or self.depreciation_date or fields.Date.context_today(
+            self)
+        amount = current_currency.with_context(
+            date=depreciation_date).compute(self.amount, company_currency)
+        return [
+            {
+                'name': '{} {}/{}'.format(
+                    self.asset_id.name,
+                    self.sequence,
+                    len(self.asset_id.depreciation_line_ids)
+                ),
+                'account_id': self.asset_id.category_id.account_depreciation_id.id,
+                'debit': 0.0 if float_compare(
+                    amount, 0.0, precision_digits=prec) > 0 else -amount,
+                'credit': amount if float_compare(
+                    amount, 0.0, precision_digits=prec) > 0 else 0.0,
+                'journal_id': self.asset_id.category_id.journal_id.id,
+                'partner_id': self.asset_id.partner_id.id,
+                'analytic_account_id':
+                    self.asset_id.category_id.account_analytic_id.id if
+                    self.asset_id.category_id.type == 'sale' else False,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and - 1.0 * self.amount or 0.0,
+            },
+            {
+                'name': '{} {}/{}'.format(
+                    self.asset_id.name,
+                    self.sequence,
+                    len(self.asset_id.depreciation_line_ids)
+                ),
+                'account_id': self.asset_id.category_id.account_depreciation_expense_id.id,
+                'credit': 0.0 if float_compare(
+                    amount, 0.0, precision_digits=prec) > 0 else -amount,
+                'debit': amount if float_compare(
+                    amount, 0.0, precision_digits=prec) > 0 else 0.0,
+                'journal_id': self.asset_id.category_id.journal_id.id,
+                'partner_id': self.asset_id.partner_id.id,
+                'analytic_account_id':
+                    self.asset_id.category_id.account_analytic_id.id if
+                    self.asset_id.category_id.type == 'purchase' else False,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and self.amount or 0.0,
+            }
+        ]
 
     def create_grouped_move(self, post_move=True):
         if not self.exists():
