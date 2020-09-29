@@ -11,6 +11,7 @@
                 	    <field name="name"/>
                     </group>
                 </group>
+                <field name="note" nolabel="1" placeholder="Detailed description of asset revaluation..."/>
                 <footer>
                     <button name="confirm_asset_revaluation" string="Confirm Revaluation" type="object" class="btn-primary"/>
                     <button string="Cancel" class="btn-default" special="cancel"/>

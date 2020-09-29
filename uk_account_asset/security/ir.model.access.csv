@@ -13,3 +13,5 @@ access_asset_depreciation_log_manager,asset.depreciation.log,model_asset_depreci
 access_account_asset_depreciation_line_employee,account.asset.depreciation.line,model_account_asset_depreciation_line,base.group_user,1,0,0,0
 access_account_asset_group,account.asset.group,model_account_asset_group,account.group_account_user,1,0,0,0
 access_account_asset_group_manager,account.asset.group,model_account_asset_group,account.group_account_manager,1,1,1,1
+access_asset_revaluation_log,asset.revaluation.log,model_asset_revaluation_log,account.group_account_user,1,0,0,0
+access_asset_revaluation_log_manager,asset.revaluation.log.manager,model_asset_revaluation_log,account.group_account_manager,1,1,1,1

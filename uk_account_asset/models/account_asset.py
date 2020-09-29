@@ -400,6 +400,15 @@ class AccountAssetAsset(models.Model):
         readonly=True,
         states={'draft': [('readonly', False)], 'open': [('readonly', False)]},
     )
+    revaluation_occurred = fields.Boolean(
+        string='Asset Revaluation Occurred',
+    )
+    revaluation_line_ids = fields.One2many(
+        'asset.revaluation.log',
+        'asset_id',
+        string='Asset Revaluation Logs',
+        readonly=True,
+        states={'open': [('readonly', False)]})
 
     def unlink(self):
         for asset in self:
@@ -1283,4 +1292,36 @@ class AccountMove(models.Model):
         states={'draft': [('readonly', False)]})
 
 
+class AssetRevaluationLog(models.Model):
+    _name = "asset.revaluation.log"
+    _description = "Asset Revaluation Log"
 
+    name = fields.Char(
+        'Name',
+        required=True)
+    date = fields.Date(
+        'Asset Revaluation Date',
+        default=datetime.today())
+    asset_id = fields.Many2one(
+        'account.asset.asset',
+        string='Asset',
+        required=True,
+        ondelete='cascade')
+    currency_id = fields.Many2one(
+        'res.currency',
+        related='asset_id.currency_id',
+        string='Currency')
+    net_value = fields.Monetary(
+        string='Net Asset Value',
+    )
+    revaluation_value = fields.Monetary(
+        string='Asset Revaluation Value',
+    )
+    difference_value = fields.Monetary(
+        string='Difference Value',
+    )
+    user_id = fields.Many2one(
+        'res.users', 'User',
+        default=lambda self: self.env.user,
+        index=True, required=True)
+    note = fields.Text(string='Notes')
