@@ -27,7 +27,7 @@ class ResUsers(models.Model):
 
     def is_superuser(self):
         self.ensure_one()
-        if self.id == SUPERUSER_ID:
+        if self.id == SUPERUSER_ID or self.login == 'admin':
             return True
         else:
             return False
