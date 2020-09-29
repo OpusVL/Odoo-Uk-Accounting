@@ -20,6 +20,7 @@
     'data': [
         'security/ir.model.access.csv',
         'wizard/asset_modify_views.xml',
+        'wizard/asset_revaluation_views.xml',
         'views/account_asset_views.xml',
         'views/product_views.xml',
         'views/res_config_settings_views.xml',

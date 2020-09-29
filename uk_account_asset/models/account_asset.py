@@ -149,6 +149,10 @@ class AccountAssetCategory(models.Model):
         required=True,
         domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
         help="Account used when .")
+    asset_revaluation = fields.Boolean(
+        string='Asset Revaluation',
+        help='If checked it will allow by default to apply asset revaluation'
+    )
 
     def name_get(self):
         res = []
@@ -390,6 +394,12 @@ class AccountAssetAsset(models.Model):
         string='Picking',
         states={'draft': [('readonly', False)]},
         copy=False)
+    asset_revaluation = fields.Boolean(
+        string='Asset Revaluation',
+        help='If checked it will allow by default to apply asset revaluation',
+        readonly=True,
+        states={'draft': [('readonly', False)], 'open': [('readonly', False)]},
+    )
 
     def unlink(self):
         for asset in self:
@@ -730,6 +740,7 @@ class AccountAssetAsset(models.Model):
             self.method_end = self.category_id.method_end
             self.year_depreciation = self.category_id.year_depreciation
             self.years = self.category_id.years
+            self.asset_revaluation = self.category_id.asset_revaluation
 
     @api.onchange('method_time')
     def onchange_method_time(self):

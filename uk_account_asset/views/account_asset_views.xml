@@ -89,6 +89,7 @@
                         </h1>
                     </div>
                     <group>
+                        <field name="asset_revaluation"/>
                         <field name="currency_id"/>
                         <field name="type"/>
                         <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
@@ -249,6 +250,9 @@
                     <button name="%(action_asset_modify)d"
                             attrs="{'invisible': ['|', ('value_alr_accumulated', '!=', 0), ('state', '!=', 'draft')]}"
                             string="Modify Depreciation" type="action"/>
+                    <button name="%(action_asset_revaluation)d"
+                            attrs="{'invisible': ['|', ('state', '!=', 'open'), ('asset_revaluation', '=', False)]}"
+                            string="Asset Revaluation" type="action"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,open"/>
                 </header>
                 <sheet>
@@ -289,6 +293,7 @@
                             <field name="border_amount" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible':[('method','=','linear')], 'required':[('method','=','degressive')]}"/>
                             <field name="value_accumulated" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="partner_id" string="Vendor"/>
+                            <field name="asset_revaluation"/>
                         </group>
                     </group>
                     <notebook colspan="4">
