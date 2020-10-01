@@ -480,10 +480,7 @@ class AccountAssetAsset(models.Model):
             return False
         if not self.method_progress_factor:
             return False
-        unposted_deprecated_sum = sum(
-            line.period_amount + line.revaluation_period_amount for line in
-            self.depreciation_line_ids) or 0.0
-        amount_to_depr = remaining_value = self.value_residual - unposted_deprecated_sum
+        amount_to_depr = remaining_value = self.value_residual
         depreciation_factor = self.value
         revaluation_factor = self.cumulative_revaluation_value
         depreciation_date = self._get_last_depreciation_date()

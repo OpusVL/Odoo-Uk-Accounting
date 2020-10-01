@@ -3,6 +3,11 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+import sys
+sys.path.append("/mnt/pycharm-debug")
+import pydevd_pycharm
+pydevd_pycharm.settrace('10.10.4.172', port=11114, suspend=False)
+
 
 def diff_month(d1, d2):
     return (d1.year - d2.year) * 12 + d1.month - d2.month
@@ -76,7 +81,7 @@ class AssetRevaluation(models.TransientModel):
                     key=lambda r: r.depreciation_date)[0]
                 end_date = unposted_lines.sorted(
                     key=lambda r: r.depreciation_date, reverse=True)[0].depreciation_date
-                total_asset_months = diff_month(end_date, asset.date) + 1
+                total_asset_months = diff_month(end_date, asset.date)
                 res.update({
                     'revaluation_date': first_unposted_line.depreciation_date,
                     'revaluation_months': len(unposted_lines) * asset.method_period,
@@ -133,7 +138,7 @@ class AssetRevaluation(models.TransientModel):
             unposted_lines = asset.depreciation_line_ids.filtered(
                 lambda line: line.depreciation_date >= self.revaluation_date)
             unposted_line_values = asset.depreciation_line_ids.filtered(
-                lambda line: line.depreciation_date < self.revaluation_date)
+                lambda line: line.depreciation_date < self.revaluation_date and not line.move_id)
             unposted_deprecated_sum = sum(
                 line.period_amount + line.revaluation_period_amount for line in unposted_line_values)
             self.net_value = asset.value_residual - unposted_deprecated_sum
