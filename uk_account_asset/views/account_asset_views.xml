@@ -123,6 +123,15 @@
                             </div>
                         </group>
                     </group>
+                    <group string="Revaluation Configuration" name="revaluation_accounts">
+                        <group>
+                            <field name="account_revaluation_equity_id"/>
+
+                        </group>
+                        <group>
+                            <field name="account_revaluation_loss_id"/>
+                        </group>
+                    </group>
                     <group string="Periodicity" name="periodicity" invisible="1">
                         <group>
                             <field name="method_time" string="Time Method Based On" widget="radio"

@@ -141,18 +141,26 @@ class AccountAssetCategory(models.Model):
         'account.account',
         string='Accumulated Intermediate Account',
         required=True,
-        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
-        help="Account used when .")
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],)
     account_depreciation_disposal_id = fields.Many2one(
         'account.account',
         string='Asset Disposal Account',
         required=True,
-        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
-        help="Account used when .")
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],)
     asset_revaluation = fields.Boolean(
         string='Asset Revaluation',
         help='If checked it will allow by default to apply asset revaluation'
     )
+    account_revaluation_equity_id = fields.Many2one(
+        'account.account',
+        string='Revaluation Equity Reserve',
+        required=True,
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],)
+    account_revaluation_loss_id = fields.Many2one(
+        'account.account',
+        string='Revaluation Loss',
+        required=True,
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)], )
 
     def name_get(self):
         res = []
@@ -1087,7 +1095,9 @@ class AccountAssetDepreciationLine(models.Model):
             'depreciation_date') or self.depreciation_date or fields.Date.context_today(
             self)
         amount = current_currency.with_context(
-            date=depreciation_date).compute(self.amount, company_currency)
+            date=depreciation_date).compute(
+            self.period_amount + self.revaluation_period_amount,
+            company_currency)
         return [
             {
                 'name': '{} {}/{}'.format(
