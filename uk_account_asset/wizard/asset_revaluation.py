@@ -3,11 +3,6 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
-import sys
-sys.path.append("/mnt/pycharm-debug")
-import pydevd_pycharm
-pydevd_pycharm.settrace('10.10.4.172', port=11114, suspend=False)
-
 
 def diff_month(d1, d2):
     return (d1.year - d2.year) * 12 + d1.month - d2.month
