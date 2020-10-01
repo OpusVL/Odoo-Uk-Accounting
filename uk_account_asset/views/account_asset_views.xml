@@ -294,6 +294,7 @@
                             <field name="border_amount" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible':[('method','=','linear')], 'required':[('method','=','degressive')]}"/>
                             <field name="value_accumulated" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="partner_id" string="Vendor"/>
+                            <field name="cumulative_revaluation_value" force_save="1"/>
                             <field name="asset_revaluation"/>
                         </group>
                     </group>
@@ -304,6 +305,8 @@
                                     <field name="depreciation_date"/>
                                     <field name="depreciated_value" readonly="1"/>
                                     <field name="period_amount" widget="monetary" string="Depreciation" sum="Total"/>
+                                    <field name="revaluation_period_amount" attrs="{'column_invisible': [('parent.revaluation_occurred', '=', False)]}"
+                                           widget="monetary" string="Revaluation Depreciation" sum="Total"/>
                                     <field name="amount" widget="monetary" string="Depreciation" sum="Total" invisible="1"/>
                                     <field name="remaining_value" readonly="1" widget="monetary" string="Residual"/>
                                     <field name="move_check" widget="deprec_lines_toggler" attrs="{'invisible': [('parent_state', '!=', 'open')]}"/>
