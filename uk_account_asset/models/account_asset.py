@@ -488,9 +488,12 @@ class AccountAssetAsset(models.Model):
             return False
         if not self.method_progress_factor:
             return False
-        amount_to_depr = remaining_value = self.value_residual
+        amount_to_depr = remaining_value = self._context.get(
+            'asset_value') if self._context.get(
+            'asset_value') else self.value_residual
         depreciation_factor = self.value
-        revaluation_factor = self.cumulative_revaluation_value
+        revaluation_factor = amount_to_depr if self._context.get(
+            'asset_value') else self.value
         depreciation_date = self._get_last_depreciation_date()
         depreciation_date = (depreciation_date - relativedelta(
             days=depreciation_date.day - 1)) + relativedelta(months=1)
@@ -512,10 +515,12 @@ class AccountAssetAsset(models.Model):
             i += 1
             sequence += 1
             depreciation_amount = depreciation_factor * self.method_progress_factor
-            revaluation_amount = revaluation_factor * self.revaluation_method_progress_factor
+            revaluation_amount = revaluation_factor * self.revaluation_method_progress_factor if \
+                self._context.get('asset_value') else \
+                revaluation_factor * self.method_progress_factor
             loop_number = 13 - depreciation_date.month
             amount_per_month = depreciation_amount / 12
-            revaluation_amount_per_month = revaluation_amount/12
+            revaluation_amount_per_month = revaluation_amount/12 - amount_per_month
             if self.method == 'degressive':
                 depreciation_factor = depreciation_factor - loop_number * amount_per_month
                 revaluation_factor = revaluation_factor - loop_number * revaluation_amount_per_month
@@ -538,7 +543,7 @@ class AccountAssetAsset(models.Model):
                         'revaluation_period_amount': period_revaluation_amount,
                         'remaining_value': remaining_value,
                         'depreciated_value':
-                            self.value_residual - remaining_value,
+                            self.value + self.cumulative_revaluation_value - remaining_value,
                     }
                     total_deprecated_revaluation_amount += period_revaluation_amount
                     remaining_value -= (
@@ -1343,6 +1348,9 @@ class AssetRevaluationLog(models.Model):
         'Name',
         required=True)
     date = fields.Date(
+        'Registration date',
+        default=datetime.today())
+    revaluation_date = fields.Date(
         'Asset Revaluation Date',
         default=datetime.today())
     asset_id = fields.Many2one(

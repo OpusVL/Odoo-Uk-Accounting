@@ -99,6 +99,11 @@ class AssetRevaluation(models.TransientModel):
     def confirm_asset_revaluation(self):
         self.ensure_one()
         asset = self.get_asset()
+        # Fixed Asset revaluation entries
+        move_lines = self.get_revaluation_move_lines()
+        move_vals = self.get_move_vals(move_lines)
+        move = self.env['account.move'].create(move_vals)
+        move.post()
         asset_revaluation_data = {
             'asset_id': asset.id,
             'note': self.note,
@@ -106,13 +111,9 @@ class AssetRevaluation(models.TransientModel):
             'net_value': self.net_value,
             'revaluation_value': self.revaluation_value,
             'difference_value': self.difference_value,
+            'revaluation_date': self.revaluation_date,
         }
         self.env['asset.revaluation.log'].create(asset_revaluation_data)
-        # Fixed Asset revaluation entries
-        move_lines = self.get_revaluation_move_lines()
-        move_vals = self.get_move_vals(move_lines)
-        move = self.env['account.move'].create(move_vals)
-        move.post()
         asset.with_context(revaluation=True).write({
             'revaluation_occurred': True,
             'cumulative_revaluation_value':
@@ -120,7 +121,10 @@ class AssetRevaluation(models.TransientModel):
             'revaluation_method_progress_factor': self.revaluation_method_progress_factor,
             'method_progress_factor': self.method_progress_factor,
         })
-        asset.compute_depreciation_board(self.revaluation_date)
+        asset.with_context(
+            asset_value=self.revaluation_value,
+        ).compute_depreciation_board(
+            self.revaluation_date)
         return {'type': 'ir.actions.act_window_close'}
 
     def get_revaluation_move_lines(self):
@@ -129,59 +133,27 @@ class AssetRevaluation(models.TransientModel):
         prec = self.env['decimal.precision'].precision_get('Account')
         company_currency = asset.company_id.currency_id
         current_currency = asset.currency_id
-        asset_value_currency = self.revaluation_value - asset.value - asset.cumulative_revaluation_value
-        asset_value = current_currency.with_context(
-            date=self.revaluation_date).compute(
-            asset_value_currency,
-            company_currency)
-        deprecated_amount_currency = sum(
-            line.period_amount + line.revaluation_period_amount for line in
-            asset.depreciation_line_ids.filtered(
-                lambda x: x.depreciation_date < self.revaluation_date)) + asset.value_alr_accumulated
+
+        if asset.revaluation_line_ids:
+            last_revaluated_date = asset.revaluation_line_ids.sorted(
+                    key=lambda r: r.revaluation_date, reverse=True)[0].revaluation_date
+            deprecated_amount_currency = sum(
+                line.period_amount + line.revaluation_period_amount for line in
+                asset.depreciation_line_ids.filtered(
+                    lambda
+                        x: x.depreciation_date < self.revaluation_date and
+                           x.depreciation_date > last_revaluated_date)) + \
+                                         asset.value_alr_accumulated
+        else:
+            deprecated_amount_currency = sum(
+                line.period_amount + line.revaluation_period_amount for line in
+                asset.depreciation_line_ids.filtered(
+                    lambda x: x.depreciation_date < self.revaluation_date)) + asset.value_alr_accumulated
         deprecated_amount = current_currency.with_context(
             date=self.revaluation_date).compute(
             deprecated_amount_currency,
             company_currency)
-        if asset_value:
-            asset_value_line_item = {
-                'name': '{}: Asset Value'.format(
-                    asset.name
-                ),
-                'account_id': asset.category_id.account_asset_id.id,
-                'credit': -asset_value if float_compare(
-                    asset_value, 0.0, precision_digits=prec) < 0 else 0.0,
-                'debit': asset_value if float_compare(
-                    asset_value, 0.0, precision_digits=prec) > 0 else 0.0,
-                'journal_id': asset.category_id.journal_id.id,
-                'partner_id': asset.partner_id.id,
-                'analytic_account_id':
-                    asset.category_id.account_analytic_id.id if
-                    asset.category_id.type == 'purchase' else False,
-                'currency_id': company_currency != current_currency and
-                               current_currency.id or False,
-                'amount_currency': company_currency != current_currency
-                                   and asset_value_currency or 0.0,
-            }
-            revaluation_move_lines.append(asset_value_line_item)
-        if deprecated_amount:
-            asset_deprecated_line_item = {
-                'name': '{}: Asset Depreciation'.format(
-                    asset.name
-                ),
-                'account_id': asset.category_id.account_depreciation_id.id,
-                'credit': -deprecated_amount if float_compare(
-                    deprecated_amount, 0.0, precision_digits=prec) < 0 else 0.0,
-                'debit': deprecated_amount if float_compare(
-                    deprecated_amount, 0.0, precision_digits=prec) > 0 else 0.0,
-                'journal_id': asset.category_id.journal_id.id,
-                'partner_id': asset.partner_id.id,
-                'currency_id': company_currency != current_currency and
-                               current_currency.id or False,
-                'amount_currency': company_currency != current_currency
-                                   and deprecated_amount_currency or 0.0,
-            }
-            revaluation_move_lines.append(asset_deprecated_line_item)
-        reserve_loss_amount_currency = asset_value_currency + deprecated_amount_currency
+        reserve_loss_amount_currency = self.difference_value
         reserve_loss_amount = current_currency.with_context(
             date=self.revaluation_date).compute(
             reserve_loss_amount_currency,
@@ -209,6 +181,50 @@ class AssetRevaluation(models.TransientModel):
                                    and reserve_loss_amount_currency or 0.0,
             }
             revaluation_move_lines.append(reserve_loss_line_item)
+        if deprecated_amount:
+            asset_deprecated_line_item = {
+                'name': '{}: Asset Depreciation'.format(
+                    asset.name
+                ),
+                'account_id': asset.category_id.account_depreciation_id.id,
+                'credit': -deprecated_amount if float_compare(
+                    deprecated_amount, 0.0, precision_digits=prec) < 0 else 0.0,
+                'debit': deprecated_amount if float_compare(
+                    deprecated_amount, 0.0, precision_digits=prec) > 0 else 0.0,
+                'journal_id': asset.category_id.journal_id.id,
+                'partner_id': asset.partner_id.id,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and deprecated_amount_currency or 0.0,
+            }
+            revaluation_move_lines.append(asset_deprecated_line_item)
+        asset_value_currency = reserve_loss_amount_currency - deprecated_amount_currency
+        asset_value = current_currency.with_context(
+            date=self.revaluation_date).compute(
+            asset_value_currency,
+            company_currency)
+        if asset_value:
+            asset_value_line_item = {
+                'name': '{}: Asset Value'.format(
+                    asset.name
+                ),
+                'account_id': asset.category_id.account_asset_id.id,
+                'credit': -asset_value if float_compare(
+                    asset_value, 0.0, precision_digits=prec) < 0 else 0.0,
+                'debit': asset_value if float_compare(
+                    asset_value, 0.0, precision_digits=prec) > 0 else 0.0,
+                'journal_id': asset.category_id.journal_id.id,
+                'partner_id': asset.partner_id.id,
+                'analytic_account_id':
+                    asset.category_id.account_analytic_id.id if
+                    asset.category_id.type == 'purchase' else False,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and asset_value_currency or 0.0,
+            }
+            revaluation_move_lines.append(asset_value_line_item)
         return revaluation_move_lines
 
     def get_move_vals(self, move_lines):
