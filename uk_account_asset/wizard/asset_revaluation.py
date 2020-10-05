@@ -142,7 +142,7 @@ class AssetRevaluation(models.TransientModel):
                 asset.depreciation_line_ids.filtered(
                     lambda
                         x: x.depreciation_date < self.revaluation_date and
-                           x.depreciation_date > last_revaluated_date)) + \
+                           x.depreciation_date >= last_revaluated_date)) + \
                                          asset.value_alr_accumulated
         else:
             deprecated_amount_currency = sum(
