@@ -197,6 +197,13 @@ class AccountAssetCategory(models.Model):
             self.border_amount = 0.0
             self.min_amount = 0.0
 
+    @api.onchange('year_depreciation', 'years', 'method_period')
+    def onchange_year_depreciation(self):
+        if self.year_depreciation and self.years:
+            self.method_progress_factor = 1 / self.years
+            if self.method_period:
+                self.method_number = self.years * 12 / self.method_period
+
 
 class AccountAssetAsset(models.Model):
     _name = 'account.asset.asset'
@@ -691,13 +698,23 @@ class AccountAssetAsset(models.Model):
     def set_to_close(self):
         for asset in self:
             unposted_depreciation_line_ids = asset.depreciation_line_ids.filtered(
-                lambda x: not x.move_check)
+                lambda x: not x.move_check).sorted(
+                lambda line: line.depreciation_date)
             if unposted_depreciation_line_ids:
                 old_values = {
                     'method_end': asset.method_end,
                     'method_number': asset.method_number,
                 }
 
+                total_period_amount = sum(
+                    depreciation_line.period_amount for
+                    depreciation_line in unposted_depreciation_line_ids)
+                total_revaluation_period_amount = sum(
+                    depreciation_line.revaluation_period_amount
+                    for depreciation_line in unposted_depreciation_line_ids)
+                depreciated_value = total_period_amount + \
+                                    total_revaluation_period_amount + \
+                                    unposted_depreciation_line_ids[0].depreciated_value
                 # Remove all unposted depr. lines
                 commands = [
                     (2, line_id.id, False) for line_id in unposted_depreciation_line_ids]
@@ -708,12 +725,13 @@ class AccountAssetAsset(models.Model):
                 today = datetime.today().strftime(DF)
                 vals = {
                     'amount': asset.value_residual,
-                    'period_amount': asset.value_residual,
+                    'period_amount': total_period_amount,
+                    'revaluation_period_amount': total_revaluation_period_amount,
                     'asset_id': asset.id,
                     'sequence': sequence,
                     'name': (asset.code or '') + '/' + str(sequence),
                     'remaining_value': 0,
-                    'depreciated_value': asset.value - asset.salvage_value,
+                    'depreciated_value': depreciated_value,
                     'depreciation_date': today,
                 }
                 commands.append((0, False, vals))
@@ -1023,11 +1041,19 @@ class AccountAssetDepreciationLine(models.Model):
         depreciation_date = self.env.context.get(
             'depreciation_date') or self.depreciation_date or fields.Date.context_today(
             self)
-        amount = current_currency.with_context(
-            date=depreciation_date).compute(self.amount, company_currency)
+        if self.asset_id.revaluation_line_ids:
+            asset_value = self.asset_id.revaluation_line_ids.sorted(
+                lambda line: line.revaluation_date, reverse=True)[0].revaluation_value
+        else:
+            asset_value = self.asset_id.value
+        depreciated_amount_currency = sum(depreciation_line.period_amount + depreciation_line.revaluation_period_amount for depreciation_line in self.asset_id.depreciation_line_ids)
         total_amount = current_currency.with_context(
-            date=depreciation_date).compute(self.asset_id.value, company_currency)
-        depreciated_amount = total_amount - amount
+            date=depreciation_date).compute(asset_value, company_currency)
+        depreciated_amount = current_currency.with_context(
+            date=depreciation_date).compute(depreciated_amount_currency, company_currency)
+        amount = current_currency.with_context(
+            date=depreciation_date).compute(
+            asset_value - depreciated_amount_currency, company_currency)
         return [
             {
                 'name': '{} {}/{}'.format(
