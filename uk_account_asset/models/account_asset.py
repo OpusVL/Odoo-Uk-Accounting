@@ -712,9 +712,7 @@ class AccountAssetAsset(models.Model):
                 total_revaluation_period_amount = sum(
                     depreciation_line.revaluation_period_amount
                     for depreciation_line in unposted_depreciation_line_ids)
-                depreciated_value = total_period_amount + \
-                                    total_revaluation_period_amount + \
-                                    unposted_depreciation_line_ids[0].depreciated_value
+                depreciated_value = unposted_depreciation_line_ids[0].depreciated_value
                 # Remove all unposted depr. lines
                 commands = [
                     (2, line_id.id, False) for line_id in unposted_depreciation_line_ids]
@@ -1046,7 +1044,9 @@ class AccountAssetDepreciationLine(models.Model):
                 lambda line: line.revaluation_date, reverse=True)[0].revaluation_value
         else:
             asset_value = self.asset_id.value
-        depreciated_amount_currency = sum(depreciation_line.period_amount + depreciation_line.revaluation_period_amount for depreciation_line in self.asset_id.depreciation_line_ids)
+        depreciated_move_lines = [move.line_ids.filtered(
+            lambda line: line.account_id == self.asset_id.category_id.account_depreciation_id) for move in self.asset_id.move_ids]
+        depreciated_amount_currency = sum(move_line.credit - move_line.debit for move_line in depreciated_move_lines)
         total_amount = current_currency.with_context(
             date=depreciation_date).compute(asset_value, company_currency)
         depreciated_amount = current_currency.with_context(
