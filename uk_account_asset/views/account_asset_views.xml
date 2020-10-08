@@ -89,6 +89,7 @@
                         </h1>
                     </div>
                     <group>
+                        <field name="asset_revaluation"/>
                         <field name="currency_id"/>
                         <field name="type"/>
                         <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
@@ -120,6 +121,15 @@
                                 <label for="account_depreciation_accumulated_id" string="Accumulated Intermediate Account" attrs="{'invisible': [('type','!=','sale')]}"/>
                                 <field name="account_depreciation_accumulated_id" nolabel="1"/>
                             </div>
+                        </group>
+                    </group>
+                    <group string="Revaluation Configuration" name="revaluation_accounts">
+                        <group>
+                            <field name="account_revaluation_equity_id"/>
+
+                        </group>
+                        <group>
+                            <field name="account_revaluation_loss_id"/>
                         </group>
                     </group>
                     <group string="Periodicity" name="periodicity" invisible="1">
@@ -249,6 +259,9 @@
                     <button name="%(action_asset_modify)d"
                             attrs="{'invisible': ['|', ('value_alr_accumulated', '!=', 0), ('state', '!=', 'draft')]}"
                             string="Modify Depreciation" type="action"/>
+                    <button name="%(action_asset_revaluation)d"
+                            attrs="{'invisible': ['|', ('state', '!=', 'open'), ('asset_revaluation', '=', False)]}"
+                            string="Asset Revaluation" type="action"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,open"/>
                 </header>
                 <sheet>
@@ -271,6 +284,7 @@
                     <group>
                         <group>
                             <field name="name"/>
+                            <field name="revaluation_occurred" invisible="1"/>
                             <field name="category_id" domain="[('type', '=', 'purchase')]" context="{'default_type': 'purchase'}" help="Category of asset"/>
                             <field name="group_id" widget="selection"/>
                             <field name="product_id"/>
@@ -289,6 +303,8 @@
                             <field name="border_amount" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible':[('method','=','linear')], 'required':[('method','=','degressive')]}"/>
                             <field name="value_accumulated" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="partner_id" string="Vendor"/>
+                            <field name="cumulative_revaluation_value" force_save="1"/>
+                            <field name="asset_revaluation"/>
                         </group>
                     </group>
                     <notebook colspan="4">
@@ -298,6 +314,8 @@
                                     <field name="depreciation_date"/>
                                     <field name="depreciated_value" readonly="1"/>
                                     <field name="period_amount" widget="monetary" string="Depreciation" sum="Total"/>
+                                    <field name="revaluation_period_amount" attrs="{'column_invisible': [('parent.revaluation_occurred', '=', False)]}"
+                                           widget="monetary" string="Revaluation Depreciation" sum="Total"/>
                                     <field name="amount" widget="monetary" string="Depreciation" sum="Total" invisible="1"/>
                                     <field name="remaining_value" readonly="1" widget="monetary" string="Residual"/>
                                     <field name="move_check" widget="deprec_lines_toggler" attrs="{'invisible': [('parent_state', '!=', 'open')]}"/>
@@ -340,6 +358,37 @@
                                 <field name="method_period"/>
                                 <field name="method_end" attrs="{'required': [('method_time','=','end')], 'invisible':[('method_time','=','number')]}"/>
                             </group>
+                        </page>
+                        <page string="Asset Revaluation Logs" attrs="{'invisible': [('revaluation_occurred','=',False)]}">
+                            <field name="revaluation_line_ids" mode="tree" readonly="1" force_save="1">
+                                <tree string="Asset Revaluation Logs" decoration-info="(difference_value > 0)" create="false" delete="false">
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="asset_id" invisible="1"/>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="net_value"/>
+                                    <field name="revaluation_value"/>
+                                    <field name="difference_value"/>
+                                    <field name="user_id"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="asset_id" invisible="1"/>
+                                            <field name="name"/>
+                                            <field name="date"/>
+                                            <field name="net_value"/>
+                                        </group>
+                                        <group>
+                                            <field name="currency_id" invisible="1"/>
+                                            <field name="revaluation_value"/>
+                                            <field name="difference_value"/>
+                                            <field name="user_id"/>
+                                        </group>
+                                    </group>
+                                    <field name="note" nolabel="1" placeholder="Detailed description of asset revaluation..."/>
+                                </form>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

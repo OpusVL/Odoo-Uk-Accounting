@@ -141,14 +141,26 @@ class AccountAssetCategory(models.Model):
         'account.account',
         string='Accumulated Intermediate Account',
         required=True,
-        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
-        help="Account used when .")
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],)
     account_depreciation_disposal_id = fields.Many2one(
         'account.account',
         string='Asset Disposal Account',
         required=True,
-        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],
-        help="Account used when .")
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],)
+    asset_revaluation = fields.Boolean(
+        string='Asset Revaluation',
+        help='If checked it will allow by default to apply asset revaluation'
+    )
+    account_revaluation_equity_id = fields.Many2one(
+        'account.account',
+        string='Revaluation Equity Reserve',
+        required=True,
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)],)
+    account_revaluation_loss_id = fields.Many2one(
+        'account.account',
+        string='Revaluation Loss',
+        required=True,
+        domain=[('internal_type', '=', 'other'), ('deprecated', '=', False)], )
 
     def name_get(self):
         res = []
@@ -390,6 +402,30 @@ class AccountAssetAsset(models.Model):
         string='Picking',
         states={'draft': [('readonly', False)]},
         copy=False)
+    asset_revaluation = fields.Boolean(
+        string='Asset Revaluation',
+        help='If checked it will allow by default to apply asset revaluation',
+        readonly=True,
+        states={'draft': [('readonly', False)], 'open': [('readonly', False)]},
+    )
+    revaluation_occurred = fields.Boolean(
+        string='Asset Revaluation Occurred',
+        copy=False,
+    )
+    cumulative_revaluation_value = fields.Monetary(
+        'Cumulative Revaluation Value ',
+        readonly=True,
+        copy=False,
+    )
+    revaluation_line_ids = fields.One2many(
+        'asset.revaluation.log',
+        'asset_id',
+        string='Asset Revaluation Logs',
+        readonly=True,
+        copy=False,
+        states={'open': [('readonly', False)]})
+    revaluation_method_progress_factor = fields.Float(
+        string='Revaluation Factor', copy=False)
 
     def unlink(self):
         for asset in self:
@@ -414,15 +450,12 @@ class AccountAssetAsset(models.Model):
         depreciation entry made for given asset ids.
         If there isn't any, return the purchase date of this asset
         """
-        self.env.cr.execute("""
-            SELECT a.id as id, COALESCE(a.date_value_alr_acc,MAX(m.date),a.date) AS date
-            FROM account_asset_asset a
-            LEFT JOIN account_asset_depreciation_line rel ON (rel.asset_id = a.id)
-            LEFT JOIN account_move m ON (rel.move_id = m.id)
-            WHERE a.id IN %s
-            GROUP BY a.id, m.date """, (tuple(self.ids),))
-        result = dict(self.env.cr.fetchall())
-        return result
+        if self.depreciation_line_ids:
+            depreciation_date = self.depreciation_line_ids.sorted(
+                    key=lambda r: r.depreciation_date, reverse=True)[0].depreciation_date
+        else:
+            depreciation_date = self.date_value_alr_acc or self.date
+        return depreciation_date
 
     def _compute_board_undone_dotation_nb(self, depreciation_date):
         undone_dotation_number = self.method_number
@@ -439,19 +472,29 @@ class AccountAssetAsset(models.Model):
             undone_dotation_number += 1
         return undone_dotation_number
 
-    def compute_depreciation_board(self):
+    def compute_depreciation_board(self, revaluation_date=False,):
         self.ensure_one()
         depreciation_line = self.env['account.asset.depreciation.line']
-        old_depreciation_lines = depreciation_line.search([
-            ('asset_id', '=', self.id), ('move_id', '=', False)])
+        if not revaluation_date:
+            old_depreciation_lines = depreciation_line.search([
+                ('asset_id', '=', self.id), ('move_id', '=', False)])
+        else:
+            old_depreciation_lines = depreciation_line.search([
+                ('asset_id', '=', self.id),
+                ('depreciation_date', '>=', revaluation_date)
+            ])
         old_depreciation_lines.unlink()
         if not self.value_residual:
             return False
         if not self.method_progress_factor:
             return False
-        amount_to_depr = remaining_value = self.value_residual
+        amount_to_depr = remaining_value = self._context.get(
+            'asset_value') if self._context.get(
+            'asset_value') else self.value_residual
         depreciation_factor = self.value
-        depreciation_date = self._get_last_depreciation_date()[self.id]
+        revaluation_factor = amount_to_depr if self._context.get(
+            'asset_value') else self.value
+        depreciation_date = self._get_last_depreciation_date()
         depreciation_date = (depreciation_date - relativedelta(
             days=depreciation_date.day - 1)) + relativedelta(months=1)
         depreciation_move_date = (depreciation_date + relativedelta(
@@ -460,6 +503,8 @@ class AccountAssetAsset(models.Model):
         sequence = 0
         depreciated_value = 0
         period_amount = 0
+        period_revaluation_amount = 0
+        total_deprecated_revaluation_amount = 0
         if self.method_period > 12 or self.method_period == 1 or 12 % self.method_period:
             period_months = [i for i in range(1, 13)]
         else:
@@ -470,66 +515,83 @@ class AccountAssetAsset(models.Model):
             i += 1
             sequence += 1
             depreciation_amount = depreciation_factor * self.method_progress_factor
+            revaluation_amount = revaluation_factor * self.revaluation_method_progress_factor if \
+                self._context.get('asset_value') else \
+                revaluation_factor * self.method_progress_factor
             loop_number = 13 - depreciation_date.month
             amount_per_month = depreciation_amount / 12
+            revaluation_amount_per_month = revaluation_amount/12 - amount_per_month
             if self.method == 'degressive':
                 depreciation_factor = depreciation_factor - loop_number * amount_per_month
+                revaluation_factor = revaluation_factor - loop_number * revaluation_amount_per_month
             for j in range(0, loop_number):
-                amount_to_depr = amount_to_depr - amount_per_month
+                amount_to_depr = amount_to_depr - amount_per_month - revaluation_amount_per_month
                 period_amount += amount_per_month
+                period_revaluation_amount += revaluation_amount_per_month
                 if depreciation_move_date.month in period_months:
                     sequence += 1
-                    if period_amount > remaining_value:
-                        period_amount = remaining_value
+                    if period_amount > remaining_value - period_revaluation_amount:
+                        period_amount = remaining_value - period_revaluation_amount
                     vals = {
-                        'amount': amount_per_month,
+                        'amount': amount_per_month + revaluation_amount_per_month,
                         'asset_id': self.id,
                         'sequence': sequence,
                         'name': str(self.id) + '/' + str(i),
                         'depreciation_date':
                             depreciation_move_date.strftime('%Y-%m-%d'),
                         'period_amount': period_amount,
+                        'revaluation_period_amount': period_revaluation_amount,
                         'remaining_value': remaining_value,
                         'depreciated_value':
-                            self.value_residual - remaining_value,
+                            self.value + self.cumulative_revaluation_value - remaining_value,
                     }
-                    remaining_value -= period_amount
-                    depreciated_value += period_amount
+                    total_deprecated_revaluation_amount += period_revaluation_amount
+                    remaining_value -= (
+                            period_amount + period_revaluation_amount)
+                    depreciated_value += period_amount + period_revaluation_amount
                     depreciation_line.create(vals)
                     period_amount = 0
+                    period_revaluation_amount = 0
                 depreciation_date = (depreciation_date + relativedelta(
                     months=1))
                 depreciation_move_date = (depreciation_date + relativedelta(
                     months=1) - relativedelta(days=1))
                 if remaining_value < 0.01:
                     return True
-        depreciation_amount = amount_to_depr
+        depreciation_amount = amount_to_depr - self.cumulative_revaluation_value + total_deprecated_revaluation_amount
+        revaluation_depreciation_amount = self.cumulative_revaluation_value - total_deprecated_revaluation_amount
         loop_number = 13 - depreciation_date.month
         amount_per_month = round(depreciation_amount / loop_number, 2)
+        revaluation_amount_per_month = round(
+            revaluation_depreciation_amount / loop_number, 2)
         period_amount = 0
+        period_revaluation_amount = 0
         for j in range(0, loop_number):
-            amount_to_depr = amount_to_depr - amount_per_month
+            amount_to_depr = amount_to_depr - amount_per_month - revaluation_amount_per_month
             period_amount += amount_per_month
+            period_revaluation_amount += revaluation_amount_per_month
             if depreciation_move_date.month in period_months:
                 sequence += 1
-                if period_amount > remaining_value:
-                    period_amount = remaining_value
+                if period_amount > remaining_value - revaluation_amount_per_month:
+                    period_amount = remaining_value - revaluation_amount_per_month
                 elif j == loop_number - 1:
-                    period_amount = remaining_value
+                    period_amount = remaining_value - revaluation_amount_per_month
                 vals = {
-                    'amount': amount_per_month,
+                    'amount': amount_per_month + revaluation_amount_per_month,
                     'asset_id': self.id,
                     'sequence': sequence,
                     'name': str(self.id) + '/' + str(i),
                     'remaining_value': remaining_value,
-                    'depreciated_value': self.value - remaining_value,
+                    'depreciated_value': self.value_residual - remaining_value,
+                    'revaluation_period_amount': period_revaluation_amount,
                     'depreciation_date':
                         depreciation_move_date.strftime('%Y-%m-%d'),
                     'period_amount': period_amount,
                 }
-                remaining_value -= period_amount
-                depreciated_value += period_amount
+                remaining_value -= (period_amount + period_revaluation_amount)
+                depreciated_value += period_amount + period_revaluation_amount
                 period_amount = 0
+                period_revaluation_amount = 0
                 depreciation_line.create(vals)
             depreciation_date = (depreciation_date + relativedelta(
                 months=1))
@@ -707,7 +769,7 @@ class AccountAssetAsset(models.Model):
                 if line.move_check:
                     total_amount += line.amount
             asset.value_accumulated = total_amount
-            asset.value_residual = asset.value - total_amount - \
+            asset.value_residual = asset.cumulative_revaluation_value + asset.value - total_amount - \
                               asset.salvage_value - asset.value_alr_accumulated
 
     @api.onchange('company_id')
@@ -730,6 +792,7 @@ class AccountAssetAsset(models.Model):
             self.method_end = self.category_id.method_end
             self.year_depreciation = self.category_id.year_depreciation
             self.years = self.category_id.years
+            self.asset_revaluation = self.category_id.asset_revaluation
 
     @api.onchange('method_time')
     def onchange_method_time(self):
@@ -829,7 +892,7 @@ class AccountAssetAsset(models.Model):
                 raise UserError(
                     _('Cannot Activate/Archive the asset, expect draft state!'))
         res = super(AccountAssetAsset, self).write(vals)
-        if 'depreciation_line_ids' not in vals and 'state' not in vals:
+        if not self._context.get('revaluation') and 'depreciation_line_ids' not in vals and 'state' not in vals:
             for rec in self:
                 rec.compute_depreciation_board()
         return res
@@ -899,6 +962,9 @@ class AccountAssetDepreciationLine(models.Model):
         track_visibility='always',)
     period_amount = fields.Monetary(
         string='Current Depreciation Amount',
+        required=True)
+    revaluation_period_amount = fields.Monetary(
+        string='Revaluation Amount',
         required=True)
 
     @api.depends('move_id')
@@ -1034,7 +1100,9 @@ class AccountAssetDepreciationLine(models.Model):
             'depreciation_date') or self.depreciation_date or fields.Date.context_today(
             self)
         amount = current_currency.with_context(
-            date=depreciation_date).compute(self.amount, company_currency)
+            date=depreciation_date).compute(
+            self.period_amount + self.revaluation_period_amount,
+            company_currency)
         return [
             {
                 'name': '{} {}/{}'.format(
@@ -1272,4 +1340,39 @@ class AccountMove(models.Model):
         states={'draft': [('readonly', False)]})
 
 
+class AssetRevaluationLog(models.Model):
+    _name = "asset.revaluation.log"
+    _description = "Asset Revaluation Log"
 
+    name = fields.Char(
+        'Name',
+        required=True)
+    date = fields.Date(
+        'Registration date',
+        default=datetime.today())
+    revaluation_date = fields.Date(
+        'Asset Revaluation Date',
+        default=datetime.today())
+    asset_id = fields.Many2one(
+        'account.asset.asset',
+        string='Asset',
+        required=True,
+        ondelete='cascade')
+    currency_id = fields.Many2one(
+        'res.currency',
+        related='asset_id.currency_id',
+        string='Currency')
+    net_value = fields.Monetary(
+        string='Net Asset Value',
+    )
+    revaluation_value = fields.Monetary(
+        string='Asset Revaluation Value',
+    )
+    difference_value = fields.Monetary(
+        string='Difference Value',
+    )
+    user_id = fields.Many2one(
+        'res.users', 'User',
+        default=lambda self: self.env.user,
+        index=True, required=True)
+    note = fields.Text(string='Notes')
