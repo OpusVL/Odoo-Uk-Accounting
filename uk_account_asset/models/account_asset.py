@@ -1046,14 +1046,21 @@ class AccountAssetDepreciationLine(models.Model):
             asset_value = self.asset_id.value
         depreciated_move_lines = [move.line_ids.filtered(
             lambda line: line.account_id == self.asset_id.category_id.account_depreciation_id) for move in self.asset_id.move_ids]
+        reserved_profit_move_lines = [move.line_ids.filtered(
+            lambda line: line.account_id == self.asset_id.category_id.account_revaluation_equity_id) for move in self.asset_id.move_ids]
         depreciated_amount_currency = sum(move_line.credit - move_line.debit for move_line in depreciated_move_lines)
+        reserved_profit_amount_currency = sum(move_line.credit - move_line.debit for move_line in reserved_profit_move_lines)
         total_amount = current_currency.with_context(
             date=depreciation_date).compute(asset_value, company_currency)
         depreciated_amount = current_currency.with_context(
             date=depreciation_date).compute(depreciated_amount_currency, company_currency)
+        reserved_profit_amount = current_currency.with_context(
+            date=depreciation_date).compute(reserved_profit_amount_currency,
+                                            company_currency)
+        amount_currency = asset_value - depreciated_amount_currency - reserved_profit_amount_currency
         amount = current_currency.with_context(
             date=depreciation_date).compute(
-            asset_value - depreciated_amount_currency, company_currency)
+            amount_currency, company_currency)
         return [
             {
                 'name': '{} {}/{}'.format(
@@ -1074,7 +1081,7 @@ class AccountAssetDepreciationLine(models.Model):
                 'currency_id': company_currency != current_currency and
                                current_currency.id or False,
                 'amount_currency': company_currency != current_currency
-                                   and - 1.0 * self.asset_id.value or 0.0,
+                                   and - 1.0 * asset_value or 0.0,
             },
             {
                 'name': '{} {}/{}'.format(
@@ -1093,7 +1100,28 @@ class AccountAssetDepreciationLine(models.Model):
                 'currency_id': company_currency != current_currency and
                                current_currency.id or False,
                 'amount_currency': company_currency != current_currency
-                                   and self.asset_id.value - self.amount or 0.0,
+                                   and depreciated_amount_currency or 0.0,
+            },
+            {
+                'name': '{} {}/{}'.format(
+                    self.asset_id.name,
+                    self.sequence,
+                    len(self.asset_id.depreciation_line_ids)
+                ),
+                'account_id': self.asset_id.category_id.account_revaluation_equity_id.id,
+                'credit': 0.0 if float_compare(
+                    reserved_profit_amount, 0.0,
+                    precision_digits=prec) > 0 else -reserved_profit_amount,
+                'debit': reserved_profit_amount if float_compare(
+                    reserved_profit_amount, 0.0,
+                    precision_digits=prec) > 0 else 0.0,
+                'journal_id': self.asset_id.category_id.journal_id.id,
+                'partner_id': self.asset_id.partner_id.id,
+                'analytic_account_id': False,
+                'currency_id': company_currency != current_currency and
+                               current_currency.id or False,
+                'amount_currency': company_currency != current_currency
+                                   and reserved_profit_amount_currency or 0.0,
             },
             {
                 'name': '{} {}/{}'.format(
@@ -1114,7 +1142,7 @@ class AccountAssetDepreciationLine(models.Model):
                 'currency_id': company_currency != current_currency and
                                current_currency.id or False,
                 'amount_currency': company_currency != current_currency
-                                   and self.amount or 0.0,
+                                   and amount_currency or 0.0,
             }
         ]
 
