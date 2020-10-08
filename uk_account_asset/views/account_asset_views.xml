@@ -365,18 +365,19 @@
                                     <field name="currency_id" invisible="1"/>
                                     <field name="asset_id" invisible="1"/>
                                     <field name="name"/>
-                                    <field name="date"/>
+                                    <field name="revaluation_date"/>
                                     <field name="net_value"/>
                                     <field name="revaluation_value"/>
                                     <field name="difference_value"/>
                                     <field name="user_id"/>
+                                    <field name="date"/>
                                 </tree>
                                 <form>
                                     <group>
                                         <group>
                                             <field name="asset_id" invisible="1"/>
                                             <field name="name"/>
-                                            <field name="date"/>
+                                            <field name="revaluation_date"/>
                                             <field name="net_value"/>
                                         </group>
                                         <group>
@@ -384,6 +385,7 @@
                                             <field name="revaluation_value"/>
                                             <field name="difference_value"/>
                                             <field name="user_id"/>
+                                            <field name="date"/>
                                         </group>
                                     </group>
                                     <field name="note" nolabel="1" placeholder="Detailed description of asset revaluation..."/>
