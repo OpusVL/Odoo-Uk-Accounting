@@ -268,6 +268,7 @@ class AccountAssetAsset(models.Model):
         [
             ('draft', 'Draft'),
             ('open', 'Running'),
+            ('fully', 'Fully depreciated'),
             ('close', 'Close'),
             ('outservice', 'Out of service')
         ],
@@ -526,8 +527,8 @@ class AccountAssetAsset(models.Model):
                 self._context.get('asset_value') else \
                 revaluation_factor * self.method_progress_factor
             loop_number = 13 - depreciation_date.month
-            amount_per_month = depreciation_amount / 12
-            revaluation_amount_per_month = revaluation_amount/12 - amount_per_month
+            amount_per_month = round(depreciation_amount / 12, 2)
+            revaluation_amount_per_month = round(revaluation_amount/12, 2) - amount_per_month
             if self.method == 'degressive':
                 depreciation_factor = depreciation_factor - loop_number * amount_per_month
                 revaluation_factor = revaluation_factor - loop_number * revaluation_amount_per_month
@@ -743,7 +744,16 @@ class AccountAssetAsset(models.Model):
                     asset.message_post(subject=_('Asset sold or disposed. Accounting entry awaiting for validation.'), tracking_value_ids=tracking_value_ids)
                 asset.depreciation_line_ids[-1].create_disposal_move(
                     post_move=True)
+            else:
+                asset.create_fully_depreciated_disposal_move()
         return True
+
+    def create_fully_depreciated_disposal_move(self):
+        move_lines = self.depreciation_line_ids[-1].get_disposal_move_lines()
+        move_vals = self.depreciation_line_ids[-1].get_move_vals(move_lines)
+        move = self.env['account.move'].create(move_vals)
+        move.post()
+        return self.write({'state': 'close'})
 
     def set_to_draft(self):
         if self.mapped('move_ids'):
@@ -753,12 +763,6 @@ class AccountAssetAsset(models.Model):
             self.mapped('depreciation_line_ids').unlink()
         self.write({'state': 'draft', 'value_alr_accumulated': 0,
                     'date_value_alr_acc': False})
-
-    def set_to_open(self):
-        if self.depreciation_line_ids:
-            for depreciation_line in self.depreciation_line_ids:
-                depreciation_line.write({'state': 'confirm'})
-        self.write({'state': 'open'})
         
     def get_asset_code(self):
         active_asset_ids = self.search([
@@ -783,7 +787,7 @@ class AccountAssetAsset(models.Model):
             total_amount = 0.0
             for line in asset.depreciation_line_ids:
                 if line.move_check:
-                    total_amount += line.amount
+                    total_amount += line.period_amount + line.revaluation_period_amount
             asset.value_accumulated = total_amount
             asset.value_residual = asset.cumulative_revaluation_value + asset.value - total_amount - \
                               asset.salvage_value - asset.value_alr_accumulated
@@ -1033,6 +1037,7 @@ class AccountAssetDepreciationLine(models.Model):
         }
 
     def get_disposal_move_lines(self):
+        move_lines = []
         prec = self.env['decimal.precision'].precision_get('Account')
         company_currency = self.asset_id.company_id.currency_id
         current_currency = self.asset_id.currency_id
@@ -1061,8 +1066,8 @@ class AccountAssetDepreciationLine(models.Model):
         amount = current_currency.with_context(
             date=depreciation_date).compute(
             amount_currency, company_currency)
-        return [
-            {
+        if total_amount:
+            move_lines.append({
                 'name': '{} {}/{}'.format(
                     self.asset_id.name,
                     self.sequence,
@@ -1082,8 +1087,9 @@ class AccountAssetDepreciationLine(models.Model):
                                current_currency.id or False,
                 'amount_currency': company_currency != current_currency
                                    and - 1.0 * asset_value or 0.0,
-            },
-            {
+            })
+        if depreciated_amount:
+            move_lines.append({
                 'name': '{} {}/{}'.format(
                     self.asset_id.name,
                     self.sequence,
@@ -1101,8 +1107,9 @@ class AccountAssetDepreciationLine(models.Model):
                                current_currency.id or False,
                 'amount_currency': company_currency != current_currency
                                    and depreciated_amount_currency or 0.0,
-            },
-            {
+            })
+        if reserved_profit_amount:
+            move_lines.append({
                 'name': '{} {}/{}'.format(
                     self.asset_id.name,
                     self.sequence,
@@ -1122,8 +1129,9 @@ class AccountAssetDepreciationLine(models.Model):
                                current_currency.id or False,
                 'amount_currency': company_currency != current_currency
                                    and reserved_profit_amount_currency or 0.0,
-            },
-            {
+            })
+        if amount:
+            move_lines.append({
                 'name': '{} {}/{}'.format(
                     self.asset_id.name,
                     self.sequence,
@@ -1143,8 +1151,8 @@ class AccountAssetDepreciationLine(models.Model):
                                current_currency.id or False,
                 'amount_currency': company_currency != current_currency
                                    and amount_currency or 0.0,
-            }
-        ]
+            })
+        return move_lines
 
     def get_move_lines(self, accounting_date):
         prec = self.env['decimal.precision'].precision_get('Account')
@@ -1257,8 +1265,8 @@ class AccountAssetDepreciationLine(models.Model):
             line.log_message_when_posted()
             asset = line.asset_id
             if asset.currency_id.is_zero(asset.value_residual):
-                asset.message_post(body=_("Document closed."))
-                asset.write({'state': 'close'})
+                asset.message_post(body=_("Asset Fully depreciated."))
+                asset.write({'state': 'fully'})
 
     def log_message_when_posted(self):
         def _format_message(message_description, tracked_values):
