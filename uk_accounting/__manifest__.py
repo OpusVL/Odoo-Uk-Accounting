@@ -21,21 +21,21 @@
 ##############################################################################
 {
     'name': "UK Accounting Localization",
-
     'summary': 'UK Accounting :Localization',
-    
     'category': 'Accounting',
-    
-    'description': """UK Accounting :Localization
-""",
-
-    'author': "OpusVL limited",
+    'description': """
+        UK Accounting :Localization
+    """,
+    'author': "Opus Vision Limited",
     'website': "https://opusvl.com",
-
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['account', 'base_iban', 'base_vat'],
+    'depends': [
+        'account',
+        'base_iban',
+        'base_vat'
+    ],
 
     # always loaded
     'data': [
