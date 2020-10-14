@@ -335,7 +335,7 @@ class AccountAssetAsset(models.Model):
         compute='_compute_amount',
         method=True,
         store=True,
-        string='Residual Value')
+        string='Net Book Value')
     prorata = fields.Boolean(
         string='Depreciate from Date of asset',
         readonly=True,
