@@ -335,7 +335,7 @@ class AccountAssetAsset(models.Model):
         compute='_compute_amount',
         method=True,
         store=True,
-        string='Residual Value')
+        string='Net Book Value')
     prorata = fields.Boolean(
         string='Depreciate from Date of asset',
         readonly=True,
@@ -744,6 +744,7 @@ class AccountAssetAsset(models.Model):
                     asset.message_post(subject=_('Asset sold or disposed. Accounting entry awaiting for validation.'), tracking_value_ids=tracking_value_ids)
                 asset.depreciation_line_ids[-1].create_disposal_move(
                     post_move=True)
+                return self.write({'state': 'close'})
             else:
                 asset.create_fully_depreciated_disposal_move()
         return True

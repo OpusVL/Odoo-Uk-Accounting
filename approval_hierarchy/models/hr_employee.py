@@ -114,9 +114,19 @@ class HrEmployee(models.Model):
         for checked_role in checked_roles:
             groups |= checked_role.role_action_id
             users.write(dict(groups_id=[(4, checked_role.role_action_id.id)]))
-        for unchecked_group in all_groups.filtered(
-                lambda group: group not in groups):
+        unchecked_groups = all_groups.filtered(
+                lambda group: group not in groups)
+        for unchecked_group in unchecked_groups:
             users.write(dict(groups_id=[(3, unchecked_group.id)]))
+        amend_approve_system_users = self.env.ref(
+            'approval_hierarchy.group_amend_system_users')
+        amend_approve_system_users |= self.env.ref(
+            'approval_hierarchy.group_approve_system_users')
+        common = set(unchecked_groups).intersection(
+            set(amend_approve_system_users))
+        if common == set(amend_approve_system_users):
+            users.write(dict(
+                groups_id=[(3, self.env.ref('hr.group_hr_manager').id)]))
         return True
 
     def action_reject(self):
