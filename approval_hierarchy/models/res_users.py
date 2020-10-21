@@ -18,6 +18,16 @@ class ResUsers(models.Model):
         compute='_get_hr_job',
         store=True,
     )
+    manager_user_id = fields.Many2one(
+        'res.users',
+        compute='_get_managers',
+        store=True,
+    )
+    manager_employee_id = fields.Many2one(
+        'hr.employee',
+        compute='_get_managers',
+        store=True,
+    )
     has_delegated = fields.Boolean(compute='_check_has_delegated')
     current_user = fields.Boolean(compute='_compute_current_user')
 
@@ -42,6 +52,13 @@ class ResUsers(models.Model):
     def _get_hr_job(self):
         for user in self:
             user.job_id = user.employee_id.job_id
+
+    @api.depends('employee_ids.parent_id')
+    def _get_managers(self):
+        for user in self:
+            user.manager_user_id = user.employee_id.parent_id and \
+                             user.employee_id.parent_id.user_id.id or False
+            user.manager_employee_id = user.employee_id.parent_id.id
 
     def __init__(self, pool, cr):
         """ Override of __init__ to add access rights.

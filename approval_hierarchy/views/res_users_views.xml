@@ -9,8 +9,11 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='work_location']" position="after">
                     <field name="job_id" invisible="1"/>
+                    <field name="manager_user_id" invisible="1"/>
                     <field name="has_delegated" invisible="1"/>
-                    <field name="delegated_user_id" domain="[('job_id', '=', job_id), ('id', '!=', uid), ('has_delegated', '=', False)]" options="{'no_create': True}"/>
+                    <field name="delegated_user_id"
+                           domain="['|',('id', '=', manager_user_id), '&amp;', '&amp;',('job_id', '=', job_id), ('id', '!=', uid), ('has_delegated', '=', False)]"
+                           options="{'no_create': True}"/>
                 </xpath>
                 <xpath expr="//field[@name='hr_presence_state']" position="after">
                     <field name="current_user" invisible="1"/>
@@ -32,8 +35,11 @@
                 <xpath expr="//field[@name='partner_id']/parent::group" position="after">
                     <group>
                         <field name="job_id" invisible="1"/>
+                        <field name="manager_user_id" invisible="1"/>
                         <field name="has_delegated" invisible="1"/>
-                        <field name="delegated_user_id" domain="[('job_id', '=', job_id), ('has_delegated', '=', False)]" options="{'no_create': True}"/>
+                        <field name="delegated_user_id"
+                               domain="['|',('id', '=', manager_user_id), '&amp;', ('job_id', '=', job_id), ('has_delegated', '=', False)]"
+                               options="{'no_create': True}"/>
                     </group>
                 </xpath>
                 <xpath expr="//sheet" position="after">
