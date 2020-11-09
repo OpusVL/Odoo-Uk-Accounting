@@ -2,7 +2,7 @@
 
 from odoo import models, api, _
 from odoo.addons.approval_hierarchy import helpers
-from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES, CONFIGURATION_ERROR_MESSAGE
+from odoo.addons.approval_hierarchy.helpers import CUSTOM_ERROR_MESSAGES, CONFIGURATION_ERROR_MESSAGE, MOVE_TYPE_MAPPING
 from odoo.exceptions import UserError
 
 
@@ -33,7 +33,8 @@ class BaseModel(models.AbstractModel):
                         model_access_rights.get('{}.{}'.format(
                             move._name, move.type))):
                     raise UserError(
-                        CUSTOM_ERROR_MESSAGES.get('write') % self._description)
+                        CUSTOM_ERROR_MESSAGES.get('write') % MOVE_TYPE_MAPPING.get(
+                            move.type))
         elif self._name == 'hr.employee':
             if self._context.get('from_my_profile') and \
                     self.env.user == self.user_id:
@@ -60,11 +61,13 @@ class BaseModel(models.AbstractModel):
                         model_access_rights.get('{}.{}'.format(
                             move._name, move.type))):
                     raise UserError(
-                        CUSTOM_ERROR_MESSAGES.get('unlink') % self._description)
+                        CUSTOM_ERROR_MESSAGES.get('unlink') % MOVE_TYPE_MAPPING.get(
+                            move.type))
         return super(BaseModel, self).unlink()
 
     @api.model_create_multi
     def create(self, vals_list):
+        results = super(BaseModel, self).create(vals_list)
         if self.env.user.is_superuser():
             return super(BaseModel, self).create(vals_list)
         model_access_rights = helpers.get_create_write_unlink_access_groups()
@@ -74,10 +77,11 @@ class BaseModel(models.AbstractModel):
                 raise UserError(
                     CUSTOM_ERROR_MESSAGES.get('create') % self._description)
         if self._name == 'account.move':
-            for move in self:
+            for move in results:
                 if not self.env.user.has_group(
                         model_access_rights.get('{}.{}'.format(
-                            move._name, move.type))):
+                            self._name, move.type))):
                     raise UserError(
-                        CUSTOM_ERROR_MESSAGES.get('create') % self._description)
-        return super(BaseModel, self).create(vals_list)
+                        CUSTOM_ERROR_MESSAGES.get('create') % MOVE_TYPE_MAPPING.get(
+                            move.type))
+        return results

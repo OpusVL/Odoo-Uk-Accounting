@@ -168,3 +168,13 @@ CUSTOM_ERROR_MESSAGES = {
 
 CONFIGURATION_ERROR_MESSAGE = _('Your user account is not configured properly. '
                                 'Please contact the support team.')
+
+MOVE_TYPE_MAPPING = {
+    'entry': 'Journal Entry',
+    'out_invoice': 'Customer Invoice',
+    'out_refund': 'Customer Credit Note',
+    'in_invoice': 'Vendor Bill',
+    'in_refund': 'Vendor Credit Note',
+    'out_receipt': 'Sales Receipt',
+    'in_receipt': 'Purchase Receipt'
+}
