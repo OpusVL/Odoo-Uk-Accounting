@@ -31,7 +31,7 @@ class BaseModel(models.AbstractModel):
             for move in self:
                 if not self.env.user.has_group(
                         model_access_rights.get('{}.{}'.format(
-                            move._name, move.type))):
+                            self._name, move.type))):
                     raise UserError(
                         CUSTOM_ERROR_MESSAGES.get('write') % MOVE_TYPE_MAPPING.get(
                             move.type))
