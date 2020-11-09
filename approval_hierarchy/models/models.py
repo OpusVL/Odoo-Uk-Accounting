@@ -69,7 +69,7 @@ class BaseModel(models.AbstractModel):
     def create(self, vals_list):
         results = super(BaseModel, self).create(vals_list)
         if self.env.user.is_superuser():
-            return super(BaseModel, self).create(vals_list)
+            return results
         model_access_rights = helpers.get_create_write_unlink_access_groups()
         if self._name in model_access_rights:
             if not self.env.user.has_group(
