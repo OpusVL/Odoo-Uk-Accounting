@@ -160,28 +160,6 @@ class AccountPaymentRegister(models.TransientModel):
             })
         return res
 
-    # # Override function to create payments only for the group
-    # def create_payments(self):
-    #     Payment = self.env['account.payment']
-    #     payments = self.env['account.payment']
-    #     for payment_vals in self.get_payments_vals():
-    #         payments |= Payment.with_context(
-    #             active_ids=payment_vals.get('invoice_ids') and payment_vals.get(
-    #                 'invoice_ids')[0][2] or []).create(payment_vals)
-    #     payments.post()
-    #     action_vals = {
-    #         'name': _('Payments'),
-    #         'domain': [('id', 'in', payments.ids)],
-    #         'res_model': 'account.payment',
-    #         'view_id': False,
-    #         'type': 'ir.actions.act_window',
-    #     }
-    #     if len(payments) == 1:
-    #         action_vals.update({'res_id': payments[0].id, 'view_mode': 'form'})
-    #     else:
-    #         action_vals['view_mode'] = 'tree,form'
-    #     return action_vals
-
 
 class AccountPaymentMethod(models.Model):
     _inherit = "account.payment.method"
