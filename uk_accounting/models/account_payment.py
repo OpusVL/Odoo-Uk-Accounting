@@ -2,6 +2,88 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.addons.account.models.account_payment import MAP_INVOICE_TYPE_PARTNER_TYPE
+
+
+class AccountPayment(models.Model):
+    _inherit = "account.payment"
+
+    @api.depends('move_line_ids.matched_debit_ids',
+                 'move_line_ids.matched_credit_ids')
+    def _compute_reconciled_invoice_ids(self):
+        '''
+        Override base computed function to add more invoices linked to the
+        payment. This was spotted when creating combined payment some of
+        incoices were not linked to the payment.
+        The change from original function is on calculating reconciled_moves
+        :return:
+        '''
+        for record in self:
+            # Change from original function starts here
+            partial_reconciled_moves = record.move_line_ids.mapped(
+                'matched_debit_ids.debit_move_id.move_id.id') \
+                               + record.move_line_ids.mapped(
+                'matched_credit_ids.credit_move_id.move_id.id')
+            full_reconciled_moves = record.move_line_ids.mapped(
+                'full_reconcile_id.partial_reconcile_ids.debit_move_id.move_id.id') + \
+                                    record.move_line_ids.mapped(
+                                        'full_reconcile_id.partial_reconcile_ids.credit_move_id.move_id.id')
+            reconciled_move_ids = list(
+                set(partial_reconciled_moves + full_reconciled_moves)
+            )
+            reconciled_moves = self.env['account.move'].browse(
+                reconciled_move_ids)
+            # Change end here
+            record.reconciled_invoice_ids = reconciled_moves.filtered(
+                lambda move: move.is_invoice())
+            record.has_invoices = bool(record.reconciled_invoice_ids)
+            record.reconciled_invoices_count = len(
+                record.reconciled_invoice_ids)
+
+    @api.model
+    def default_get(self, default_fields):
+        if not self.env.user.company_id.combined_payment:
+            return super(AccountPayment, self).default_get(default_fields)
+        else:
+            active_ids = self._context.get('active_ids') or self._context.get(
+                'active_id')
+            active_model = self._context.get('active_model')
+            # Calling super with context active_ids = False to call super
+            # but to skip the error if invoices are of different types
+            rec = super(AccountPayment, self.with_context(
+                active_ids=False)).default_get(default_fields)
+
+            # After skipping the check on base default_get, added the
+            # same lines without the check of invoice types
+            invoices = self.env['account.move'].browse(active_ids).filtered(
+                lambda move: move.is_invoice(include_receipts=True))
+            # Check for selected invoices ids
+            if not active_ids or active_model != 'account.move':
+                return rec
+
+            # Check all invoices are open
+            if not invoices or any(
+                    invoice.state != 'posted' for invoice in invoices):
+                raise UserError(
+                    _("You can only register payments for open invoices"))
+
+            amount = self._compute_payment_amount(
+                invoices,
+                invoices[0].currency_id,
+                invoices[0].journal_id, rec.get(
+                    'payment_date') or fields.Date.today()
+            )
+            rec.update({
+                'currency_id': invoices[0].currency_id.id,
+                'amount': abs(amount),
+                'payment_type': 'inbound' if amount > 0 else 'outbound',
+                'partner_id': invoices[0].commercial_partner_id.id,
+                'partner_type': MAP_INVOICE_TYPE_PARTNER_TYPE[invoices[0].type],
+                'communication': invoices[0].invoice_payment_ref or invoices[
+                    0].ref or invoices[0].name,
+                'invoice_ids': [(6, 0, invoices.ids)],
+            })
+            return rec
 
 
 class AccountPaymentRegister(models.TransientModel):
@@ -77,6 +159,28 @@ class AccountPaymentRegister(models.TransientModel):
                 'domain': {'payment_method_id': domain_payment}
             })
         return res
+
+    # # Override function to create payments only for the group
+    # def create_payments(self):
+    #     Payment = self.env['account.payment']
+    #     payments = self.env['account.payment']
+    #     for payment_vals in self.get_payments_vals():
+    #         payments |= Payment.with_context(
+    #             active_ids=payment_vals.get('invoice_ids') and payment_vals.get(
+    #                 'invoice_ids')[0][2] or []).create(payment_vals)
+    #     payments.post()
+    #     action_vals = {
+    #         'name': _('Payments'),
+    #         'domain': [('id', 'in', payments.ids)],
+    #         'res_model': 'account.payment',
+    #         'view_id': False,
+    #         'type': 'ir.actions.act_window',
+    #     }
+    #     if len(payments) == 1:
+    #         action_vals.update({'res_id': payments[0].id, 'view_mode': 'form'})
+    #     else:
+    #         action_vals['view_mode'] = 'tree,form'
+    #     return action_vals
 
 
 class AccountPaymentMethod(models.Model):
