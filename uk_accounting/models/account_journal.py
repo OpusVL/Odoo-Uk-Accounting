@@ -31,7 +31,7 @@ class AccountJournal(models.Model):
     def configure_payment_methods_on_uk_bank_journals(self):
         # Called from data xml, as bank journal has no extid
         # On every upgrade we will want all journals of type bank
-        # to have these outgoing payment methods configured
+        # to have these combined payment methods configured
         bank_journals = self.search([('type', '=', 'bank')])
         combined_payment_methods = self.env['account.payment.method'].search(
             [('payment_type', '=', 'combined')]
