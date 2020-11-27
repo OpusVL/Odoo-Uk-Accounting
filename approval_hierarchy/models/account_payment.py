@@ -32,24 +32,16 @@ class AccountPayment(models.Model):
     def default_get(self, default_fields):
         rec = super(AccountPayment, self).default_get(default_fields)
         payment_date = datetime.now()
-        active_ids = self._context.get('active_ids') or self._context.get(
-            'active_id')
-        active_model = self._context.get('active_model')
-        if not active_ids or active_model != 'account.move' or not rec.get(
-                'partner_id'):
+        if rec.get('partner_id'):
+            partner = self.env['res.partner'].browse(rec.get(
+                'partner_id'))
+            partner = _get_warn_partner_id(partner)
+            if partner.payment_warn and partner.payment_warn != 'no-message':
+                payment_date = False
             rec.update({
+                'register_payment_action': True,
                 'payment_date': payment_date,
             })
-            return rec
-        partner = self.env['res.partner'].browse(rec.get(
-                'partner_id'))
-        partner = _get_warn_partner_id(partner)
-        if partner.payment_warn and partner.payment_warn != 'no-message':
-            payment_date = False
-        rec.update({
-            'register_payment_action': True,
-            'payment_date': payment_date,
-        })
         return rec
 
     @api.onchange('partner_id')
@@ -114,6 +106,16 @@ class AccountPayment(models.Model):
                 CUSTOM_ERROR_MESSAGES.get('export') % 'payments')
         return super(AccountPayment, self).export_data(fields_to_export)
 
+    def post(self):
+        """
+        It is possible to create `account.payment` records via the wizard with no `partner_id` set.
+        There is a check `onchange_partner_id_warning` above which will raise if we try to post
+        with no partner_id. We filter records here to allow users to still view payment options
+        without an error raising
+        """
+        payments = self.filtered(lambda payment: payment.partner_id)
+        return super(AccountPayment, payments).post()
+
 
 class PaymentRegister(models.TransientModel):
     _inherit = 'account.payment.register'
@@ -126,31 +128,3 @@ class PaymentRegister(models.TransientModel):
         if partner.payment_warn and partner.payment_warn != 'no-message':
             payment_vals.update({'partner_id': False})
         return payment_vals
-
-    # Override function to post only the payments that has filled the partner
-    def create_payments(self):
-        '''Create payments according to the invoices.
-        Having invoices with different commercial_partner_id or different type
-        (Vendor bills with customer invoices) leads to multiple payments.
-        In case of all the invoices are related to the same
-        commercial_partner_id and have the same type, only one payment will be
-        created.
-
-        :return: The ir.actions.act_window to show created payments.
-        '''
-        Payment = self.env['account.payment']
-        payments = Payment.create(self.get_payments_vals())
-        payments.filtered(lambda payment: payment.partner_id).post()
-
-        action_vals = {
-            'name': _('Payments'),
-            'domain': [('id', 'in', payments.ids)],
-            'res_model': 'account.payment',
-            'view_id': False,
-            'type': 'ir.actions.act_window',
-        }
-        if len(payments) == 1:
-            action_vals.update({'res_id': payments[0].id, 'view_mode': 'form'})
-        else:
-            action_vals['view_mode'] = 'tree,form'
-        return action_vals

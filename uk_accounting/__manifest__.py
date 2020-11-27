@@ -43,6 +43,7 @@
         'security/uk_accounting_security.xml',
         'data/uk_accounting_chart_data.xml',
         'data/account_type_data.xml',
+        'data/account_payment_method.xml',
         'data/account.account.template.csv',
         'data/account.chart.template.csv',
         'data/account.tax.group.csv',
@@ -53,5 +54,8 @@
         'views/account_account_view.xml',
         'views/account_move_view.xml',
         'views/res_partner_bank_view.xml',
+        'views/res_config_settings_views.xml',
+        'views/account_journal_view.xml',
+        'views/account_payment_view.xml',
     ],
 }
