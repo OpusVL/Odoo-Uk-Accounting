@@ -4,6 +4,11 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.addons.account.models.account_payment import MAP_INVOICE_TYPE_PARTNER_TYPE
 
+import sys
+sys.path.append("/mnt/pycharm-debug")
+import pydevd_pycharm
+pydevd_pycharm.settrace('10.10.4.172', port=11114, suspend=False)
+
 
 class AccountPayment(models.Model):
     _inherit = "account.payment"
@@ -19,19 +24,16 @@ class AccountPayment(models.Model):
         '''
         for record in self:
             # Change from original function starts here
-            partial_reconciled_moves = record.move_line_ids.mapped(
-                'matched_debit_ids.debit_move_id.move_id.id') \
-                               + record.move_line_ids.mapped(
-                'matched_credit_ids.credit_move_id.move_id.id')
-            full_reconciled_moves = record.move_line_ids.mapped(
-                'full_reconcile_id.partial_reconcile_ids.debit_move_id.move_id.id') + \
-                                    record.move_line_ids.mapped(
-                                        'full_reconcile_id.partial_reconcile_ids.credit_move_id.move_id.id')
-            reconciled_move_ids = list(
-                set(partial_reconciled_moves + full_reconciled_moves)
-            )
-            reconciled_moves = self.env['account.move'].browse(
-                reconciled_move_ids)
+            mls = record.move_line_ids
+            mls_debit_moves = mls.mapped(
+                'matched_debit_ids.debit_move_id.move_id')
+            mls_credit_moves = mls.mapped(
+                'matched_credit_ids.credit_move_id.move_id')
+            mls_debit_reconciles = mls.mapped(
+                'full_reconcile_id.partial_reconcile_ids.debit_move_id.move_id')
+            mls_credit_reconciles = mls.mapped(
+                'full_reconcile_id.partial_reconcile_ids.credit_move_id.move_id')
+            reconciled_moves = mls_debit_moves | mls_credit_moves | mls_debit_reconciles | mls_credit_reconciles
             # Change end here
             record.reconciled_invoice_ids = reconciled_moves.filtered(
                 lambda move: move.is_invoice())
