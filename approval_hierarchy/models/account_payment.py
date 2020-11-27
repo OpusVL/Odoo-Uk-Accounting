@@ -107,6 +107,12 @@ class AccountPayment(models.Model):
         return super(AccountPayment, self).export_data(fields_to_export)
 
     def post(self):
+        """
+        It is possible to create `account.payment` records via the wizard with no `partner_id` set.
+        There is a check `onchange_partner_id_warning` above which will raise if we try to post
+        with no partner_id. We filter records here to allow users to still view payment options
+        without an error raising
+        """
         payments = self.filtered(lambda payment: payment.partner_id)
         return super(AccountPayment, payments).post()
 
