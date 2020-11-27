@@ -107,9 +107,6 @@ class AccountPayment(models.Model):
         return super(AccountPayment, self).export_data(fields_to_export)
 
     def post(self):
-        '''
-        Post only payments that has partner field filled
-        '''
         payments = self.filtered(lambda payment: payment.partner_id)
         return super(AccountPayment, payments).post()
 
