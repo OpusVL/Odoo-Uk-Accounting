@@ -4,11 +4,6 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.addons.account.models.account_payment import MAP_INVOICE_TYPE_PARTNER_TYPE
 
-import sys
-sys.path.append("/mnt/pycharm-debug")
-import pydevd_pycharm
-pydevd_pycharm.settrace('10.10.4.172', port=11114, suspend=False)
-
 
 class AccountPayment(models.Model):
     _inherit = "account.payment"
