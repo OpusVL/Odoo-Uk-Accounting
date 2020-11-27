@@ -27,8 +27,6 @@
             <field name="payment_type">combined</field>
         </record>
 
-        <function name="configure_payment_methods_on_uk_bank_journals" model="account.journal"/>
-
     </data>
 
 </odoo>

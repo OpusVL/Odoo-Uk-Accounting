@@ -26,17 +26,3 @@ class AccountJournal(models.Model):
              "Check:Pay bill by check and print it from Odoo.\n"
              "SEPA Credit Transfer: Pay bill from a SEPA Credit Transfer file "
              "you submit to your bank. Enable this option from the settings.")
-
-    @api.model
-    def configure_payment_methods_on_uk_bank_journals(self):
-        # Called from data xml, as bank journal has no extid
-        # On every upgrade we will want all journals of type bank
-        # to have these combined payment methods configured
-        bank_journals = self.search([('type', '=', 'bank')])
-        combined_payment_methods = self.env['account.payment.method'].search(
-            [('payment_type', '=', 'combined')]
-        )
-        for bank_journal in bank_journals:
-            bank_journal.write(dict(
-                combined_payment_method_ids=[
-                    [4, combined_payment_method.id] for combined_payment_method in combined_payment_methods]))
