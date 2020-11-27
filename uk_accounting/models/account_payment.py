@@ -93,12 +93,12 @@ class AccountPaymentRegister(models.TransientModel):
     @api.model
     def default_get(self, fields):
         """
-        # Override base default_get without super because on base default is
-        # raising error if inbound and out bound register payments at the same time
-        # I added check_combined_configuration ,
-        # if is activated on settings will not raise error
+        Override base default_get without super because on base default is
+        raising error if inbound and out bound register payments at the same time
+        I added check_combined_configuration ,
+        if is activated on settings will not raise error
         :param fields:
-        :return:
+        :return: defaults: dict() of fieldnames and values
         """
         defaults = {}
         active_ids = self._context.get('active_ids')
