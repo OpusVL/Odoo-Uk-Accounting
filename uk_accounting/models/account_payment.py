@@ -16,7 +16,6 @@ class AccountPayment(models.Model):
         payment. This was spotted when creating combined payment some of
         incoices were not linked to the payment.
         The change from original function is on calculating reconciled_moves
-        :return:
         '''
         for record in self:
             # Change from original function starts here
