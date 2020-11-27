@@ -20,7 +20,7 @@ class AccountJournal(models.Model):
         'journal_id',
         'combined_payment_method',
         domain=[('payment_type', '=', 'combined')],
-        string='For Combined Payments',
+        string='For payments through matching',
         default=lambda self: self._default_combined_payment_methods(),
         help="Manual:Pay bill by cash or any other method outside of Odoo.\n" 
              "Check:Pay bill by check and print it from Odoo.\n"

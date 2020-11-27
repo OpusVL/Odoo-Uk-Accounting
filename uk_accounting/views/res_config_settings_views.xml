@@ -12,9 +12,9 @@
                         <field name="combined_payment"/>
                     </div>
                     <div class="o_setting_right_pane">
-                        <label for="combined_payment" string="Combined Payment"/>
+                        <label for="combined_payment" string="Match multiple credit notes with invoices"/>
                         <div class="text-muted">
-                            Activate Combined Payments From Register Payment Option
+                            Create payments by matching multiple credit notes with invoices
                         </div>
                     </div>
                 </div>
