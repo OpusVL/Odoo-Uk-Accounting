@@ -94,7 +94,7 @@ class AccountPaymentRegister(models.TransientModel):
         raising error if inbound and out bound register payments at the same time
         I added check_combined_configuration ,
         if is activated on settings will not raise error
-        :param fields:
+        :param fields: list() of str() field names
         :return: defaults: dict() of fieldnames and values
         """
         defaults = {}
