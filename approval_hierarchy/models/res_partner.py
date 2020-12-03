@@ -25,7 +25,7 @@ class ResPartner(models.Model):
     )
     approval_user_id = fields.Many2one(
         'res.users',
-        string='Approved by',
+        string='Approver',
     )
     current_user = fields.Boolean(compute='_get_current_user')
     payment_warn = fields.Selection(
