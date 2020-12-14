@@ -37,13 +37,13 @@
         'contacts',
     ],
     'data': [
+        'security/groups.xml',
+        'security/ir.model.access.csv',
         'wizard/vat_check_wizard_view.xml',
         'views/res_partner_view.xml',
         'views/mtd_menu.xml',
         'views/hmrc_configuration_view.xml',
         'views/vat_number_history_view.xml',
-        'security/groups.xml',
-        'security/ir.model.access.csv',
     ],
     'demo': [
     ],
