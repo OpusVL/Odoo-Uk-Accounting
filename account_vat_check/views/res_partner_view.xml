@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mtd_hmrc_res_partner_view_ext" model="ir.ui.view">
+        <field name="name">HMRC Customer View Change</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <field name="vat" position="after">
+                <button name="%(account_vat_check.action_vat_number_check_view)d" 
+                        type="action" 
+                        string="Check VAT Number" 
+                        class="oe_highlight"/>
+            </field>
+            <page name="internal_notes" position="after">
+                <page string="HMRC VAT Number Response">
+                    <field name="response_from_hmrc"/>
+                </page>
+            </page>
+        </field>
+    </record>
+
+</odoo>

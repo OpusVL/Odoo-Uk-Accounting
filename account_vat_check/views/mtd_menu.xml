@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <menuitem id="contacts.res_partner_menu_config"
+            name="Configuration"
+            parent="contacts.menu_contacts"
+            groups="base.group_system"
+            sequence="3"/>
+
+        <!-- Main menu -->
+        <menuitem id="mtd_vat_menu"
+            name="Vat Number"
+            parent="contacts.menu_contacts"
+            sequence="2" groups="mtd_vat_admin"/>
+
+        <act_window id="action_mtd_vat_hmrc_configuration"
+            name="HMRC Set-up"
+            res_model="mtd.vat_hmrc_configuration"
+            view_mode="tree,form" />
+
+        <act_window id="action_mtd_vat_history"
+            name="Vat Number History"
+            res_model="vat.check.history"
+            view_mode="tree" />
+
+        <!-- sub menu -->
+        <menuitem id="submenu_mtd_vat_hmrc_services"
+            name="VAT HMRC Set-up"
+            parent="mtd_vat_menu"
+            sequence="30"
+            action="" />
+
+        <menuitem id="submenu_vat_hmrc_configuration"
+            name="HMRC Set-up"
+            parent="submenu_mtd_vat_hmrc_services"
+            sequence="1"
+            action="action_mtd_vat_hmrc_configuration"/>
+
+        <menuitem id="submenu_vat_number_history"
+            name="Vat History"
+            parent="submenu_mtd_vat_hmrc_services"
+            sequence="1"
+            action="action_mtd_vat_history"/>
+</odoo>
