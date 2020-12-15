@@ -2,8 +2,8 @@
 
 ##############################################################################
 #
-# Making Tax Digital for VAT
-# Copyright (C) 2019 OpusVL (<http://opusvl.com/>)
+# Check UK Vat Number
+# Copyright (C) 2020 OpusVL (<http://opusvl.com/>)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
