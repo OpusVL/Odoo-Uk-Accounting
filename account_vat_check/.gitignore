@@ -1,0 +1,3 @@
+# Byte-compiled / optimized / DLL files
+/odoo/__pycache__/
+/odoo/*.py[cod]
