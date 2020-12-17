@@ -60,7 +60,7 @@ class MtdVATCheckAPi(models.Model):
 			record.write(partner_dict)
 
 		if 'message' in response_token:
-			record.write({'response_from_hmrc': "Response Received From HMRC: \n" + response_token['message'].replace('targetVrn', 'VAT Number') })
+			record.write({'response_from_hmrc': "Response Received From HMRC: \n {}".format(response_token['message'].replace('targetVrn', 'VAT Number')) })
 		history_dict = {
 			'partner_id': record.id,
 			'vat': record.vat,
