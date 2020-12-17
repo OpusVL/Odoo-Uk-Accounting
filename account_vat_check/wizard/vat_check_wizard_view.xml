@@ -13,7 +13,7 @@
                     <field name="company_type" options="{'horizontal': true}" widget="radio" nolabel="1"/>
                     <newline/>
                     <p colspan="2" style="color:blue;" >
-                        <span attrs="{'invisible':[('company_type','!=','company')]}">Retrieves of name and address of a VAT registered company</span>
+                        <span attrs="{'invisible':[('company_type','!=','company')]}">Retrieves name and address of a VAT registered company</span>
                         <span attrs="{'invisible':[('company_type','=','company')]}">Retrieves the name and address of a UK VAT-registered business, if the business exists.</span>
                     </p>
                 </group>

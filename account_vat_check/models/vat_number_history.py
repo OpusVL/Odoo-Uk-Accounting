@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 class VatNumberHistory(models.Model):
 	_name = 'vat.check.history'
 	_description = 'Checked Vat Number History'
+	_order = 'create_date desc'
 
 	partner_id = fields.Many2one('res.partner',string='Contact')
 	vat = fields.Char('Vat Number')
