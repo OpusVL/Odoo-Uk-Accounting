@@ -27,8 +27,7 @@ class CompanyVatCheck(models.TransientModel):
 		# strip any space
 		strip_vrn = vrn.replace(" ", "")
 		split_vrn = re.findall('\d+|\D+', vrn)
-
-		return split_vrn[1]
+		return split_vrn[len(split_vrn) - 1]
 
 	def check_vat_number(self):
 		partner_id = self.env['res.partner'].browse(self._context.get('active_id'))
