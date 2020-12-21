@@ -20,7 +20,7 @@ class CompanyVatCheck(models.TransientModel):
 	)
 	hmrc_configuration = fields.Many2one(comodel_name="mtd.vat_hmrc_configuration", string="HMRC Configuration", default=_get_default_hmrc_config_id)
 	path = fields.Char(string="sandbox_url")
-	company_id = fields.Many2one(comodel_name="res.company", string="Company", default=lambda self: self.env.company)
+	company_id = fields.Many2one(comodel_name="res.company", string="Company", default=lambda self: self.env['res.company']._company_default_get('account.account'))
 	vrn = fields.Char(related="company_id.vat", string="VAT Number", readonly=True)
 
 	def get_vrn(self, vrn):
@@ -35,9 +35,14 @@ class CompanyVatCheck(models.TransientModel):
 		if self.company_type == 'company':
 			self.path = '/organisations/vat/check-vat-number/lookup/{targetVrn}'.format(targetVrn=self.get_vrn(partner_id.vat))
 		else:
+			company = self.env['res.company']._company_default_get('account.account')
+			if not company.vat:
+				raise exceptions.Warning(
+				    "Please Configure Company Vat Number For Business Vat Check !!"
+				)
 			self.path = '/organisations/vat/check-vat-number/lookup/{targetVrn}/{requesterVrn}'.format(
 				targetVrn=self.get_vrn(partner_id.vat),
-				requesterVrn=self.get_vrn(self.env.company.vat)
+				requesterVrn=self.get_vrn(company.vat)
 			)
 		if self.hmrc_configuration:
 			version = self.env['mtd.vat_check_endpoint'].json_command(self._name, self.id, partner_id)
