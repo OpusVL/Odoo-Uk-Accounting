@@ -1,5 +1,0 @@
-<odoo>
-    <data>
-        <function model="res.config.settings" name="set_approval_config"/>
-    </data>
-</odoo>
