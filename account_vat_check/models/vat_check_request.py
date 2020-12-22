@@ -22,6 +22,8 @@ class MtdVATCheckAPi(models.Model):
 				token = token[0]
 			elif isinstance(token, str):
 				pass
+			elif isinstance(token, unicode):
+				token = token.encode('utf-8')
 			else:
 				raise exceptions.Warning('Invalid token format')
 			header_items["authorization"] = ("Bearer " + token)

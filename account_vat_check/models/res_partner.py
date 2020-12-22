@@ -6,6 +6,7 @@ class ResPartner(models.Model):
 	_inherit = 'res.partner'
 
 	response_from_hmrc = fields.Text(string="Response From HMRC", readonly=True)
+	vat = fields.Char('TIN')
 
 	def check_uk_vat(self):
 		""" Check Uk Vat Number """
