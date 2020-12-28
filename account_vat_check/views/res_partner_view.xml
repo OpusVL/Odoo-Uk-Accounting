@@ -11,7 +11,7 @@
                         type="object" 
                         string="Check VAT Number" 
                         class="oe_highlight"
-                        groups="account_vat_check.mtd_check_vat_user"/>
+                        groups="account_vat_check.mtd_check_vat_user,account_vat_check.mtd_check_vat_admin"/>
             </field>
             <page name="internal_notes" position="after">
                 <page string="HMRC VAT Number Response">
