@@ -3,7 +3,7 @@ import requests
 import json
 import logging
 import werkzeug
-from odoo import models, exceptions
+from openerp import models, exceptions
 from datetime import datetime
 
 _logger = logging.getLogger(__name__)
