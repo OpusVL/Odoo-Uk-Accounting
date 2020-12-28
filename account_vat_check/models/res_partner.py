@@ -1,4 +1,4 @@
-from odoo import models, fields, api, exceptions
+from openerp import models, fields, api, _,exceptions
 from datetime import datetime, timedelta
 import re
 
@@ -8,6 +8,7 @@ class ResPartner(models.Model):
 	response_from_hmrc = fields.Text(string="Response From HMRC", readonly=True)
 	vat = fields.Char('TIN')
 
+	@api.multi
 	def check_uk_vat(self):
 		""" Check Uk Vat Number """
 		if self.vat:
