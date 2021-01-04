@@ -23,7 +23,7 @@
 
 {
     'name': 'UK HMRC MTD - VAT Check',
-    'version': '0.7',
+    'version': '9.0.1',
     'author': 'OpusVL',
     'website': 'https://opusvl.com/',
     'summary': 'This module enables Odoo Community and Enterprise to Check Vat Details of Company and Business.',
@@ -34,7 +34,7 @@
     'depends': [
         'base',
         'account',
-        'contacts',
+        'mail',
     ],
     'data': [
         'security/groups.xml',

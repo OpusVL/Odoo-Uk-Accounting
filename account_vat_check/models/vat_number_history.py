@@ -1,4 +1,4 @@
-from odoo import models, fields, api, exceptions
+from openerp import models, fields, api, exceptions
 from datetime import datetime, timedelta
 
 class VatNumberHistory(models.Model):
