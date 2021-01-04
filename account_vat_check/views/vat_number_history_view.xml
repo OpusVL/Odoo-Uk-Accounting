@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo>
-
-    <record id="mtd_hmrc_vat_history_tree_view" model="ir.ui.view">
-        <field name="name">HMRC Vat Number History</field>
-        <field name="model">vat.check.history</field>
-        <field name="arch" type="xml">
-            <tree string="Vat Number History" create="0" edit="0">
-                <field name="partner_id"/>
-                <field name="vat"/>
-                <field name="company_type"/>
-                <field name="processin_date"/>
-                <field name="consultationNumber"/>
-                <field name="requester"/>
-                <field name="response_from_hmrc"/>
-                <field name="status_code"/>
-            </tree>
-        </field>
-    </record>
-
-</odoo>
+<openerp>
+    <data>
+        <record id="mtd_hmrc_vat_history_tree_view" model="ir.ui.view">
+            <field name="name">HMRC Vat Number History</field>
+            <field name="model">vat.check.history</field>
+            <field name="arch" type="xml">
+                <tree string="Vat Number History" create="0" edit="0">
+                    <field name="partner_id"/>
+                    <field name="vat"/>
+                    <field name="company_type"/>
+                    <field name="processin_date"/>
+                    <field name="consultationNumber"/>
+                    <field name="requester"/>
+                    <field name="response_from_hmrc"/>
+                    <field name="status_code"/>
+                </tree>
+            </field>
+        </record>
+    </data>
+</openerp>

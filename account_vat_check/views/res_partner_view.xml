@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo>
+<openerp>
+    <data>
 
-    <record id="mtd_hmrc_res_partner_view_ext" model="ir.ui.view">
-        <field name="name">HMRC Customer View Change</field>
-        <field name="model">res.partner</field>
-        <field name="inherit_id" ref="base.view_partner_form"/>
-        <field name="arch" type="xml">
-            <field name="category_id" position="after">
-                <field name="vat"/>
-                <button name="check_uk_vat" 
-                        type="object" 
-                        string="Check VAT Number" 
-                        class="oe_highlight"
-                        groups="account_vat_check.mtd_check_vat_user,account_vat_check.mtd_check_vat_admin"/>
-            </field>
-            <page name="internal_notes" position="after">
-                <page string="HMRC VAT Number Response">
-                    <field name="response_from_hmrc"/>
+        <record id="mtd_hmrc_res_partner_view_ext" model="ir.ui.view">
+            <field name="name">HMRC Customer View Change</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <field name="website" position="after">
+                    <field name="vat"/>
+                    <button name="check_uk_vat" 
+                            type="object" 
+                            string="Check VAT Number" 
+                            class="oe_highlight"
+                            groups="account_vat_check.mtd_check_vat_user,account_vat_check.mtd_check_vat_admin"/>
+                </field>
+                <page name="internal_notes" position="after">
+                    <page string="HMRC VAT Number Response">
+                        <field name="response_from_hmrc"/>
+                    </page>
                 </page>
-            </page>
-        </field>
-    </record>
+            </field>
+        </record>
 
-</odoo>
+    </data>
+</openerp>
