@@ -10,13 +10,12 @@
                     <group>
                         <field name="hmrc_configuration"/>
                     </group>
-                    <field name="company_type" options="{'horizontal': true}" widget="radio" nolabel="1"/>
-                    <newline/>
-                    <p colspan="2" style="color:blue;" >
-                        <span attrs="{'invisible':[('company_type','!=','company')]}">Retrieves name and address of a VAT registered company</span>
-                        <span attrs="{'invisible':[('company_type','=','company')]}">Retrieves the name and address of a UK VAT-registered business, if the business exists.</span>
-                    </p>
+                    <field name="company_type" invisible='1'/>
                 </group>
+                <div>
+                    <field name="is_business"/>
+                    <span><b>Select if you want proof of your check (for UK VAT-registered businesses only)</b></span>
+                </div>
                 <footer>
                     <button name="check_vat_number" string="Check VAT" type="object" default_focus="1" class="oe_highlight"/>
                     <button string="Cancel" class="btn btn-default" special="cancel"/>
