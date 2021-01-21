@@ -16,4 +16,5 @@ class VatNumberHistory(models.Model):
 	consultationNumber = fields.Char(string='Consultation Number')
 	requester = fields.Char(string='Requester')
 	response_from_hmrc = fields.Text(string="Response From HMRC", readonly=True)
+	status = fields.Char('Status')
 	status_code = fields.Char('Status')
