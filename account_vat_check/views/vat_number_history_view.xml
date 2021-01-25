@@ -13,7 +13,7 @@
                 <field name="consultationNumber"/>
                 <field name="requester"/>
                 <field name="response_from_hmrc"/>
-                <field name="status_code"/>
+                <field name="status"/>
             </tree>
         </field>
     </record>
