@@ -76,6 +76,6 @@ class MtdVATHmrcConfiguration(models.Model):
     def format_error(err):
         return '{status_code}: {reason}\n\n{message}'.format(
             message=err.args[0],
-            status_code=err.response.status_code,
-            reason=err.response.reason,
+            status_code=err and err.response and err.response.status_code or '',
+            reason=err and err.response and err.response.reason or '',
         )
