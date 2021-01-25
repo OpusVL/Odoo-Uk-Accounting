@@ -42,16 +42,24 @@ class MtdVATCheckAPi(models.Model):
 
 	def handle_request_response(self, response, record=None, url=None, company_type=None):
 		response_token = json.loads(response.text)
+		response_token_message = ''
+		partner_dict = {}
 		if response.status_code == 200:
 			target = response_token.get('target')
+			for field in target.keys():
+				if field != 'address':
+					response_token_message += "{field} : {value} \n".format(field=field,value=target[field])
+			if 'address' in target.keys():
+				response_token_message += "\nAddress\n"
+				for field in target['address']:
+					response_token_message += "{field} : {value} \n".format(field=field,value=target['address'][field])
+
 			message = (
 					"Date {date}     Time {time} \n".format(date=datetime.now().date(),
 															time=datetime.now().time())
 					+ "Congratulations ! The connection succeeded. \n"
 					+ "Please check the log below for details. \n\n"
-					+ "Connection Status Details: \n"
-					+ "Request Sent: \n{connection_url} \n\n".format(connection_url=url)
-					+ "Response Received: \n{message}".format(message=response_token or response_token['message'] or '')
+					+ "Response Received: \n{message}".format(message=response_token_message or '')
 			)
 			partner_dict = {
 				'name': target['name'],
@@ -59,10 +67,14 @@ class MtdVATCheckAPi(models.Model):
 				'zip': target['address']['postcode'],
 				'response_from_hmrc': message
 			}
-			record.write(partner_dict)
-
 		if 'message' in response_token:
-			record.write({'response_from_hmrc': "Response Received From HMRC: \n {}".format(response_token['message'].replace('targetVrn', 'VAT Number')) })
+			if company_type == 'company':
+				response_token_message = response_token['message'].replace('targetVrn', 'VAT Number')
+			else:
+				response_token_message = response_token['message'].replace('requesterVrn', 'Company (Requester) VAT Number')
+			partner_dict.update({'response_from_hmrc': "Response Received From HMRC: \n {}".format(response_token_message) })
+		
+		record.write(partner_dict)
 		history_dict = {
 			'partner_id': record.id,
 			'vat': record.vat,
@@ -70,8 +82,9 @@ class MtdVATCheckAPi(models.Model):
 			'processin_date': datetime.now(),
 			'consultationNumber': response_token.get('consultationNumber') or '',
 			'requester': response_token.get('requester') or '',
-			'response_from_hmrc': response.text,
-			'status_code': str(response.status_code),
+			'response_from_hmrc':response_token_message or '',
+			'status': 'Success' if response.status_code == 200 else 'Failed',
+			'status_code': "{}".format(response.status_code),
 		}
 		self.env['vat.check.history'].create(history_dict)
 		return True
