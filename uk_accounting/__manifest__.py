@@ -20,42 +20,40 @@
 #
 ##############################################################################
 {
-    'name': "UK Accounting Localization",
-    'summary': 'UK Accounting :Localization',
-    'category': 'Accounting',
-    'description': """
-        UK Accounting :Localization
+    "name": "UK Accounting Localization",
+    "summary": "UK Accounting: Localization",
+    "category": "Accounting",
+    "description": """
+        UK Accounting: Localization
     """,
-    'author': "Opus Vision Limited",
-    'website': "https://opusvl.com",
-    'version': '0.1',
-
+    "author": "Opus Vision Limited",
+    "website": "https://opusvl.com",
+    "version": "13.0.1.0.2",
     # any module necessary for this one to work correctly
-    'depends': [
-        'account',
-        'base_iban',
-        'base_vat'
+    "depends": [
+        "account",
+        "base_iban",
+        "base_vat" "l10n_uk",
     ],
-
     # always loaded
-    'data': [
-        'security/ir.model.access.csv',
-        'security/uk_accounting_security.xml',
-        'data/uk_accounting_chart_data.xml',
-        'data/account_type_data.xml',
-        'data/account_payment_method.xml',
-        'data/account.account.template.csv',
-        'data/account.chart.template.csv',
-        'data/account.tax.group.csv',
-        'data/account_tax_report_data.xml',
-        'data/account_tax_data.xml',
-        'data/account_chart_template_data.xml',
-        'data/ir_sequence_data.xml',
-        'views/account_account_view.xml',
-        'views/account_move_view.xml',
-        'views/res_partner_bank_view.xml',
-        'views/res_config_settings_views.xml',
-        'views/account_journal_view.xml',
-        'views/account_payment_view.xml',
+    "data": [
+        "security/ir.model.access.csv",
+        "security/uk_accounting_security.xml",
+        "data/uk_accounting_chart_data.xml",
+        "data/account_type_data.xml",
+        "data/account_payment_method.xml",
+        "data/account.account.template.csv",
+        "data/account.chart.template.csv",
+        "data/account.tax.group.csv",
+        "data/account_tax_report_data.xml",
+        "data/account_tax_data.xml",
+        "data/account_chart_template_data.xml",
+        "data/ir_sequence_data.xml",
+        "views/account_account_view.xml",
+        "views/account_move_view.xml",
+        "views/res_partner_bank_view.xml",
+        "views/res_config_settings_views.xml",
+        "views/account_journal_view.xml",
+        "views/account_payment_view.xml",
     ],
 }
