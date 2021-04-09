@@ -1,5 +1,6 @@
-from odoo import models, fields, api, _
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
 from odoo.addons.account.models.account_payment import MAP_INVOICE_TYPE_PARTNER_TYPE
 
 
@@ -127,7 +128,8 @@ class AccountPaymentRegister(models.TransientModel):
             if not self.check_combined_configuration():
                 raise UserError(
                     _(
-                        "You can only register at the same time for payment that are all inbound or all outbound"
+                        "You can only register at the same time for payment "
+                        "that are all inbound or all outbound"
                     )
                 )
             combined = True
@@ -135,7 +137,8 @@ class AccountPaymentRegister(models.TransientModel):
         if any(inv.company_id != invoices[0].company_id for inv in invoices):
             raise UserError(
                 _(
-                    "You can only register at the same time for payment that are all from the same company"
+                    "You can only register at the same time for payment that "
+                    "are all from the same company"
                 )
             )
         if "invoice_ids" not in defaults:

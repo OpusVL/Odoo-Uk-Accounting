@@ -1,22 +1,22 @@
 <odoo>
-  <data>
-
-      <record id="view_account_journal_form_inherit" model="ir.ui.view">
-          <field name="name">account.journal.form.inherit</field>
-          <field name="model">account.journal</field>
-          <field name="inherit_id" ref="account.view_account_journal_form"/>
-          <field name="arch" type="xml">
-               <xpath expr="//field[@name='outbound_payment_method_ids']" position="after">
-                   <field name="show_combined_payment"
-                          invisible="1"/>
-                   <field name="combined_payment_method_ids"
-                          widget="many2many_checkboxes"
-                          attrs="{'invisible':[('show_combined_payment','=', False)]}"
-                   />
-               </xpath>
-          </field>
-      </record>
-
-
-  </data>
+    <data>
+        <record id="view_account_journal_form_inherit" model="ir.ui.view">
+            <field name="name">account.journal.form.inherit</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account.view_account_journal_form" />
+            <field name="arch" type="xml">
+                <xpath
+                    expr="//field[@name='outbound_payment_method_ids']"
+                    position="after"
+                >
+                    <field name="show_combined_payment" invisible="1" />
+                    <field
+                        name="combined_payment_method_ids"
+                        widget="many2many_checkboxes"
+                        attrs="{'invisible':[('show_combined_payment','=', False)]}"
+                    />
+                </xpath>
+            </field>
+        </record>
+    </data>
 </odoo>

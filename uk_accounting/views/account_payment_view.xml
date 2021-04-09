@@ -1,16 +1,14 @@
 <odoo>
-  <data>
-
-      <record id="view_account_payment_form_multi_inherit" model="ir.ui.view">
-          <field name="name">account.payment.form.multi.inherit</field>
-          <field name="model">account.payment.register</field>
-          <field name="inherit_id" ref="account.view_account_payment_form_multi"/>
-          <field name="arch" type="xml">
-              <field name="group_payment" position="after">
-                  <field name="combined" invisible="1"/>
-              </field>
-          </field>
-      </record>
-
-  </data>
+    <data>
+        <record id="view_account_payment_form_multi_inherit" model="ir.ui.view">
+            <field name="name">account.payment.form.multi.inherit</field>
+            <field name="model">account.payment.register</field>
+            <field name="inherit_id" ref="account.view_account_payment_form_multi" />
+            <field name="arch" type="xml">
+                <field name="group_payment" position="after">
+                    <field name="combined" invisible="1" />
+                </field>
+            </field>
+        </record>
+    </data>
 </odoo>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <data noupdate="1">
         <!-- account.account.type -->
@@ -9,6 +9,5 @@
             <field name="note">Used mainly for parent accounts</field>
             <field name="include_initial_balance" eval="False" />
         </record>
-
     </data>
 </odoo>
