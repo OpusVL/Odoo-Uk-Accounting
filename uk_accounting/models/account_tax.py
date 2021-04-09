@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import fields, models
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -52,7 +52,8 @@ class AccountTaxMargin(models.Model):
             else:
                 if product:
                     safe_eval(
-                        "result = (base_amount - product.standard_price) - (base_amount - product.standard_price ) / (1 + {})".format(
+                        "result = (base_amount - product.standard_price) - "
+                        "(base_amount - product.standard_price ) / (1 + {})".format(
                             self.amount / 100.0
                         ),
                         localdict,
