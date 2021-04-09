@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <!-- Chart template -->
+    <record id="l10n_uk.l10n_uk" model="account.chart.template">
+        <field name="name">UK Tax and Account Chart Template (by SmartMode/OpusVL)</field>
+    </record>
+</odoo>
