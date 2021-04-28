@@ -142,7 +142,7 @@ class AccountPaymentRegister(models.TransientModel):
                 defaults['payment_method_id'] = self.env[
                     'account.payment.method'].search(domain, limit=1).id
         return defaults
-    
+
     def check_combined_configuration(self):
         return self.env.user.company_id.combined_payment
 
