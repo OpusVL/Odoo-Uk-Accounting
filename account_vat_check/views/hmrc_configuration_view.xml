@@ -10,13 +10,8 @@
                 <sheet>
                     <group>
                         <field name="name"/>
-                        <field name="client_id"/>
-                        <field name="client_secret"/>
                         <field name="environment" widget="radio" options="{'horizontal': true}"/>
                         <field name="hmrc_url"/>
-                        <field name="access_token" invisible="1"/>
-                        <field name="refresh_token" invisible="1"/>
-                        <field name="state" invisible="1"/>
                     </group>
                 </sheet>
             </form>
