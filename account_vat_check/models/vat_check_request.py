@@ -17,15 +17,7 @@ class MtdVATCheckAPi(models.Model):
 		try:
 			header_items = {}
 			record = self.env[module_name].search([('id', '=', record_id)])
-			token = record.hmrc_configuration.get_access_token()
-			if isinstance(token, list) and len(token) == 1:
-				token = token[0]
-			elif isinstance(token, str):
-				pass
-			else:
-				raise exceptions.Warning('Invalid token format')
-			header_items["authorization"] = ("Bearer " + token)
-
+			
 			hmrc_connection_url = "{}{}".format(record.hmrc_configuration.hmrc_url, record.path)
 
 			_logger.info(
