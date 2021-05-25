@@ -49,13 +49,14 @@ class AccountPayment(models.Model):
             res = super(AccountPayment, self.with_context(
                 active_ids=False)).default_get(default_fields)
 
+            # Check for selected invoices ids
+            if not active_ids or active_model != 'account.move':
+                return res
+
             # After skipping the check on base default_get, added the
             # same lines without the check of invoice types
             invoices = self.env['account.move'].browse(active_ids).filtered(
                 lambda move: move.is_invoice(include_receipts=True))
-            # Check for selected invoices ids
-            if not active_ids or active_model != 'account.move':
-                return res
 
             # Check all invoices are open
             if not invoices or any(
@@ -141,7 +142,7 @@ class AccountPaymentRegister(models.TransientModel):
                 defaults['payment_method_id'] = self.env[
                     'account.payment.method'].search(domain, limit=1).id
         return defaults
-    
+
     def check_combined_configuration(self):
         return self.env.user.company_id.combined_payment
 
