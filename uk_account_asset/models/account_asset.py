@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
-
 from datetime import date, datetime
-import time
 from odoo import api, fields, models, _
-import calendar
 from calendar import monthrange
 from datetime import timedelta
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from dateutil.relativedelta import relativedelta
-from odoo.tools import float_is_zero, float_compare
+from odoo.tools import float_compare
 
 
 def month_difference(d1, d2):
