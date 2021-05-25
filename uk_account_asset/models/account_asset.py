@@ -764,7 +764,7 @@ class AccountAssetAsset(models.Model):
             self.mapped('depreciation_line_ids').unlink()
         self.write({'state': 'draft', 'value_alr_accumulated': 0,
                     'date_value_alr_acc': False})
-        
+
     def get_asset_code(self):
         active_asset_ids = self.search([
             ('code', '!=', False),
