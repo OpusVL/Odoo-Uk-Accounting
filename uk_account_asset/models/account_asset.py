@@ -545,9 +545,9 @@ class AccountAssetAsset(models.Model):
                             depreciation_move_date.strftime('%Y-%m-%d'),
                         'period_amount': period_amount,
                         'revaluation_period_amount': period_revaluation_amount,
-                        'remaining_value': remaining_value,
+                        'remaining_value': remaining_value - amount_per_month,
                         'depreciated_value':
-                            self.value + self.cumulative_revaluation_value - remaining_value,
+                            self.value + self.cumulative_revaluation_value - remaining_value + amount_per_month,
                     }
                     total_deprecated_revaluation_amount += period_revaluation_amount
                     remaining_value -= (
@@ -585,7 +585,7 @@ class AccountAssetAsset(models.Model):
                     'asset_id': self.id,
                     'sequence': sequence,
                     'name': str(self.id) + '/' + str(i),
-                    'remaining_value': remaining_value,
+                    'remaining_value': remaining_value - amount_per_month,
                     'depreciated_value': self.value_residual - remaining_value,
                     'revaluation_period_amount': period_revaluation_amount,
                     'depreciation_date':
