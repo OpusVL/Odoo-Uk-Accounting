@@ -5,8 +5,18 @@ from odoo.http import request
 class AccountAccountType(models.Model):
     _inherit = "account.account.type"
 
-    type = fields.Selection(selection_add=[("view", "View")])
-    internal_group = fields.Selection(selection_add=[("view", "View")])
+    type = fields.Selection(
+        ondelete={
+            "view": "cascade",
+        },
+        selection_add=[("view", "View")],
+    )
+    internal_group = fields.Selection(
+        ondelete={
+            "view": "cascade",
+        },
+        selection_add=[("view", "View")],
+    )
 
 
 class AccountAccount(models.Model):
