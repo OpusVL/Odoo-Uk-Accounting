@@ -136,4 +136,9 @@ class AccountPaymentRegister(models.TransientModel):
 class AccountPaymentMethod(models.Model):
     _inherit = "account.payment.method"
 
-    payment_type = fields.Selection(selection_add=[("combined", "Combined")])
+    payment_type = fields.Selection(
+        ondelete={
+            "combined": "cascade",
+        },
+        selection_add=[("combined", "Combined")],
+    )

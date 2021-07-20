@@ -5,13 +5,23 @@ from odoo.tools.safe_eval import safe_eval
 class AccountTaxTemplateMargin(models.Model):
     _inherit = "account.tax.template"
 
-    amount_type = fields.Selection(selection_add=[("margin", "Margin")])
+    amount_type = fields.Selection(
+        ondelete={
+            "margin": "cascade",
+        },
+        selection_add=[("margin", "Margin")],
+    )
 
 
 class AccountTaxMargin(models.Model):
     _inherit = "account.tax"
 
-    amount_type = fields.Selection(selection_add=[("margin", "Margin")])
+    amount_type = fields.Selection(
+        ondelete={
+            "margin": "cascade",
+        },
+        selection_add=[("margin", "Margin")],
+    )
 
     def _compute_amount(
         self, base_amount, price_unit, quantity=1.0, product=None, partner=None
