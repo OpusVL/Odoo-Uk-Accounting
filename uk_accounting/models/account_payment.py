@@ -1,8 +1,6 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from odoo.addons.account.models.account_payment import MAP_INVOICE_TYPE_PARTNER_TYPE
-
 
 class AccountPayment(models.Model):
     _inherit = "account.payment"
@@ -38,57 +36,6 @@ class AccountPayment(models.Model):
             )
             record.has_invoices = bool(record.reconciled_invoice_ids)
             record.reconciled_invoices_count = len(record.reconciled_invoice_ids)
-
-    @api.model
-    def default_get(self, default_fields):
-        if not self.env.user.company_id.combined_payment:
-            return super(AccountPayment, self).default_get(default_fields)
-        else:
-            active_ids = self._context.get("active_ids") or self._context.get(
-                "active_id"
-            )
-            active_model = self._context.get("active_model")
-            # Calling super with context active_ids = False to call super
-            # but to skip the error if invoices are of different types
-            res = super(
-                AccountPayment, self.with_context(active_ids=False)
-            ).default_get(default_fields)
-
-            # After skipping the check on base default_get, added the
-            # same lines without the check of invoice types
-            invoices = (
-                self.env["account.move"]
-                .browse(active_ids)
-                .filtered(lambda move: move.is_invoice(include_receipts=True))
-            )
-            # Check for selected invoices ids
-            if not active_ids or active_model != "account.move":
-                return res
-
-            # Check all invoices are open
-            if not invoices or any(invoice.state != "posted" for invoice in invoices):
-                raise UserError(_("You can only register payments for open invoices"))
-
-            amount = self._compute_payment_amount(
-                invoices,
-                invoices[0].currency_id,
-                invoices[0].journal_id,
-                res.get("payment_date") or fields.Date.today(),
-            )
-            res.update(
-                {
-                    "currency_id": invoices[0].currency_id.id,
-                    "amount": abs(amount),
-                    "payment_type": "inbound" if amount > 0 else "outbound",
-                    "partner_id": invoices[0].commercial_partner_id.id,
-                    "partner_type": MAP_INVOICE_TYPE_PARTNER_TYPE[invoices[0].type],
-                    "communication": invoices[0].invoice_payment_ref
-                    or invoices[0].ref
-                    or invoices[0].name,
-                    "invoice_ids": [(6, 0, invoices.ids)],
-                }
-            )
-            return res
 
 
 class AccountPaymentRegister(models.TransientModel):
