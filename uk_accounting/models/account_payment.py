@@ -47,14 +47,12 @@ class AccountPaymentRegister(models.TransientModel):
 
     @api.onchange("journal_id", "invoice_ids")
     def _onchange_journal(self):
-        res = super(AccountPaymentRegister, self)._onchange_journal()
         if self.combined:
             domain_payment = [
                 ("payment_type", "=", "combined"),
                 ("id", "in", self.journal_id.combined_payment_method_ids.ids),
             ]
-            res.update({"domain": {"payment_method_id": domain_payment}})
-        return res
+            return {"domain": {"payment_method_id": domain_payment}}
 
 
 class AccountPaymentMethod(models.Model):
