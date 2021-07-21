@@ -31,6 +31,5 @@
         "views/res_partner_bank_view.xml",
         "views/res_config_settings_views.xml",
         "views/account_journal_view.xml",
-        "views/account_payment_view.xml",
     ],
 }
