@@ -23,7 +23,9 @@ class AccountAccount(models.Model):
     _inherit = "account.account"
 
     parent_id = fields.Many2one(
-        comodel_name="account.account", string="Parent Account", ondelete="set null"
+        comodel_name="account.account",
+        ondelete="set null",
+        string="Parent Account",
     )
 
 
@@ -102,7 +104,8 @@ class AccountJournal(models.Model):
                 or ""
             )
         parent_id = self.env["account.account"].search(
-            [("code", "=", str(parent_code.ljust(6, "0")))], limit=1
+            [("code", "=", str(parent_code.ljust(6, "0")))],
+            limit=1,
         )
         res["parent_id"] = parent_id and parent_id.id
         return res
