@@ -1002,8 +1002,12 @@ class AccountAssetDepreciationLine(models.Model):
         created_moves = self.env['account.move']
         for line in self:
             move_lines = line.get_move_lines(accounting_date)
-            move_vals = line.get_move_vals(move_lines, log_id)
-            move = self.env['account.move'].create(move_vals)
+            ############# Opusvl Change ###########
+            # Account Move Date should be Accounting date not Depreciation Date
+            # Account Move Period id set according to Accounting Date
+            move_vals = line.get_move_vals(move_lines, accounting_date, log_id)
+            move = self.env['account.move'].with_context({'asset_accounting_date': accounting_date or False}).create(move_vals)
+            ############# Opusvl Change ###########
             line.write({'move_id': move.id, 'move_check': True})
             created_moves |= move
         if post_move and created_moves:
@@ -1024,13 +1028,15 @@ class AccountAssetDepreciationLine(models.Model):
                 created_move.post()
         return True
 
-    def get_move_vals(self, move_lines, log_id=False):
-        depreciation_date = self.env.context.get(
-            'depreciation_date') or self.depreciation_date or fields.Date.context_today(
-            self)
+    def get_move_vals(self, move_lines, accounting_date, log_id=False):
+        # depreciation_date = self.env.context.get(
+        #     'depreciation_date') or self.depreciation_date or fields.Date.context_today(
+        #     self)
+        ############# Opusvl Change ###########
+        # Account Move Date value should be Accounting date not Depreciation Date
         return {
             'ref': self.asset_id.code,
-            'date': depreciation_date or False,
+            'date': accounting_date or False,
             'journal_id': self.asset_id.category_id.journal_id.id,
             'line_ids': [(0, 0, move_line) for move_line in move_lines],
             'asset_log_id': log_id,
