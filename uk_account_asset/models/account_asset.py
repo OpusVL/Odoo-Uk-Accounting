@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
-
 from datetime import date, datetime
-import time
 from odoo import api, fields, models, _
-import calendar
 from calendar import monthrange
 from datetime import timedelta
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from dateutil.relativedelta import relativedelta
-from odoo.tools import float_is_zero, float_compare
+from odoo.tools import float_compare
 
 
 def month_difference(d1, d2):
@@ -549,9 +545,9 @@ class AccountAssetAsset(models.Model):
                             depreciation_move_date.strftime('%Y-%m-%d'),
                         'period_amount': period_amount,
                         'revaluation_period_amount': period_revaluation_amount,
-                        'remaining_value': remaining_value,
+                        'remaining_value': remaining_value - amount_per_month,
                         'depreciated_value':
-                            self.value + self.cumulative_revaluation_value - remaining_value,
+                            self.value + self.cumulative_revaluation_value - remaining_value + amount_per_month,
                     }
                     total_deprecated_revaluation_amount += period_revaluation_amount
                     remaining_value -= (
@@ -589,7 +585,7 @@ class AccountAssetAsset(models.Model):
                     'asset_id': self.id,
                     'sequence': sequence,
                     'name': str(self.id) + '/' + str(i),
-                    'remaining_value': remaining_value,
+                    'remaining_value': remaining_value - amount_per_month,
                     'depreciated_value': self.value_residual - remaining_value,
                     'revaluation_period_amount': period_revaluation_amount,
                     'depreciation_date':
@@ -764,7 +760,7 @@ class AccountAssetAsset(models.Model):
             self.mapped('depreciation_line_ids').unlink()
         self.write({'state': 'draft', 'value_alr_accumulated': 0,
                     'date_value_alr_acc': False})
-        
+
     def get_asset_code(self):
         active_asset_ids = self.search([
             ('code', '!=', False),
