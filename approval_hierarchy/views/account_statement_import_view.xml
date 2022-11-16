@@ -5,9 +5,9 @@
         <record id="journal_dashboard_view_inherit" model="ir.ui.view">
         <field name="name">account.journal.dashboard.kanban.inherit</field>
         <field name="model">account.journal</field>
-        <field name="inherit_id" ref="account_bank_statement_import.journal_dashboard_view_inherit"/>
+        <field name="inherit_id" ref="account_statement_import.journal_dashboard_view_inherit"/>
         <field name="arch" type="xml">
-            <xpath expr='//a[@name="import_statement"]/parent::span' position='attributes'>
+            <xpath expr='//a[@name="import_account_statement"]/parent::span' position='attributes'>
                 <attribute name="groups">approval_hierarchy.import_bank_statement_role</attribute>
             </xpath>
         </field>

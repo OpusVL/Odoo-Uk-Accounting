@@ -64,3 +64,10 @@ class AccountPaymentMethod(models.Model):
         },
         selection_add=[("combined", "Combined")],
     )
+    @api.model
+    def _get_payment_method_information(self):
+        res = super()._get_payment_method_information()
+        combined_payment_methods = self.env['account.payment.method'].search([('payment_type', '=', 'combined')])
+        for method in combined_payment_methods:
+            res[method.code] = {'mode': 'multi', 'domain': [('type', '=', 'bank')]}
+        return res

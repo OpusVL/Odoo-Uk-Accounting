@@ -6,7 +6,7 @@
             <field name="model">res.partner</field>
             <field name="inherit_id" ref="base.view_partner_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='type']/parent::group/parent::group" position="before">
+                <xpath expr="//field[@name='type']" position="after">
                     <group>
                         <group>
                             <field name="approval_user_id"

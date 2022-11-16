@@ -7,7 +7,7 @@
             <field name="model">res.users</field>
             <field name="inherit_id" ref="hr.res_users_view_form_profile"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='work_location']" position="after">
+                <xpath expr="//field[@name='work_location_id']" position="after">
                     <field name="job_id" invisible="1"/>
                     <field name="manager_user_id" invisible="1"/>
                     <field name="has_delegated" invisible="1"/>

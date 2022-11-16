@@ -30,7 +30,7 @@ access_ir_property_approve_user,ir_property approve_user,base.model_ir_property,
 
 account.access_account_bank_statement,account.bank.statement,account.model_account_bank_statement,account.group_account_user,1,0,0,0
 account.access_account_bank_statement_line,account.bank.statement.line,account.model_account_bank_statement_line,account.group_account_user,1,0,0,0
-access_account_bank_statement_import_file,account.bank.statement import_file,account.model_account_bank_statement,approval_hierarchy.import_bank_statement_role,1,1,1,1
+access_account_statement_import_file,account.bank.statement import_file,account.model_account_bank_statement,approval_hierarchy.import_bank_statement_role,1,1,1,1
 access_account_bank_statement_line_import_file,account.bank.statement.line import_file,account.model_account_bank_statement_line,approval_hierarchy.import_bank_statement_role,1,1,1,1
 account.access_account_cashbox,account.bank.statement.cashbox,account.model_account_bank_statement_cashbox,account.group_account_user,1,0,0,0
 account.access_account_cashbox_line,account.bank.statement.cashbox.line,account.model_account_cashbox_line,account.group_account_user,1,0,0,0

@@ -14,6 +14,7 @@ class HrEmployeeBase(models.AbstractModel):
         string='Delegated User',
         tracking=True,
     )
+    
 
 
 class HrEmployee(models.Model):
@@ -31,7 +32,7 @@ class HrEmployee(models.Model):
         copy=False,
         default='draft',
     )
-    has_delegated = fields.Boolean(compute='_check_has_delegated')
+    has_delegated = fields.Boolean(compute='_check_has_delegated', store=True)
 
     def _check_has_delegated(self):
         for rec in self:

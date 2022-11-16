@@ -13,6 +13,7 @@ class AccountMove(models.Model):
         selection_add=[
             ('waiting', 'Waiting'),
         ],
+        ondelete={"waiting": "cascade"},
     )
     approval_user_id = fields.Many2one(
         'res.users',

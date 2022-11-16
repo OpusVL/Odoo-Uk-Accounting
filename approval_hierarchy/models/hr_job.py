@@ -118,6 +118,7 @@ class HrJob(models.Model):
             ('rejected', 'Rejected'),
             ('approved', 'Approved')
         ],
+        ondelete={'draft': 'cascade', 'waiting': 'cascade', 'rejected': 'cascade', 'approved': 'cascade' },
         default='draft',
     )
 

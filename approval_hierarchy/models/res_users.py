@@ -28,7 +28,7 @@ class ResUsers(models.Model):
         compute='_get_managers',
         store=True,
     )
-    has_delegated = fields.Boolean(compute='_check_has_delegated')
+    has_delegated = fields.Boolean(compute='_check_has_delegated', store=True)
     current_user = fields.Boolean(compute='_compute_current_user')
 
     def _compute_current_user(self):
