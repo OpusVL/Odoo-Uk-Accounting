@@ -84,7 +84,7 @@ class AssetModify(models.TransientModel):
         asset.do_change_accumulated_account(datas)
         tracked_fields = self.env['account.asset.asset'].fields_get(
             ['method_number', 'method_period', 'method_end'])
-        changes, tracking_value_ids = asset._message_track(
+        changes, tracking_value_ids = asset._mail_track(
             tracked_fields, old_values)
         if changes:
             asset.message_post(subject=_('Depreciation board modified'),

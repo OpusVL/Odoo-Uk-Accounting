@@ -15,3 +15,4 @@ access_account_asset_group,account.asset.group,model_account_asset_group,account
 access_account_asset_group_manager,account.asset.group,model_account_asset_group,account.group_account_manager,1,1,1,1
 access_asset_revaluation_log,asset.revaluation.log,model_asset_revaluation_log,account.group_account_user,1,0,0,0
 access_asset_revaluation_log_manager,asset.revaluation.log.manager,model_asset_revaluation_log,account.group_account_manager,1,1,1,1
+asset_modify_account_manager_access,asset.modify.account.manager.access,model_asset_modify,account.group_account_manager,1,1,1,1

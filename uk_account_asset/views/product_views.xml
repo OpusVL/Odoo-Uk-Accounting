@@ -8,11 +8,11 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
-           <xpath expr="//field[@name='purchase_ok']" position="after">
-               <div>
+           <xpath expr="//div[@name='options']" position="inside">
+               <span>
                    <field name="pr_active"/>
                    <label for="pr_active"/>
-               </div>
+               </span>
             </xpath>
         </field>
     </record>
