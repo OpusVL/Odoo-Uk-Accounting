@@ -667,6 +667,8 @@ class AccountAssetAsset(models.Model):
         return True
 
     def validate(self):
+        if len(self.depreciation_line_ids) == 0:
+            raise UserError("Please compute depreciations before confirming the asset.")
         if not self.code:
             code = self.get_asset_code()
             self.write({'state': 'open', 'code': code})
@@ -691,7 +693,7 @@ class AccountAssetAsset(models.Model):
                 del(tracked_fields['method_end'])
             else:
                 del(tracked_fields['method_number'])
-            dummy, tracking_value_ids = asset._message_track(
+            dummy, tracking_value_ids = asset._mail_track(
                 tracked_fields, dict.fromkeys(asset_fields))
             asset.message_post(subject=_('Asset created'),
                                tracking_value_ids=tracking_value_ids)
@@ -738,7 +740,7 @@ class AccountAssetAsset(models.Model):
                              'method_end': today, 'method_number': sequence})
                 tracked_fields = self.env['account.asset.asset'].fields_get(
                     ['method_number', 'method_end'])
-                changes, tracking_value_ids = asset._message_track(
+                changes, tracking_value_ids = asset._mail_track(
                     tracked_fields, old_values)
                 if changes:
                     asset.message_post(subject=_('Asset sold or disposed. Accounting entry awaiting for validation.'), tracking_value_ids=tracking_value_ids)
@@ -1019,7 +1021,7 @@ class AccountAssetDepreciationLine(models.Model):
         created_moves = self.env['account.move']
         for line in self:
             move_lines = line.get_disposal_move_lines()
-            move_vals = line.get_move_vals(move_lines)
+            move_vals = line.get_move_vals(move_lines, date.today())
             move = self.env['account.move'].create(move_vals)
             line.write({'move_id': move.id, 'move_check': True})
             created_moves |= move
