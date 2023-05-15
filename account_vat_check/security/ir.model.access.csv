@@ -3,3 +3,4 @@ access_mtd_vat_check_endpoint,access_mtd_vat_check_endpoint,model_mtd_vat_check_
 access_mtd_vat_hmrc_configuration,access_mtd_vat_hmrc_configuration,model_mtd_vat_hmrc_configuration,base.group_user,1,0,0,0
 access_mtd_vat_hmrc_configuration,access_mtd_vat_hmrc_configuration,model_mtd_vat_hmrc_configuration,mtd_check_vat_admin,1,1,1,1
 access_vat_check_history,access_vat_check_history,model_vat_check_history,base.group_user,1,0,1,0
+access_company_vat_check_number,access.company.vat.check.number,model_company_vat_check_number,base.group_user,1,1,1,1
