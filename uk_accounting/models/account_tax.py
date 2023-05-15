@@ -93,6 +93,7 @@ class AccountTaxMargin(models.Model):
         partner=None,
         is_refund=False,
         handle_price_include=True,
+        include_caba_tags=False,
     ):
         taxes = self.filtered(lambda r: r.amount_type != "margin")
         company = self.env.company
@@ -120,6 +121,7 @@ class AccountTaxMargin(models.Model):
             partner,
             is_refund=is_refund,
             handle_price_include=handle_price_include,
+            include_caba_tags=include_caba_tags
         )
         if len(res["taxes"]) > 1:
             return res
